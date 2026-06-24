@@ -1,0 +1,30 @@
+# 依赖
+node_modules/
+
+# Playwright 运行产物
+playwright-report/
+test-results/
+blob-report/
+.cache/
+
+# 探索性测试的临时调试截图
+debug-*.png
+explore-*.png
+
+# 环境变量与密钥（切勿提交）
+.env
+.env.*
+!.env.example
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# Python（若配合测试数据脚本使用）
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# 日志
+*.log
