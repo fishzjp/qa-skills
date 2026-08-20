@@ -5,8 +5,26 @@
 
 ## [Unreleased]
 
-- 开源工程化：CI 工作流（架构红线校验 + 语法检查）、Issue/PR 模板、行为准则、
-  安全策略、dependabot、`scripts/validate_skills.py` 本地校验脚本
+### 新增
+
+- **安装体验**：`install.sh` / `uninstall.sh`（自动检测宿主 skills 目录
+  ~/.agents/skills 等，支持拷贝/软链两种方式与重装覆盖，安装时写入版本标识）；
+  README 新增宿主兼容性矩阵与 markmap 渲染指引
+- **DESIGN.md**：公开版设计文档（设计动机、三层架构、证据/风险模型、编排
+  会话模型、可执行性失败模式、评测方法学、设计决策速查）
+- **examples/**：同一 PRD 的 Skill On/Off 完整产出对照（取自验证轮真实产物）
+- **README.en.md** 英文版，中英双语切换
+- **assets/**：社交预览图及其 HTML 源（regenerate：改 banner.html 后 Playwright 截图）
+- **Benchmark 手动工作流**（workflow_dispatch）：CI 上跑黄金集质量门，
+  产物上传 artifact；token 成本原因不随 push 触发
+- **tests/**：harness 纯函数单测 20 项（统计/judge 校验/代码块解析/可执行性
+  检查/确定性），CI 接入
+- Issue 模板升级为 YAML issue forms；PR 按路径自动打标（labeler）
+- README "500 行红线"补 Red Hat ACE 实践出处链接
+
+### 变更
+
+- CI 拆为 validate + label 两个 job（PR 自动打领域标签）
 
 ## [0.4.0] - 2026-08-20
 

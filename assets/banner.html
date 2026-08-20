@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1280px; height: 640px; overflow: hidden;
+         font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+         background: linear-gradient(135deg, #0d1117 0%, #161b22 60%, #1c2432 100%);
+         color: #e6edf3; position: relative; }
+  .glow { position: absolute; width: 900px; height: 900px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(63,185,80,0.13) 0%, transparent 60%);
+          top: -350px; right: -250px; }
+  .wrap { position: relative; padding: 72px 80px; height: 100%; display: flex; flex-direction: column; }
+  .title { display: flex; align-items: baseline; gap: 22px; }
+  h1 { font-size: 74px; font-weight: 800; letter-spacing: -1px; }
+  h1 .check { color: #3fb950; }
+  .sub-en { font-size: 24px; color: #8b949e; font-weight: 500; }
+  .tagline { margin-top: 26px; font-size: 36px; font-weight: 600; color: #e6edf3; }
+  .tagline em { color: #3fb950; font-style: normal; }
+  .pipeline { margin-top: 34px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .step { background: #21262d; border: 1px solid #30363d; border-radius: 8px;
+          padding: 9px 16px; font-size: 19px; color: #c9d1d9; white-space: nowrap; }
+  .step.hl { background: rgba(63,185,80,0.15); border-color: #3fb950; color: #7ee787; font-weight: 600; }
+  .arrow { color: #484f58; font-size: 18px; }
+  .metrics { margin-top: auto; display: flex; gap: 20px; align-items: stretch; }
+  .metric { background: rgba(33,38,45,0.85); border: 1px solid #30363d; border-radius: 12px;
+            padding: 20px 26px; min-width: 220px; }
+  .metric .v { font-size: 34px; font-weight: 800; color: #7ee787; }
+  .metric .v .from { color: #f85149; font-size: 24px; font-weight: 600; }
+  .metric .k { margin-top: 6px; font-size: 17px; color: #8b949e; }
+  .meta { margin-top: 26px; display: flex; gap: 26px; font-size: 18px; color: #8b949e; align-items: center; }
+  .meta b { color: #c9d1d9; font-weight: 600; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: #3fb950; display: inline-block; margin-right: 8px; }
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+  <div class="wrap">
+    <div class="title">
+      <h1>QA<span class="check">·</span>Skills</h1>
+      <div class="sub-en">QA Agent Skills Framework</div>
+    </div>
+    <div class="tagline">让 AI 像<em>资深测试工程师</em>一样工作</div>
+    <div class="pipeline">
+      <span class="step">需求理解</span><span class="arrow">→</span>
+      <span class="step">风险分析</span><span class="arrow">→</span>
+      <span class="step">测试策略</span><span class="arrow">→</span>
+      <span class="step">用例编写</span><span class="arrow">→</span>
+      <span class="step">审查</span><span class="arrow">→</span>
+      <span class="step hl">自动化执行</span><span class="arrow">→</span>
+      <span class="step">Bug 分析</span><span class="arrow">→</span>
+      <span class="step">测试报告</span>
+    </div>
+    <div class="metrics">
+      <div class="metric">
+        <div class="v"><span class="from">0%</span> → 78%</div>
+        <div class="k">E2E 真实执行通过率</div>
+      </div>
+      <div class="metric">
+        <div class="v">100%</div>
+        <div class="k">植入 bug 检出率</div>
+      </div>
+      <div class="metric">
+        <div class="v">4/7 门通过</div>
+        <div class="k">预注册门·失败如实记录</div>
+      </div>
+    </div>
+    <div class="meta">
+      <span><span class="dot"></span><b>方法论 + 10 Skills + Benchmark</b></span>
+      <span><b>MIT</b></span>
+      <span>github.com/fishzjp/qa-skills</span>
+    </div>
+  </div>
+</body>
+</html>

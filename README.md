@@ -1,5 +1,7 @@
 # QA Skills
 
+[简体中文](./README.md) | **English**: [README.en.md](./README.en.md)
+
 > A full-lifecycle QA skill framework for AI coding agents — methodology, 10 skills, and a reproducible benchmark.（中文项目，文档以中文为准）
 >
 > 让 AI 像资深测试工程师一样工作:一句"帮我测试这个需求",跑完 **需求理解 → 风险分析 → 测试策略 → 用例编写 → 审查 → 自动化执行 → Bug 分析 → 回归 → 测试报告** 的完整流水线。
@@ -33,11 +35,11 @@
   - 预期结果: 到期后 1 小时内状态自动变为「已结束」,超过 1 小时未变判失败
 ```
 
-具体数据、明确入口、可判定的预期、异步行为带时限——这背后是 `core/executability.md` 的 8 条硬标准,评测里它是一票否决项:**不可执行的用例,覆盖再全也计零分**。
+具体数据、明确入口、可判定的预期、异步行为带时限——这背后是 `core/executability.md` 的 8 条硬标准,评测里它是一票否决项:**不可执行的用例,覆盖再全也计零分**。同一份 PRD 的完整 before/after 产出对照见 [examples/](./examples/)。
 
 ### 坑二:指令堆得越多,AI 反而越弱
 
-把方法论、模板、规则全塞进一个 SKILL.md,Agent 有效遵循的规则反而变少(外部实践验证的 500 行红线)。本框架的解法是**三层架构**:
+把方法论、模板、规则全塞进一个 SKILL.md,Agent 有效遵循的规则反而变少([Red Hat ACE 的 Agent Skill 实践总结](https://next.redhat.com/2026/07/28/building-skills-for-ai-agents-pitfalls-and-best-practices/):指令超过 500 行后性能开始退化)。本框架的解法是**三层架构**:
 
 ```text
 L1  SKILL.md 头部      触发边界:什么时候用、什么时候不用、交给谁
@@ -65,16 +67,37 @@ L3  references/ + core/  方法/规则/模板:按需加载,工作流步骤里显
 ## 快速开始
 
 ```bash
-# 1. 复制到你的 Agent skills 目录(core/ 必须一起,各 skill 相对引用它)
-cp -r qa core requirement-analysis test-strategy test-case-writing test-case-review \
-      automated-e2e-testing api-testing exploratory-testing bug-analysis regression-testing \
-      <项目>/.claude/skills/
+git clone https://github.com/fishzjp/qa-skills.git
+cd qa-skills
 
-# 2. 对 Agent 说一句话
+./install.sh            # 交互选择宿主目录(自动检测 ~/.agents/skills 等)
+./install.sh --auto     # 或:自动装到第一个检测到的目录
+./install.sh --target <项目>/.claude/skills --link   # 或:项目级 + 软链(git pull 即升级)
+
+# 对 Agent 说一句话
 "帮我测试这个需求:{需求描述 + 仓库地址}"
 ```
 
+卸载:`./uninstall.sh`。手动安装也可以:`cp -r qa core requirement-analysis test-strategy test-case-writing test-case-review automated-e2e-testing api-testing exploratory-testing bug-analysis regression-testing <你的 skills 目录>/`(**core/ 必须一起**,各 skill 相对引用它)。
+
 单阶段任务(写用例/审查/转自动化/回归范围)直接描述即可触发对应 skill,不需要走全流水线。
+
+### 宿主兼容性
+
+Skill 是纯 Markdown 指令文件(frontmatter + 相对路径引用),不依赖特定宿主特性,任何支持 Agent Skills 约定的宿主都可用:
+
+| 宿主 | 安装目录 | 状态 |
+|------|---------|------|
+| Claude Code | `~/.claude/skills/` 或 `<项目>/.claude/skills/` | ✅ 主要适配对象,评测基于此 |
+| 跨宿主共享目录 | `~/.agents/skills/` | ✅ 多 Agent 共读一份,`install.sh` 默认推荐 |
+| Codex CLI | `~/.codex/skills/` | 🔶 按约定应可用,未系统评测 |
+| 其他支持 skills 的 Agent | 各自 skills 目录 | 🔶 同上 |
+
+> `qa` 流水线的"阶段间上下文隔离"依赖宿主的子会话/子代理能力;不支持时自动退化为顺序会话 + 文件衔接,正确性不受影响(见 [DESIGN.md](./DESIGN.md) 编排会话模型)。
+
+### markmap 用例怎么渲染成脑图
+
+`测试用例_markmap.md` 就是标准 Markdown(markmap 语法),三种打开方式:VS Code 装 [Markmap 扩展](https://marketplace.visualstudio.com/items?itemName=gera2ld.markmap-vscode)预览;或 `npx markmap-cli 测试用例_markmap.md` 生成可交互 HTML;或粘贴到 [markmap.js.org/repl](https://markmap.js.org/repl)。
 
 ---
 
@@ -113,6 +136,8 @@ PRD / 代码
 ### 3. 会说话的检查点
 
 端到端不等于零人工:澄清、执行策略、Bug 定性三类决策由你裁决,Agent 只提案不代答;裁决落盘后,后续阶段不得推翻。
+
+> 设计动机与关键决策(为什么 10 个窄 skill 而不是 1 个全能 skill、为什么 markmap 是唯一维护源、为什么评测先于扩容)见 **[DESIGN.md](./DESIGN.md)**。
 
 ---
 

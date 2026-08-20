@@ -1,0 +1,33 @@
+# PR 按改动路径自动打标(与已建 label 对齐)
+"skill:方法论":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "*/SKILL.md"
+          - "core/**"
+          - "*/references/**"
+          - "*/templates/**"
+
+"skill:eval-harness":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "eval/harness/**"
+          - "scripts/**"
+          - "tests/**"
+
+"golden:标注":
+  - changed-files:
+      - any-glob-to-any-file: "eval/golden/**"
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "*.md"
+          - "examples/**"
+          - ".github/**"
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/package.json"
+          - "**/package-lock.json"
+          - "**/requirements.txt"

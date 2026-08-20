@@ -19,6 +19,12 @@ jobs:
       - name: Skills 架构红线校验（frontmatter / ≤500 行 / When NOT to Use / 引用完整性 / JSON）
         run: python3 scripts/validate_skills.py
 
+      - name: 安装 harness 单测依赖
+        run: python3 -m pip install --quiet requests pytest
+
+      - name: Harness 纯函数单测（统计/judge 校验/代码块解析/可执行性检查）
+        run: python3 -m pytest tests/ -q
+
       - name: Python 语法检查（harness 与 mock 服务）
         run: |
           python3 -m py_compile eval/harness/run_eval.py eval/harness/fixtures/mock_api/server.py
@@ -32,3 +38,15 @@ jobs:
         run: |
           node --check eval/harness/fixtures/playwright_scaffold/mock_app/server.js
           node --check eval/harness/fixtures/playwright_scaffold/tests/helpers.ts
+
+  label:
+    name: PR 自动打标
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/labeler@v5
+        with:
+          configuration-path: .github/labeler.yml

@@ -1,0 +1,48 @@
+name: 🐛 Bug 报告
+description: 某个 skill 或 eval harness 的行为不符合预期
+labels: [bug]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: 问题区域
+      options:
+        - qa（编排）
+        - test-case-writing / test-case-review（用例）
+        - test-strategy / requirement-analysis（策略与需求）
+        - automated-e2e-testing / api-testing（执行）
+        - bug-analysis / regression-testing / exploratory-testing（其他 skill）
+        - eval（golden 集 / harness / fixtures）
+        - 其他
+    validations:
+      required: true
+  - type: textarea
+    id: desc
+    attributes:
+      label: 问题描述
+      description: 一句话说清:哪个环节、期望什么、实际什么
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: 复现步骤
+      description: 触发输入(脱敏后的最小复现材料)、期望产出 vs 实际产出(贴关键片段)
+      placeholder: |
+        1. 使用的 skill / run_eval.py 的 phase
+        2. 输入材料(脱敏)
+        3. 期望 vs 实际
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: 环境
+      placeholder: Agent 宿主与版本 / 模型 / 操作系统
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: 补充(可选)
+      description: 截图 / 日志 / 猜测的方向
