@@ -58,7 +58,15 @@ qa-skills/
 ├── exploratory-testing/       # charter 驱动探索会话 → 探索笔记_{主题}.md
 ├── bug-analysis/              # Bug 根因/影响/回归建议 → 追加进测试报告
 ├── regression-testing/        # diff → 影响面 → 回归清单_{日期}.md
-└── eval/                      # 黄金集 v0 + Benchmark harness（见 eval/EXPECTED.md）
+└── eval/                      # 科学评估体系（harness/README.md 详述）
+    ├── EXPECTED.md            # 预期效果门 v1.0（预注册冻结）+ 验证轮判定 + v1.1 提案
+    ├── golden/                # 黄金集 12 任务（标注经独立审计，annotation.audit 记录修改）
+    ├── harness/
+    │   ├── run_eval.py        # setup-e2e / audit-annotations / generate / score
+    │   ├── *_schema.json      # judge / pairwise / audit 的 JSON Schema 约束
+    │   └── fixtures/          # 固定执行环境：playwright_scaffold（含 mock_app 被测应用）
+    │                          #   与 mock_api（实现任务 OpenAPI 契约的 mock 服务）
+    └── results/               # 运行归档（outputs/judge/pairwise/exec + metrics + report）
 ```
 
 ## 产物流转（文件即流水线状态）
@@ -71,15 +79,20 @@ qa-skills/
 
 每个阶段的产出落盘为文件，跨会话可续跑（`qa` 的断点续跑只认文件）；Schema 从 markmap 单向抽取，供审查 / 回归 / 执行层消费。
 
-## Eval 与 Benchmark
+## Eval 与 Benchmark（科学评估体系 v2）
+
+黄金集 12 任务（GT 标注经独立审计 + 人工复核），On/Off 对比采用多样本与统计推断，执行类指标跑真实环境：
 
 ```bash
-python3 eval/harness/run_eval.py setup-e2e   # 一次性安装编译检查依赖
-python3 eval/harness/run_eval.py generate    # 黄金集 12 任务 × Skill On/Off
-python3 eval/harness/run_eval.py score --run-dir eval/results/runs/<目录>
+python3 eval/harness/run_eval.py setup-e2e            # 一次性：依赖 + chromium 浏览器
+python3 eval/harness/run_eval.py audit-annotations    # 可选：GT 标注独立审计（改标注后重跑）
+python3 eval/harness/run_eval.py generate --samples 3 # 每任务×模式 3 次独立采样
+python3 eval/harness/run_eval.py score --samples 3 --run-dir eval/results/runs/<目录>
 ```
 
-指标与预期效果门（G1–G6）见 [eval/EXPECTED.md](./eval/EXPECTED.md)；最新结果见 [eval/results/LATEST.md](./eval/results/LATEST.md)。
+方法学要点：任务层配对 bootstrap 95%CI；成对评审（On vs Off 并排 + 位置互换）；逐采样 judge 多数表决；E2E 产物在 mock 被测应用上以真实浏览器执行、API 产物对 mock 服务跑 pytest——**可执行性、编译、真实执行、植入 bug 检出为无 judge 参与的客观指标**。门 v1.0 预注册冻结（G1–G7），完整定义、验证轮判定（4/7 通过，失败项含诊断）与 v1.1 提案见 [eval/EXPECTED.md](./eval/EXPECTED.md)；最新报告见 [eval/results/LATEST.md](./eval/results/LATEST.md)，方法学详述见 [eval/harness/README.md](./eval/harness/README.md)。
+
+**当前验证结论（2026-08-20 验证轮，如实记录）**：Skill 的可复现效应为——用例可执行性 0.77→0.98、E2E 代码真实执行通过率 0%→78%、植入 bug 检出 100%、质量 +5.7pp（CI 显著）、11/12 任务不劣化；覆盖类增益 +3.8pp（方向显著、幅度小于早期单采样表观值）；成本为 tokens 3.3×。
 
 ## 设计理念
 

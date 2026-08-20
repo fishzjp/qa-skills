@@ -1,18 +1,21 @@
 # Eval Harness 使用说明（v2 科学评估体系）
 
+> **当前状态（2026-08-20）**：主通道（arkcli / glm-5-2）正常；opencode 通道（异构 judge / 成对评审 / 泛化模型）因月度额度耗尽暂不可用，验证轮的 judge 已降级为同源模型并在结果中如实标注——恢复后按文末"待补项"各一条命令补齐。
+
 ## 目录
 
 ```
 eval/
-├── EXPECTED.md            # 预期效果门 G1–G7（v1.0 冻结 + 预注册声明 + 观察型指标）
-├── golden/                # 黄金集 v0：12 个任务（task.md + annotation.json，标注经独立审计）
+├── EXPECTED.md            # 预期效果门 G1–G7（v1.0 冻结 + 验证轮判定 + v1.1 提案）
+├── golden/                # 黄金集 v0：12 个任务（task.md + annotation.json）
+│                          #   annotation 的 audit 字段记录独立审计与人工复核的修改及理由
 ├── harness/
 │   ├── run_eval.py        # 主脚本：setup-e2e / audit-annotations / generate / score
 │   ├── judge_schema.json  # 逐点评审输出约束（covered/detected/quality）
 │   ├── pairwise_schema.json  # 成对评审输出约束（winner A/B/tie）
 │   ├── audit_schema.json  # 标注审计输出约束（kept/revise/remove + missing）
 │   └── fixtures/
-│       ├── playwright_scaffold/   # E2E 固定执行环境（含 mock_app 被测应用 + 功能化 helpers）
+│       ├── playwright_scaffold/   # E2E 固定执行环境（mock_app 被测应用 + 功能化 helpers + chromium）
 │       └── mock_api/server.py     # API 固定执行环境（实现任务 OpenAPI 契约与业务规则）
 └── results/               # 归档：runs/{时间戳}/outputs|judge|pairwise|exec + metrics.json + report.md
 ```
@@ -48,6 +51,18 @@ python3 eval/harness/run_eval.py score --samples 3 --run-dir <同上>
 环境变量：`EVAL_WORKERS`（并发，默认 4）、`EVAL_JUDGE_SAMPLES`（judge 表决数，默认 3）、
 `EVAL_PAIR_SAMPLES`（成对评审采样对数，默认 2）、`EVAL_GEN/E2E/API_TIMEOUT`、`EVAL_E2E_PORT/EVAL_API_PORT`。
 
+## 缓存与断点续跑规则（重要）
+
+- `generate` / `judge` / `pairwise` / `exec` 均按文件缓存，成功即跳过；重跑同一命令只补失败项
+- **缓存不感知上游变更**：改了 annotation.json、judge prompt、judge 模型或 mock 应用/服务，必须先删除对应缓存（judge/、pairwise/、exec/ 下相关 json）再评分，否则结果是旧的
+- 失败的 judge/pairwise 文件会自动重试（ok=false 不算缓存命中）
+
+## 标注审计工作流（改 golden 集必走）
+
+1. 修改/新增 annotation 后：`python3 eval/harness/run_eval.py audit-annotations`（独立审计角色逐条给 kept/revise/remove + 遗漏项）
+2. 人工逐条复核 flagged 项：接受/拒绝都要有理由，连同修改写入 annotation 的 `audit` 字段（changes 列表）；可参考 tcw-export-noui 等任务的既有写法
+3. 删除该 run 目录 judge/ 下对应任务的缓存后重新 score
+
 ## 方法学（v2，对应行业主流实践）
 
 | 环节 | 做法 | 行业对应 |
@@ -67,3 +82,16 @@ python3 eval/harness/run_eval.py score --samples 3 --run-dir <同上>
 - **E2E mock 应用**（`fixtures/playwright_scaffold/mock_app/server.js`）：实现 e2e 任务"材料 3"的全部页面结构（登录 placeholder、新建/搜索/删除、`.project-card`、`GET /api/projects`），内存态、端口锁定（8931）；生成的 spec 若选择器与材料一致即可通过——**执行通过率度量的是"生成代码对真实系统的有效性"**
 - **脚手架 helpers** 为真实实现（非编译桩）：`LoginPage.loginAs` 真登录并等待跳转
 - **mock API**（`fixtures/mock_api/server.py`）：实现 api 任务 OpenAPI 全部契约（参数校验、错误码、鉴权、限领 409、名称唯一），内存态、端口 8932；兼容常见登录路径
+
+## 待补项（opencode 额度恢复后，各一条命令）
+
+```bash
+# 1) 异构 judge 复评（当前验证轮 judge 与生成同源，覆盖/质量/成对为保守估计）
+rm -rf eval/results/runs/<run>/judge eval/results/runs/<run>/pairwise
+EVAL_JUDGE_MODEL=oc:deepseek-v4-flash EVAL_PAIR_JUDGE_MODEL=oc:kimi-k3 \
+  python3 eval/harness/run_eval.py score --samples 3 --run-dir <run>
+
+# 2) G7 泛化：第二生成模型（产物文件自动带模型标签，score 自动分组出 G7）
+python3 eval/harness/run_eval.py generate --samples 2 --model oc:deepseek-v4-pro --run-dir <run>
+python3 eval/harness/run_eval.py score --samples 3 --run-dir <run>
+```

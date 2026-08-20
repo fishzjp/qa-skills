@@ -7,7 +7,7 @@
 - **报告问题**：在 Issue 中描述复现场景与预期行为。
 - **改进方法论**：各 skill 的工作流、检查表、模板都欢迎补充。改动请保持核心原则：一条用例只测一个点、代码优先（测准声明）、先澄清再动手、用例必须可执行（`core/executability.md`）、证据标注（`core/evidence.md`）。
 - **补充代码模板**：新增的 Page Object / Helper 模板请保持通用、不绑定具体业务，且不包含任何真实账号、URL 或内部信息。
-- **扩充黄金集**：`eval/golden/` 下新增任务（task.md + annotation.json，含人工标注的可测点清单），跑 harness 验证。
+- **扩充黄金集**：`eval/golden/` 下新增任务（task.md + annotation.json，可测点/检出项须材料可推导、不依赖 skill 知识）。**新增或修改标注后必须跑独立审计**：`python3 eval/harness/run_eval.py audit-annotations`，flagged 项人工逐条复核后将修改与理由记入 annotation 的 `audit` 字段——标注者不得既写标注又独立复核同一批内容。
 
 ## 架构红线（改 skill 前必读）
 
@@ -22,7 +22,10 @@
 - [ ] 未引入任何真实环境地址、账号、密钥、内部系统名
 - [ ] 改动后的 skill 仍符合 [Agent Skill 规范](https://docs.claude.com/en/docs/claude-code/skills)：每个 skill 有 `SKILL.md`，frontmatter 含 `name` 与 `description`
 - [ ] `wc -l <skill>/SKILL.md` ≤ 500；被引用的 references/core 文件存在且路径正确
-- [ ] 改动影响用例产出的，跑一遍 Benchmark：`python3 eval/harness/run_eval.py generate --tasks <相关任务>` + `score`，预期效果门（eval/EXPECTED.md）不回退
+- [ ] 改动影响用例产出的，跑一遍 Benchmark（多样本，断点续跑可重试失败项）：
+      `python3 eval/harness/run_eval.py generate --samples 3 --tasks <相关任务>` + `score --samples 3`；
+      判定标准以 [eval/EXPECTED.md](./eval/EXPECTED.md) 当前生效版本为准（v1.0 已冻结并完成验证轮判定，v1.1 提案见该文件）；**改过标注或 judge 配置的，先删除对应 judge/pairwise 缓存再评分**（缓存不感知上游变更）
+- [ ] 客观指标（可执行性 / 编译 / 真实执行 / 植入 bug 检出）不依赖 LLM judge，回退即拦截；judge 类指标回退需先排除同源宽容偏差（成对评审大量平局是信号）
 - [ ] 代码示例可独立运行，或已用占位符（如 `<你的测试环境地址>`）标注需替换处
 
 ## 许可证
