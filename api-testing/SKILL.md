@@ -31,15 +31,34 @@ api-tests/
 ```
 
 ```python
+# common/client.py —— 统一请求封装（requests.Session 不支持 base_url，必须显式拼接）
+class Client:
+    def __init__(self, base_url: str, token: str):
+        self.base_url = base_url.rstrip("/")
+        self.s = requests.Session()
+        self.s.headers.update({"Authorization": f"Bearer {token}"})
+
+    def request(self, method: str, path: str, **kwargs):
+        url = f"{self.base_url}/{path.lstrip('/')}"
+        kwargs.setdefault("timeout", 10)
+        return self.s.request(method, url, **kwargs)
+
+    def get(self, path, **kw):  return self.request("GET", path, **kw)
+    def post(self, path, **kw): return self.request("POST", path, **kw)
+    # put / delete / patch 同理扩展
+
+def login(user: str, password: str) -> str:
+    """按项目实际登录接口实现（如 POST /login 换 token）——占位，勿直接照抄"""
+    raise NotImplementedError("按项目登录接口实现")
+```
+
+```python
 # conftest.py 关键 fixture
 @pytest.fixture(scope="session")
 def client():
     base_url = os.environ["API_BASE_URL"]          # 环境与账号不硬编码，走环境变量
     token = login(os.environ["API_USER"], os.environ["API_PASSWORD"])
-    s = requests.Session()
-    s.headers.update({"Authorization": f"Bearer {token}"})
-    s.base_url = base_url
-    return s
+    return Client(base_url, token)
 ```
 
 > 敏感信息（账号/Token/环境地址）一律环境变量注入，不进代码仓库（与 `automated-e2e-testing` 的 constants 约定一致）。
@@ -85,7 +104,7 @@ pytest api-tests/test_coupon_create.py   # 单文件
 
 ### 5. 交付
 
-脚本路径 + 运行统计（通过/失败/跳过）+ Bug 条目 + 遗留问题清单。
+脚本路径 + 运行统计（§2 执行统计：P0/P1/P2 × 通过/失败/阻塞/未执行，按 `../core/report-template.md`）+ Bug 条目 + 遗留问题清单。
 
 ## Common Mistakes
 

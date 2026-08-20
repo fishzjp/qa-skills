@@ -35,7 +35,7 @@
 
 ## 4. 覆盖维度索引
 
-覆盖度检查的完整维度清单（19 维 + 横切可执行性）由 `test-case-writing/references/coverage.md` 维护，`test-strategy` 制定范围、`test-case-review` 独立审查时同样引用该清单。
+覆盖度检查的完整维度清单（19 维 + 横切可执行性）由 `test-case-writing/references/coverage.md` 维护，`test-case-review` 独立审查时同样引用该清单（`test-strategy` 的范围决策走 `core/risk-model.md` 的风险维度，不直接消费该清单）。
 
 ## 5. 引用方式
 

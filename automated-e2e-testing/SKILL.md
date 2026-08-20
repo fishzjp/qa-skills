@@ -28,7 +28,7 @@ description: 当需要将手动测试用例转为 Playwright E2E 测试并执行
 - 端到端测试整个需求（理解→策略→用例→执行→报告的流水线）→ 用 `qa` skill 编排
 - 编写手动测试用例 → 用 `test-case-writing` skill
 - 纯 API 接口测试（无 Web UI 流程）→ 用 `api-testing` skill
-- 以**理解系统 / 发现风险**为目的的独立探索式测试会话（charter 驱动、产出探索笔记）→ 用 `exploratory-testing` skill；本 skill 的工作流零只做**为写自动化踩点**的小规模探索
+- 以**理解系统 / 发现风险**为目的的独立探索式测试会话（charter 驱动、产出探索笔记）→ 用 `exploratory-testing` skill；本 skill 的工作流零只做「为写自动化踩点」的小规模探索
 - 已确认 Bug 的根因定位、影响分析、回归建议 → 用 `bug-analysis` skill；本 skill 只负责收集 Bug 证据（截图/API/控制台）并记录报告条目
 - 代码变更后判断回归范围 → 用 `regression-testing` skill
 - 单元测试 → 用 Jest/Vitest；性能压测 → 专业工具（k6、locust）；安全测试 → 安全审计专项（见 `test-strategy` 的 handoff 约定）
@@ -66,6 +66,15 @@ npm run test:headed               # 有头模式（可视观察）
 npx playwright test tests/{文件名}.spec.ts  # 运行单个文件
 npm run show-report               # 查看报告
 ```
+
+> 以上命令依赖 package.json 的 scripts 定义（新项目需配置）：
+> ```json
+> "scripts": {
+>   "test": "playwright test",
+>   "test:headed": "playwright test --headed",
+>   "show-report": "playwright show-report"
+> }
+> ```
 
 ### 环境与账号配置
 
@@ -210,7 +219,8 @@ test.describe('{模块名}', () => {
   });
 
   test.afterEach(async () => {
-    if (createdName) {
+    // beforeEach 可能登录失败导致 xxxPage 未初始化，同步判空防清理噪音
+    if (createdName && xxxPage) {
       await xxxPage.deleteXxx(createdName).catch(() => {});
     }
   });
@@ -376,13 +386,13 @@ test('测试中发现 Bug', async ({ page }, testInfo) => {
 
 ### Bug 报告格式
 
-记录在 `{项目名}/测试报告_{来源}_{日期}.md`，**字段与 `../core/report-template.md`（测试报告唯一来源模板）的 §3 Bug 清单保持一致**，保证条目可直接拼装进 `qa` 收尾的最终报告：
+记录在 `{项目名}/测试报告_{来源}_{日期}.md`，**字段与 `../core/report-template.md`（测试报告唯一来源模板）的 §3 Bug 清单保持一致**，保证条目可直接拼装进 `qa` 收尾的最终报告。执行分报告还需包含 §2 执行统计（P0/P1/P2 × 用例数/通过/失败/阻塞/未执行表，同样按 report-template）：
 
 ```markdown
 ### BUG-{序号}: {简要描述}
 
 - **严重程度**: P0 / P1 / P2
-- **发现方式**: 自动化测试 / 业务熟悉探索 / 手动执行 / 代码审查（Cx 转）
+- **发现方式**: 自动化测试 / 探索性测试 / 业务熟悉探索 / 手动执行 / 代码审查（Cx 转）
 - **复现步骤**:
   1. 以 {角色} 登录
   2. 进入 {页面} ({URL})
