@@ -2,7 +2,7 @@
   "task_id": "rev-flawed-cases",
   "skill": "test-case-review",
   "mode": "review",
-  "description": "审查带 10 处植入问题的用例文件：可执行性违规（占位符/模糊判定/无时限/断言超强度/正文代码/缺导读/缺入口）+ 覆盖缺口（幂等/每日限3次/积分清零/库存扣减）+ P0 泛滥",
+  "description": "审查带 15 处植入问题的用例文件：可执行性违规（占位符/模糊判定/无时限/断言超强度/正文代码/缺导读/缺入口）+ 覆盖缺口（幂等/每日限3次/积分清零/库存扣减）+ P0 泛滥",
   "skill_files_on": [
     "test-case-review/SKILL.md",
     "test-case-writing/references/templates.md",
@@ -14,7 +14,7 @@
   "planted_violations": [
     {
       "id": "V01",
-      "point": "可执行性缺陷：环境与账号信息完全缺失且无 TODO 指引——零上下文执行者无法开工（导读要素缺失）",
+      "point": "可执行性缺陷：环境与账号信息完全缺失且无 TODO/索取指引——零上下文执行者无法开工（导读要素缺失，任何等价的『开工前须知』结构均算检出）",
       "match_keywords": [
         "导读",
         "环境",
@@ -146,7 +146,7 @@
   "audit": {
     "audited_by": "independent-reviewer(role) via glm-5-2-260617 + 人工(作者)复核",
     "date": "2026-08-20",
-    "note": "审计一致率 0.90;flagged 项人工逐条复核后落地",
+    "note": "审计一致率 0.8462（12 任务均值 0.872）;flagged 项人工逐条复核后落地",
     "changes": [
       "V01 重述为执行性问题（审计建议 remove，人工复核拒绝：环境账号缺失是任何审查者应发现的执行性问题；采纳'非文档规范表述'意见）",
       "V04 重写",

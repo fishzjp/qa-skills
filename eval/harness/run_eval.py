@@ -11,7 +11,8 @@
   - 多样本生成：每任务×模式 n≥3 次独立采样，任务指标 = 均值 ± SD（量化生成方差）
   - 统计推断：On/Off 差值在任务层做配对 bootstrap（10k 次）报 95% CI；成对胜率报 Wilson 95% CI
   - 成对评审（pairwise）：On vs Off 同任务并排 + 位置互换，消除绝对打分的刻度校准噪声（MT-Bench/AlpacaEval 范式）
-  - LLM judge：3 采样多数表决 + JSON Schema 约束 + 固定 rubric；与被评同模型（当前 plan 仅此一个可用模型，
+  - LLM judge：3 采样多数表决 + JSON Schema 引导 + 本地校验（oc: 通道 schema 进 prompt；解析后本地做
+    GT-id 集合校验与分值域裁剪，幻觉 id 丢弃、漏项按未覆盖计）；与被评同模型（当前 plan 仅此一个可用模型，
     为已声明的限制，缓解 = pairwise + 位置互换 + 多数表决 + 标注独立审计）
   - 真实执行：E2E 产物跑真实浏览器（mock 被测应用 + chromium），API 产物跑真实 HTTP 服务（mock API + pytest），
     报 Execution Success Rate 与重跑稳定性（SWE-bench 式执行验证）
@@ -20,12 +21,14 @@
 """
 import argparse
 import concurrent.futures
+import hashlib
 import json
 import math
 import os
 import random
 import re
 import shutil
+import socket
 import statistics
 import subprocess
 import sys
@@ -39,13 +42,21 @@ REPO = Path(__file__).resolve().parents[2]
 GOLDEN = REPO / "eval" / "golden"
 RESULTS = REPO / "eval" / "results"
 
-# .env（不入 git）加载：OPENCODE_GO_KEY 等
+# .env（不入 git）加载：OPENCODE_GO_KEY 等。支持引号值 / export 前缀 / 行内注释
 _env_file = REPO / ".env"
 if _env_file.exists():
     for line in _env_file.read_text().splitlines():
-        if "=" in line and not line.strip().startswith("#"):
-            k, v = line.split("=", 1)
-            os.environ.setdefault(k.strip(), v.strip())
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        k = k.removeprefix("export").strip()
+        v = v.strip()
+        if len(v) >= 2 and v[0] == v[-1] and v[0] in "\"'":
+            v = v[1:-1]
+        elif " #" in v:
+            v = v.split(" #", 1)[0].rstrip()
+        os.environ.setdefault(k, v)
 
 import requests as _requests  # noqa: E402
 
@@ -61,10 +72,20 @@ MAX_OUTPUT_TOKENS = 32768
 WORKERS = int(os.environ.get("EVAL_WORKERS", "4"))
 JUDGE_SAMPLES = int(os.environ.get("EVAL_JUDGE_SAMPLES", "3"))
 BOOTSTRAP_N = 10000
+BOOTSTRAP_SEED = 42
+E2E_RUN_TIMEOUT = int(os.environ.get("EVAL_E2E_RUN_TIMEOUT", "600"))  # 单次 playwright 全量运行预算
+API_RUN_TIMEOUT = int(os.environ.get("EVAL_API_RUN_TIMEOUT", "600"))  # 单次 pytest 全量运行预算
+EXEC_WEIGHT_CLEAN = 0.5    # 可执行性 = clean_ratio 与 guide_score 的权重（其余给 guide）
+EXEC_VETO_CLEAN = 0.5      # clean_ratio 低于此值触发一票否决
+JUDGE_TEXT_TRUNC = 60000   # judge 读取产物的截断长度
+PAIR_TEXT_TRUNC = 45000    # pairwise 读取产物的截断长度
+STATE_TASK = "tcw-order-state"      # G1b 状态机敏感任务
+BUG_TASK = "tcw-user-delete-code"   # G3 植入 bug 检出任务
+EXEC_TASK_FAMS = ("e2e", "api")     # 参与编译/真实执行检查的任务族（按任务名前缀，避免硬编码任务名）
 
 DETECTION_KEYS = ["known_bugs", "planted_violations", "expected_issues", "expected_risks",
                   "expected_findings", "expected_selections"]
-TCW_PREFIXES = ("tcw-", "rev-")
+TCW_PREFIXES = ("tcw-", "rev-")  # "tcw 类"任务 = 用例编写 + 用例审查（G2 口径）
 
 PERSONA_OFF = (
     "你是一名资深软件测试工程师。请阅读用户提供的任务与材料，完成任务的最终产出。"
@@ -81,11 +102,12 @@ EVAL_PREAMBLE = """【交付约定（评测模式）】
 GATES = {
     "G1_tcw_cov_mean": {"desc": "tcw 类有效覆盖均值差 ≥ +5pp 且 bootstrap 95%CI 下界 > 0", "min_diff": 0.05},
     "G1_state_cov": {"desc": "状态机任务有效覆盖差 ≥ +20pp", "min_diff": 0.20},
-    "G2_exec": {"desc": "tcw 类 On 可执行性均值 ≥ 0.85", "min": 0.85},
+    "G2_exec": {"desc": "tcw 类（tcw-/rev- 前缀）On 可执行性均值 ≥ 0.85", "min": 0.85},
     "G3_bug": {"desc": "代码任务 bug 检出 On ≥ 75%", "min": 0.75},
     "G4_compile": {"desc": "代码类任务 On 编译通过率 100%", "min": 1.0},
-    "G5_quality": {"desc": "质量均分 On ≥ 0.80 且 > Off", "min": 0.80},
-    "G6_no_regression": {"desc": "On 在 ≥ 2/3 可比任务上不劣于 Off（-10pp 容差）", "min_ratio": 2 / 3},
+    "G5_quality": {"desc": "质量均分 On ≥ 0.80 且 > Off（配对数据缺失时判 FAIL，不默认通过）", "min": 0.80},
+    "G6_no_regression": {"desc": "On 在 ≥ 2/3 可比任务上有效覆盖（主指标）不劣于 Off（-10pp 容差）",
+                         "min_ratio": 2 / 3},
 }
 OBSERVATIONAL = ["G-X1 执行成功率(E2E/API 真实执行)", "G-X2 成对胜率(pairwise)",
                  "G-X3 生成方差(SD)", "G-X4 Efficiency(用例数/重复率/tokens)"]
@@ -94,6 +116,49 @@ OBSERVATIONAL = ["G-X1 执行成功率(E2E/API 真实执行)", "G-X2 成对胜�
 # ---------------------------------------------------------------- 基础设施
 def sh(cmd, timeout=None, cwd=None, env=None):
     return subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, cwd=cwd, env=env)
+
+
+def git_commit():
+    try:
+        r = subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=REPO)
+        return r.stdout.strip() if r.returncode == 0 else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _port_in_use(port):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        return s.connect_ex(("127.0.0.1", port)) == 0
+
+
+def wait_http_ready(url, timeout=20.0):
+    """轮询等待 mock 服务就绪（任何 <500 的响应都算进程活着）。"""
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            r = _requests.get(url, timeout=2)
+            if r.status_code < 500:
+                return True
+        except Exception:  # noqa: BLE001
+            pass
+        time.sleep(0.4)
+    return False
+
+
+def start_mock_server(cmd, cwd, port, extra_env=None, ready_path="/"):
+    """启动 mock 服务并探测就绪；失败返回 (None, 错误说明)——环境错误不得计入指标。"""
+    if _port_in_use(port):
+        return None, f"environment error: port {port} already in use"
+    try:
+        server = subprocess.Popen(cmd, cwd=cwd, stdout=subprocess.DEVNULL,
+                                  stderr=subprocess.DEVNULL,
+                                  env={**os.environ, **(extra_env or {})})
+    except OSError as e:
+        return None, f"environment error: cannot start {cmd[0]} ({e})"
+    if not wait_http_ready(f"http://127.0.0.1:{port}{ready_path}", timeout=20):
+        server.terminate()
+        return None, f"environment error: mock server on :{port} not ready in 20s"
+    return server, None
 
 
 def load_task(task_dir: Path):
@@ -106,6 +171,10 @@ def call_model(prompt, instructions=None, model=None, timeout=900, max_tokens=MA
                schema_path=None, temperature=None, thinking=None, retries=2):
     """模型路由：`oc:NAME` 走 opencode Zen（OpenAI 兼容），其余走 arkcli +chat。"""
     model = model or GEN_MODEL
+    if instructions and not model.startswith("oc:") and len(instructions) > 120_000:
+        # arkcli 通道 instructions 走 argv，超长有 E2BIG 风险（且会出现在进程列表）
+        return {"ok": False, "error": f"instructions {len(instructions)} 字符超出 argv 安全上限；"
+                                      f"请改用 oc: 模型或缩减 skill 文件"}
     if model.startswith("oc:"):
         return _call_opencode(prompt, instructions, model[3:], timeout, max_tokens,
                               schema_path, temperature, retries)
@@ -139,6 +208,8 @@ def call_model(prompt, instructions=None, model=None, timeout=900, max_tokens=MA
 
 
 def _call_opencode(prompt, instructions, model, timeout, max_tokens, schema_path, temperature, retries):
+    if temperature:
+        print("[warn] oc: 通道不支持 temperature，已忽略（方差由多采样表决吸收）", file=sys.stderr)
     key = os.environ.get("OPENCODE_GO_KEY", "")
     headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
     messages = []
@@ -394,15 +465,37 @@ def check_executability(text):
     }
     guide_score = sum(guide.values()) / 4
     clean_ratio = (len(cases) - dirty) / len(cases) if cases else 1.0
-    exec_score = round(0.5 * clean_ratio + 0.5 * guide_score, 4) if cases else None
+    exec_score = round(EXEC_WEIGHT_CLEAN * clean_ratio + (1 - EXEC_WEIGHT_CLEAN) * guide_score, 4) if cases else None
+    # 无格式依赖的内容违规密度（On/Off 同尺：不依赖 TC 编号与导读四件套）
+    async_bad = [l for l in text.splitlines()
+                 if ("自动" in l or "异步" in l or "稍后" in l) and "预期" in l and not TIME_UNITS.search(l)]
+    content_violations = {
+        "placeholder": len(PLACEHOLDER.findall(text)) + len(FUZZ_WORDS.findall(text)),
+        "vague": len(VAGUE.findall(text)),
+        "code_leak": len(CODE_LOC.findall(text)),
+        "no_time_limit": len(async_bad),
+    }
     return {"n_cases": len(cases), "n_dirty": dirty, "clean_ratio": round(clean_ratio, 4),
             "guide_score": round(guide_score, 4), "exec_score": exec_score,
-            "veto": bool(cases and clean_ratio < 0.5),
-            "dup_titles": dup, "dup_rate": round(dup / len(cases), 4) if cases else 0.0}
+            "veto": bool(cases and clean_ratio < EXEC_VETO_CLEAN),
+            "dup_titles": dup, "dup_rate": round(dup / len(cases), 4) if cases else 0.0,
+            "content_violations": content_violations}
 
 
 CODE_BLOCK = re.compile(r"^```(\w*)\s*$", re.M)
 FILE_HINT = re.compile(r"([\w./-]+\.(?:py|ts|tsx|js))")
+
+
+def _looks_like_lang(code, lang):
+    """无语言标注的围栏按内容启发式识别（防把无标注代码块整体漏判为"无代码"）。"""
+    if lang == "python":
+        return bool(re.search(r"^\s*(def\s|class\s|import\s|from\s+\S+\s+import|@\w|assert\s|print\()", code, re.M))
+    return bool(re.search(r"^\s*(import\s|export\s|const\s|let\s|describe\(|test\(|it\(|page\.)", code, re.M))
+
+
+def code_hash8(code):
+    """确定性短哈希（内置 hash() 受 PYTHONHASHSEED 影响，跨进程不稳定）。"""
+    return int(hashlib.md5(code.encode()).hexdigest()[:8], 16) % 9999
 
 
 def extract_code_blocks(text, lang):
@@ -412,22 +505,24 @@ def extract_code_blocks(text, lang):
     i = 0
     while i < len(lines):
         m = re.match(r"^```(\w*)\s*$", lines[i])
-        if m and m.group(1) == lang:
+        if m:
+            tag = m.group(1)
             j, buf = i + 1, []
             while j < len(lines) and not lines[j].startswith("```"):
                 buf.append(lines[j])
                 j += 1
             code = "\n".join(buf)
-            first = code.splitlines()[0] if code.splitlines() else ""
-            inner = FILE_HINT.search(first)
-            blocks.append({"file": pending_file or (inner.group(1) if inner else None), "code": code})
-            i = j + 1
-            pending_file = None
-        else:
-            hint = FILE_HINT.search(lines[i])
-            if hint and len(lines[i]) < 120:
-                pending_file = hint.group(1)
-            i += 1
+            if tag == lang or (not tag and _looks_like_lang(code, lang)):
+                first = code.splitlines()[0] if code.splitlines() else ""
+                inner = FILE_HINT.search(first)
+                blocks.append({"file": pending_file or (inner.group(1) if inner else None), "code": code})
+                i = j + 1
+                pending_file = None
+                continue
+        hint = FILE_HINT.search(lines[i])
+        if hint and len(lines[i]) < 120:
+            pending_file = hint.group(1)
+        i += 1
     return blocks
 
 
@@ -441,9 +536,7 @@ def check_python_compile(text):
             compile(b["code"], b["file"] or "<block>", "exec")
         except SyntaxError as e:
             errors.append(f"{b['file']}: {e}")
-    return {"compile_pass": not errors, "n_blocks": len(blocks), "errors": errors,
-            "env_injected": ("os.environ" in text or "getenv" in text),
-            "assert_depth": bool(re.search(r"\.json\(\)", text))}
+    return {"compile_pass": not errors, "n_blocks": len(blocks), "errors": errors}
 
 
 SCAFFOLD = REPO / "eval/harness" / "fixtures" / "playwright_scaffold"
@@ -465,7 +558,7 @@ def write_ts_project(text):
     spec_text = ""
     written = []
     for b in blocks:
-        name = (b["file"] or f"gen_{abs(hash(b['code'])) % 9999}.spec.ts").lstrip("/")
+        name = (b["file"] or f"gen_{code_hash8(b['code'])}.spec.ts").lstrip("/")
         if "tests/" in name:
             name = name[name.index("tests/"):]
         target = proj / name if name.startswith("tests/") else proj / "tests" / Path(name).name
@@ -523,16 +616,20 @@ def exec_e2e(text, runs=2):
         if not (SCAFFOLD / "node_modules" / ".browser-installed").exists():
             return {"exec_ok": False, "detail": "chromium not installed — run setup-e2e"}
         with EXEC_LOCK:
-            server = subprocess.Popen(["node", "mock_app/server.js"], cwd=SCAFFOLD,
-                                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                                      env={**os.environ, "E2E_PORT": str(E2E_PORT)})
-            time.sleep(1.2)
+            server, err = start_mock_server(["node", "mock_app/server.js"], SCAFFOLD, E2E_PORT,
+                                            extra_env={"E2E_PORT": str(E2E_PORT)})
+            if err:
+                return {"exec_ok": False, "detail": err}
             results = []
             for _ in range(runs):
-                r = sh(["./node_modules/.bin/playwright", "test", "--reporter=json"],
-                       timeout=300, cwd=proj,
-                       env={**os.environ, "TEST_BASE_URL": f"http://127.0.0.1:{E2E_PORT}",
-                            "ADMIN_USER": "admin", "ADMIN_PASS": "pass"})
+                try:
+                    r = sh(["./node_modules/.bin/playwright", "test", "--reporter=json"],
+                           timeout=E2E_RUN_TIMEOUT, cwd=proj,
+                           env={**os.environ, "TEST_BASE_URL": f"http://127.0.0.1:{E2E_PORT}",
+                                "ADMIN_USER": "admin", "ADMIN_PASS": "pass"})
+                except subprocess.TimeoutExpired:
+                    results.append({"passed": 0, "failed": 0, "total": 0, "timeout": True})
+                    continue
                 m = re.search(r'\{.*\}', r.stdout, re.S)
                 passed = failed = 0
                 if m:
@@ -566,15 +663,16 @@ def exec_e2e(text, runs=2):
 
 
 def exec_api(text, runs=1):
-    """真实执行：起 mock API 服务跑生成的 pytest。"""
+    """真实执行：起 mock API 服务跑生成的 pytest（runs>1 时多次运行并报稳定性）。"""
     proj_dir = Path(tempfile.mkdtemp(prefix="api_exec_"))
     server = None
+    r = None
     try:
         blocks = extract_code_blocks(text, "python")
         if not blocks:
             return {"exec_ok": False, "detail": "no python code blocks"}
         for b in blocks:
-            name = (b["file"] or f"test_gen_{abs(hash(b['code'])) % 9999}.py").lstrip("/").lstrip("./")
+            name = (b["file"] or f"test_gen_{code_hash8(b['code'])}.py").lstrip("/").lstrip("./")
             # 归一化工程前缀并保留包目录结构（common/ 等子包依赖相对布局）
             for prefix in ("api-tests/", "api_tests/", "tests/"):
                 if name.startswith(prefix):
@@ -586,29 +684,41 @@ def exec_api(text, runs=1):
         pytest_ini = proj_dir / "pytest.ini"
         pytest_ini.write_text("[pytest]\nasyncio_mode = auto\n")
         with EXEC_LOCK:
-            server = subprocess.Popen([sys.executable, str(REPO / "eval/harness/fixtures/mock_api/server.py")],
-                                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                                      env={**os.environ, "API_PORT": str(API_PORT)})
-            time.sleep(1.0)
-            r = sh([sys.executable, "-m", "pytest", "-q", "--junitxml=junit.xml", "-p", "no:cacheprovider"],
-                   timeout=600, cwd=proj_dir,
-                   env={**os.environ, "API_BASE_URL": f"http://127.0.0.1:{API_PORT}",
-                        "API_USER": "admin", "API_PASSWORD": "pass",
-                        "PYTHONPATH": str(proj_dir)})
-            junit = proj_dir / "junit.xml"
-            total = failed = 0
-            if junit.exists():
-                x = junit.read_text()
-                m_total = re.search(r'tests="(\d+)"', x)
-                m_fail = re.search(r'failures="(\d+)"', x)
-                m_err = re.search(r'errors="(\d+)"', x)
-                if m_total:
-                    total = int(m_total.group(1))
-                    failed = int(m_fail.group(1) if m_fail else 0) + int(m_err.group(1) if m_err else 0)
+            server, err = start_mock_server(
+                [sys.executable, str(REPO / "eval/harness/fixtures/mock_api/server.py")],
+                None, API_PORT, extra_env={"API_PORT": str(API_PORT)})
+            if err:
+                return {"exec_ok": False, "detail": err}
+            results = []
+            for _ in range(runs):
+                try:
+                    r = sh([sys.executable, "-m", "pytest", "-q", "--junitxml=junit.xml", "-p", "no:cacheprovider"],
+                           timeout=API_RUN_TIMEOUT, cwd=proj_dir,
+                           env={**os.environ, "API_BASE_URL": f"http://127.0.0.1:{API_PORT}",
+                                "API_USER": "admin", "API_PASSWORD": "pass",
+                                "PYTHONPATH": str(proj_dir)})
+                except subprocess.TimeoutExpired:
+                    results.append({"n_tests": 0, "n_failed": 0, "timeout": True})
+                    continue
+                junit = proj_dir / "junit.xml"
+                total = failed = 0
+                if junit.exists():
+                    x = junit.read_text()
+                    m_total = re.search(r'tests="(\d+)"', x)
+                    m_fail = re.search(r'failures="(\d+)"', x)
+                    m_err = re.search(r'errors="(\d+)"', x)
+                    if m_total:
+                        total = int(m_total.group(1))
+                        failed = int(m_fail.group(1) if m_fail else 0) + int(m_err.group(1) if m_err else 0)
+                results.append({"n_tests": total, "n_failed": failed})
+            total = sum(x["n_tests"] for x in results)
+            failed = sum(x["n_failed"] for x in results)
             passed = total - failed
+            stable = len({(x["n_tests"], x["n_failed"]) for x in results}) == 1
             return {"exec_ok": True, "pass_rate": round(passed / total, 4) if total else 0.0,
-                    "n_tests": total, "n_failed": failed,
-                    "raw_tail": (r.stdout or r.stderr)[-500:] if failed else ""}
+                    "n_tests": total, "n_failed": failed, "stable_across_runs": stable,
+                    "runs": results,
+                    "raw_tail": (r.stdout or r.stderr)[-500:] if (r is not None and failed) else ""}
     finally:
         if server:
             server.terminate()
@@ -622,11 +732,11 @@ def exec_api(text, runs=1):
 def objective_checks(task_id, text):
     fam = task_id.split("-")[0]
     out = {}
-    if fam == "tcw" or task_id.startswith("rev-"):
+    if task_id.startswith(TCW_PREFIXES):
         out["executability"] = check_executability(text)
     if fam == "api":
         out.update(check_python_compile(text))
-    if fam == "e2e":
+    elif fam == "e2e":
         out.update(check_ts_compile(text))
     return out
 
@@ -691,6 +801,20 @@ def merge_judge_samples(samples):
             "quality": quality, "notes": samples[0].get("notes", "") if samples else ""}
 
 
+def sanitize_judge(data, gt_point_ids, gt_detect_ids):
+    """本地校验（弥补 oc: 通道 schema 仅进 prompt）：丢弃 GT 外的幻觉 id；裁剪越界分值到 0-5。"""
+    pts = [p for p in data.get("point_results", []) if p.get("id") in gt_point_ids]
+    dts = [d for d in data.get("detection_results", []) if d.get("id") in gt_detect_ids]
+    q = {}
+    for k, v in (data.get("quality") or {}).items():
+        try:
+            q[k] = max(0.0, min(5.0, float(v)))
+        except (TypeError, ValueError):
+            pass
+    return {"point_results": pts, "detection_results": dts, "quality": q,
+            "notes": data.get("notes", "")}
+
+
 def judge_sample(task_name, mode, sample, run_dir, tag=""):
     ann, _ = load_task(GOLDEN / task_name)
     out_file = run_dir / "outputs" / f"{task_name}__{mode}__s{sample}{tag}.md"
@@ -708,10 +832,12 @@ def judge_sample(task_name, mode, sample, run_dir, tag=""):
         "detections": [{"id": d["id"],
                         "point": d.get("point") or d.get("case") or d.get("desc", ""),
                         **({"bucket": d["bucket"]} if "bucket" in d else {})} for d in detections],
-        "agent_output": out_file.read_text()[:60000],
+        "agent_output": out_file.read_text()[:JUDGE_TEXT_TRUNC],
     }
     prompt = JUDGE_PROMPT + "\n\n## 黄金标准与待评审产出（JSON）\n```json\n" + \
         json.dumps(payload, ensure_ascii=False, indent=1) + "\n```"
+    gt_point_ids = {p["id"] for p in gt_points}
+    gt_detect_ids = {d["id"] for d in detections}
     samples = []
     for _ in range(JUDGE_SAMPLES):
         r = call_model(prompt, model=JUDGE_MODEL, timeout=JUDGE_TIMEOUT, max_tokens=16384,
@@ -719,13 +845,13 @@ def judge_sample(task_name, mode, sample, run_dir, tag=""):
         if r["ok"]:
             d = normalize_judge_json(r["content"])
             if d:
-                samples.append(d)
+                samples.append(sanitize_judge(d, gt_point_ids, gt_detect_ids))
     jf.parent.mkdir(parents=True, exist_ok=True)
     if not samples:
         jf.write_text(json.dumps({"ok": False, "error": "all judge samples failed"}, ensure_ascii=False))
         return (task_name, mode, sample, "FAIL: judge")
     merged = merge_judge_samples(samples)
-    merged.update({"ok": True, "n_samples": len(samples)})
+    merged.update({"ok": True, "n_samples": len(samples), "low_quorum": len(samples) < 2})
     jf.write_text(json.dumps(merged, ensure_ascii=False, indent=2))
     return (task_name, mode, sample, "ok")
 
@@ -751,7 +877,7 @@ def judge_pair(task_name, sample, run_dir):
     if jf.exists() and json.loads(jf.read_text()).get("ok"):
         return (task_name, sample, "cached")
     ann, _ = load_task(GOLDEN / task_name)
-    on_txt, off_txt = a_file.read_text()[:45000], b_file.read_text()[:45000]
+    on_txt, off_txt = a_file.read_text()[:PAIR_TEXT_TRUNC], b_file.read_text()[:PAIR_TEXT_TRUNC]
 
     def one_round(first_name, first_txt, second_name, second_txt):
         payload = {"task": ann.get("description", task_name),
@@ -777,7 +903,7 @@ def judge_pair(task_name, sample, run_dir):
             return None
         return {"winner": w, "reason": str(d.get("reason") or d.get("justification") or "")[:300]}
 
-    # 第一轮：On 放 A；第二轮：On 放 B（位置互换，消位置偏差）
+    # 第一轮：On 放 A；第二轮：On 放 B（位置互换，消位置偏差；两轮都留完整判决便于事后审计）
     r1 = one_round("A", on_txt, "B", off_txt)
     r2 = one_round("B", off_txt, "A", on_txt)
     jf.parent.mkdir(parents=True, exist_ok=True)
@@ -787,13 +913,13 @@ def judge_pair(task_name, sample, run_dir):
     w1 = "on" if r1["winner"] == "A" else ("off" if r1["winner"] == "B" else "tie")
     w2 = "on" if r2["winner"] == "B" else ("off" if r2["winner"] == "A" else "tie")
     consistent = w1 if w1 == w2 else "tie"
-    jf.write_text(json.dumps({"ok": True, "round1": r1, "round2": w2, "result": consistent,
+    jf.write_text(json.dumps({"ok": True, "round1": r1, "round2": r2, "result": consistent,
                               "position_consistent": w1 == w2}, ensure_ascii=False, indent=2))
     return (task_name, sample, consistent)
 
 
 # ---------------------------------------------------------------- 统计
-def paired_bootstrap_ci(diffs, n=BOOTSTRAP_N, seed=42, alpha=0.05):
+def paired_bootstrap_ci(diffs, n=BOOTSTRAP_N, seed=BOOTSTRAP_SEED, alpha=0.05):
     """任务层配对 bootstrap：对差值列表重采样，返回 (mean, lo, hi)。"""
     if not diffs:
         return None, None, None
@@ -804,8 +930,8 @@ def paired_bootstrap_ci(diffs, n=BOOTSTRAP_N, seed=42, alpha=0.05):
         sample = [diffs[rng.randrange(k)] for _ in range(k)]
         means.append(sum(sample) / k)
     means.sort()
-    lo = means[int(alpha / 2 * n)]
-    hi = means[int((1 - alpha / 2) * n) - 1]
+    lo = means[int(alpha / 2 * (n - 1))]
+    hi = means[int((1 - alpha / 2) * (n - 1))]
     return sum(diffs) / k, lo, hi
 
 
@@ -862,6 +988,10 @@ def phase_score(run_dir, samples=3):
     def build_rows(tag):
         rows = {}
         for t in task_names:
+            ann, _ = load_task(GOLDEN / t)
+            # 分母固定为 GT 点集：judge 漏报的 id 按未覆盖计（judge 幻觉 id 已在评分入口丢弃）
+            gt_pt_ids = {p["id"] for p in ann.get("testable_points", [])}
+            gt_dt_ids = {d["id"] for k in DETECTION_KEYS for d in ann.get(k, [])}
             for m in ("on", "off"):
                 per_sample = []
                 for s in range(samples):
@@ -876,8 +1006,14 @@ def phase_score(run_dir, samples=3):
                         if j.get("ok"):
                             pts = j.get("point_results", [])
                             dts = j.get("detection_results", [])
-                            entry["coverage"] = round(sum(1 for p in pts if p.get("covered")) / len(pts), 4) if pts else None
-                            entry["detection"] = round(sum(1 for d in dts if d.get("detected")) / len(dts), 4) if dts else None
+                            if gt_pt_ids:
+                                covered = {p.get("id") for p in pts if p.get("covered")}
+                                entry["coverage"] = round(len(covered & gt_pt_ids) / len(gt_pt_ids), 4)
+                                entry["judge_missing_points"] = len(gt_pt_ids - {p.get("id") for p in pts})
+                            if gt_dt_ids:
+                                detected = {d.get("id") for d in dts if d.get("detected")}
+                                entry["detection"] = round(len(detected & gt_dt_ids) / len(gt_dt_ids), 4)
+                                entry["judge_missing_detections"] = len(gt_dt_ids - {d.get("id") for d in dts})
                             q = j.get("quality", {})
                             entry["quality"] = round(sum(q.get(k, 0) for k in
                                                          ("correctness", "specificity", "actionability")) / 15, 4)
@@ -904,10 +1040,11 @@ def phase_score(run_dir, samples=3):
 
     rows = build_rows("")
 
-    # 真实执行（主模型）
-    print("[score] 真实执行（E2E 浏览器 / API 服务）...")
+    # 真实执行（主模型）——任务按前缀发现；单任务环境异常不炸整轮统计；仅缓存成功结果
+    exec_tasks = [t for t in task_names if t.split("-")[0] in EXEC_TASK_FAMS]
+    print(f"[score] 真实执行（E2E 浏览器 / API 服务）：{exec_tasks}")
     exec_results = {}
-    for t in ("e2e-markmap-to-spec", "api-openapi-coupon"):
+    for t in exec_tasks:
         for m in ("on", "off"):
             for s in range(samples):
                 out_f = run_dir / "outputs" / f"{t}__{m}__s{s}.md"
@@ -915,13 +1052,18 @@ def phase_score(run_dir, samples=3):
                 if not out_f.exists():
                     continue
                 if ef.exists():
-                    exec_results[f"{t}__{m}__s{s}"] = json.loads(ef.read_text())
-                    continue
-                r = exec_e2e(out_f.read_text()) if t.startswith("e2e") else exec_api(out_f.read_text())
+                    d = json.loads(ef.read_text())
+                    if d.get("exec_ok"):
+                        exec_results[f"{t}__{m}__s{s}"] = d
+                        continue
+                try:
+                    r = exec_e2e(out_f.read_text()) if t.startswith("e2e") else exec_api(out_f.read_text())
+                except Exception as e:  # noqa: BLE001
+                    r = {"exec_ok": False, "detail": f"environment error: {repr(e)[:200]}"}
                 ef.parent.mkdir(parents=True, exist_ok=True)
                 ef.write_text(json.dumps(r, ensure_ascii=False, indent=2))
                 exec_results[f"{t}__{m}__s{s}"] = r
-                print(f"  exec {t} {m} s{s}: pass_rate={r.get('pass_rate')}")
+                print(f"  exec {t} {m} s{s}: pass_rate={r.get('pass_rate', r.get('detail'))}")
 
     # 成对统计
     pair_stats = {}
@@ -952,10 +1094,13 @@ def phase_score(run_dir, samples=3):
                              round(on_m, 4) if on_m is not None else None)
         if diffs:
             mean, lo, hi = paired_bootstrap_ci(diffs)
+            # on/off 均值一律取配对任务集（与 mean_diff 同口径），非配对任务单独计数
+            paired = [v for v in detail.values() if v[0] is not None and v[1] is not None]
             return {"mean_diff": round(mean, 4), "ci95": [round(lo, 4), round(hi, 4)],
                     "n_tasks": len(diffs), "detail": detail,
-                    "on_avg": round(statistics.mean([v[1] for v in detail.values() if v[1] is not None]), 4),
-                    "off_avg": round(statistics.mean([v[0] for v in detail.values() if v[0] is not None]), 4)}
+                    "on_avg": round(statistics.mean([v[1] for v in paired]), 4) if paired else None,
+                    "off_avg": round(statistics.mean([v[0] for v in paired]), 4) if paired else None,
+                    "n_unpaired": len(detail) - len(paired)}
         return {"detail": detail}
 
     stats = {
@@ -968,32 +1113,53 @@ def phase_score(run_dir, samples=3):
                   "off": sum(v["off"] for v in pair_stats.values()),
                   "tie": sum(v["tie"] for v in pair_stats.values()),
                   "n": sum(v["n"] for v in pair_stats.values())}
-    if pair_total["n"]:
-        score_on = pair_total["on"] + 0.5 * pair_total["tie"]
-        stats["pairwise"] = {"win_rate_on": round(score_on / pair_total["n"], 4),
-                             "wilson95": [round(x, 4) for x in wilson_ci(score_on, pair_total["n"])],
-                             **pair_total}
+    # Wilson CI 按任务层计算（任务内多对先聚合，避免同任务样本伪重复收窄区间）
+    task_scores = [(v["on"] + 0.5 * v["tie"]) / v["n"] for v in pair_stats.values()]
+    if task_scores:
+        score_on = sum(task_scores)
+        n_tasks_p = len(task_scores)
+        p, plo, phi = wilson_ci(score_on, n_tasks_p)
+        stats["pairwise"] = {"win_rate_on": round(score_on / n_tasks_p, 4),
+                             "wilson95": [round(p, 4), round(plo, 4), round(phi, 4)],
+                             **pair_total, "n_tasks": n_tasks_p,
+                             "ci_unit": "task"}
     ex_vals_on, ex_vals_off = [], []
+    content_viol = {"on": [], "off": []}
+    n_no_format = {"on": 0, "off": 0}
     for t in task_names:
         if not t.startswith(TCW_PREFIXES):
             continue
-        for m, arr in (("on", ex_vals_on), ("off", ex_vals_off)):
-            vals = [e.get("objective", {}).get("executability", {}).get("exec_score")
-                    for e in rows[f"{t}__{m}"]]
-            vals = [v for v in vals if v is not None]
+        for m in ("on", "off"):
+            vals = []
+            for e in rows[f"{t}__{m}"]:
+                ex = (e.get("objective") or {}).get("executability")
+                if ex is None:
+                    continue  # 该采样无输出文件（生成失败），不进分母
+                if ex.get("exec_score") is None:
+                    # 产出存在但未采用 TC 编号体系 → 计 0 并显式计数（不再静默剔除分母）
+                    vals.append(0.0)
+                    n_no_format[m] += 1
+                else:
+                    vals.append(ex["exec_score"])
+                cv = ex.get("content_violations")
+                if cv is not None:
+                    content_viol[m].append(sum(cv.values()))
             if vals:
-                arr.append(statistics.mean(vals))
+                (ex_vals_on if m == "on" else ex_vals_off).append(statistics.mean(vals))
     stats["executability_on"] = round(statistics.mean(ex_vals_on), 4) if ex_vals_on else None
     stats["executability_off"] = round(statistics.mean(ex_vals_off), 4) if ex_vals_off else None
-    stats["bug_detection_on"] = task_metric(rows, "tcw-user-delete-code", "on", "detection")[0]
+    stats["executability_zero_samples"] = n_no_format
+    stats["content_violations"] = {m: round(statistics.mean(v), 2) if v else None
+                                   for m, v in content_viol.items()}
+    stats["bug_detection_on"] = task_metric(rows, BUG_TASK, "on", "detection")[0]
     compile_results = {}
-    for t in ("api-openapi-coupon", "e2e-markmap-to-spec"):
+    for t in exec_tasks:
         vals = [1.0 if (e.get("objective") or {}).get("compile_pass") is True else 0.0
                 for e in rows[f"{t}__on"]]
         compile_results[t] = round(statistics.mean(vals), 4) if vals else None
     stats["compile_on"] = compile_results
     exec_agg = {}
-    for t in ("e2e-markmap-to-spec", "api-openapi-coupon"):
+    for t in exec_tasks:
         for m in ("on", "off"):
             rates = [v.get("pass_rate") for k, v in exec_results.items()
                      if k.startswith(f"{t}__{m}__s") and v.get("pass_rate") is not None]
@@ -1059,10 +1225,17 @@ def phase_score(run_dir, samples=3):
 
     gates = evaluate_gates(stats, task_names, rows, task_metric)
     report = build_report(run_dir, task_names, rows, task_metric, stats, gates, pair_stats, samples)
+    config = {
+        "gen_model": GEN_MODEL, "judge_model": JUDGE_MODEL,
+        "pair_judge_model": PAIR_JUDGE_MODEL, "audit_model": AUDIT_MODEL,
+        "samples": samples, "judge_samples": JUDGE_SAMPLES, "pair_samples": pair_samples,
+        "bootstrap": {"n": BOOTSTRAP_N, "seed": BOOTSTRAP_SEED, "alpha": 0.05},
+        "workers": WORKERS, "gen_timeout": GENERATE_TIMEOUT, "judge_timeout": JUDGE_TIMEOUT,
+        "git_commit": git_commit(),
+    }
     (run_dir / "metrics.json").write_text(json.dumps(
-        {"rows": rows, "stats": stats, "gates": gates, "pair_stats": pair_stats,
-         "gen_model": GEN_MODEL, "judge_model": JUDGE_MODEL, "samples": samples,
-         "judge_samples": JUDGE_SAMPLES}, ensure_ascii=False, indent=2))
+        {"rows": rows, "stats": stats, "gates": gates, "pair_stats": pair_stats, **config},
+        ensure_ascii=False, indent=2))
     (run_dir / "report.md").write_text(report)
     (RESULTS / "LATEST.md").write_text(report)
     print(report)
@@ -1077,7 +1250,7 @@ def evaluate_gates(stats, task_names, rows, task_metric):
         "pass": ec.get("mean_diff") is not None and ec["mean_diff"] >= 0.05 and ec["ci95"][0] > 0,
         "detail": f"Δ={fmt_pct(ec.get('mean_diff'))} CI95=[{fmt_pct(ec['ci95'][0]) if ec.get('ci95') else '—'}, "
                   f"{fmt_pct(ec['ci95'][1]) if ec.get('ci95') else '—'}] (n={ec.get('n_tasks')})"}
-    d = (ec.get("detail") or {}).get("tcw-order-state")
+    d = (ec.get("detail") or {}).get(STATE_TASK)
     if d and d[0] is not None and d[1] is not None:
         diff = d[1] - d[0]
         gates["G1_state_cov"] = {"desc": GATES["G1_state_cov"]["desc"],
@@ -1099,19 +1272,16 @@ def evaluate_gates(stats, task_names, rows, task_metric):
     qd = q.get("mean_diff")
     gates["G5_quality"] = {"desc": GATES["G5_quality"]["desc"],
                            "pass": q.get("on_avg") is not None and q["on_avg"] >= 0.80 and
-                           (qd is None or qd > 0),
+                           qd is not None and qd > 0,
                            "detail": f"On={q.get('on_avg')} Off={q.get('off_avg')} Δ={qd}"}
+    # G6 主指标 = 有效覆盖（单指标判定；any-of-多指标会退化为"coverage 不崩即过"）
     wins, total = 0, 0
     for t in task_names:
-        pairs = []
-        for k in ("effective_coverage", "coverage", "detection"):
-            a = task_metric(rows, t, "on", k)[0]
-            b = task_metric(rows, t, "off", k)[0]
-            if a is not None and b is not None:
-                pairs.append((a, b))
-        if pairs:
+        a = task_metric(rows, t, "on", "effective_coverage")[0]
+        b = task_metric(rows, t, "off", "effective_coverage")[0]
+        if a is not None and b is not None:
             total += 1
-            if any(a >= b - 0.10 for a, b in pairs):
+            if a >= b - 0.10:
                 wins += 1
     gates["G6_no_regression"] = {"desc": GATES["G6_no_regression"]["desc"],
                                  "pass": total > 0 and wins / total >= 2 / 3,
@@ -1132,9 +1302,10 @@ def evaluate_gates(stats, task_names, rows, task_metric):
 
 def build_report(run_dir, task_names, rows, task_metric, stats, gates, pair_stats, samples):
     lines = [f"# Benchmark 报告（v2 科学评估体系）— {run_dir.name}", "",
-             f"- 生成模型：{GEN_MODEL}；评审模型：{JUDGE_MODEL}；每任务×模式 {samples} 采样；"
-             f"judge {JUDGE_SAMPLES} 采样多数表决；成对评审含位置互换",
-             f"- 统计推断：任务层配对 bootstrap {BOOTSTRAP_N} 次报 95%CI；成对胜率报 Wilson 95%CI",
+             f"- 生成模型：{GEN_MODEL}；评审模型：{JUDGE_MODEL}；成对评审模型：{PAIR_JUDGE_MODEL}",
+             f"- 每任务×模式 {samples} 采样；judge {JUDGE_SAMPLES} 采样多数表决；成对评审含位置互换",
+             f"- 统计推断：任务层配对 bootstrap {BOOTSTRAP_N} 次（种子 {BOOTSTRAP_SEED}）报 95%CI；"
+             f"成对胜率报 Wilson 95%CI（任务层）",
              f"- 时间：{datetime.now().isoformat(timespec='seconds')}", "",
              "## 逐任务指标（任务均值 ± 生成 SD）", "",
              "| 任务 | 模式 | 有效覆盖(mean±sd) | 检出 | 质量 | 可执行性 | 编译 | 执行通过率 | 成对 |",
@@ -1147,18 +1318,18 @@ def build_report(run_dir, task_names, rows, task_metric, stats, gates, pair_stat
             exs = [e.get("objective", {}).get("executability", {}).get("exec_score")
                    for e in rows[f"{t}__{m}"]]
             exs = [x for x in exs if x is not None]
-            comp = rows[f"{t}__{m}"][0].get("objective", {}).get("compile_pass") if rows[f"{t}__{m}"] else None
             comp_all = [e.get("objective", {}).get("compile_pass") for e in rows[f"{t}__{m}"]]
             comp_str = "—" if all(c is None for c in comp_all) else f"{round(statistics.mean([c is True for c in comp_all]) * 100)}%"
-            rates = [v.get("pass_rate") for k, v in stats.get("execution_success", {}).items()
-                     if k.startswith(f"{t}__{m}")] if False else None
+            er = (stats.get("execution_success") or {}).get(f"{t}__{m}")
+            rate_str = fmt_pct(er)
+            cov_str = "—" if cov is None else f"{fmt_pct(cov)}±{round((cov_sd or 0) * 100)}pp"
             pair = pair_stats.get(t, {})
             pair_str = f"{pair.get('on', 0)}胜/{pair.get('off', 0)}负/{pair.get('tie', 0)}平" if pair else "—"
             lines.append(
-                f"| {t} | {m} | {fmt_pct(cov)}±{round((cov_sd or 0) * 100)}pp | {fmt_pct(det)} | "
+                f"| {t} | {m} | {cov_str} | {fmt_pct(det)} | "
                 f"{round(q, 3) if q is not None else '—'} | "
                 f"{round(statistics.mean(exs), 3) if exs else '—'} | {comp_str} | "
-                f"{rates[0] if rates else '—'} | {pair_str} |")
+                f"{rate_str} | {pair_str} |")
     lines += ["", "## 聚合与统计推断", ""]
     for name, s in stats.items():
         if name in ("efficiency",):
@@ -1173,8 +1344,9 @@ def build_report(run_dir, task_names, rows, task_metric, stats, gates, pair_stat
     pw = stats.get("pairwise", {})
     if pw:
         lines.append(f"- **pairwise 胜率(On, 平局=0.5)**：{fmt_pct(pw['win_rate_on'])}，"
-                     f"Wilson95[{fmt_pct(pw['wilson95'][0])}, {fmt_pct(pw['wilson95'][1])}]"
-                     f"（{pw['on']}胜/{pw['off']}负/{pw['tie']}平 / {pw['n']} 对）")
+                     f"Wilson95[{fmt_pct(pw['wilson95'][1])}, {fmt_pct(pw['wilson95'][2])}]"
+                     f"（点估计 {fmt_pct(pw['wilson95'][0])}；{pw['on']}胜/{pw['off']}负/{pw['tie']}平"
+                     f" / {pw['n']} 对，CI 按任务层 n={pw.get('n_tasks')}）")
     eff = stats.get("efficiency", {})
     lines.append(f"- **efficiency**：{json.dumps(eff, ensure_ascii=False)}")
     lines += ["", "## 预期效果门（v1.0 冻结版，见 eval/EXPECTED.md）", ""]
@@ -1204,8 +1376,12 @@ def main():
         if r2.returncode == 0:
             (SCAFFOLD / "node_modules" / ".browser-installed").write_text("ok")
         sys.exit(0 if (r1.returncode == 0 and r2.returncode == 0) else 1)
-    run_dir = Path(args.run_dir) if args.run_dir else RESULTS / "runs" / (
-        datetime.now().strftime("%Y%m%d_%H%M") + ("_" + args.label if args.label else ""))
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S") + ("_" + args.label if args.label else "")
+    run_dir = Path(args.run_dir) if args.run_dir else RESULTS / "runs" / stamp
+    n = 1
+    while run_dir.exists() and not args.run_dir:  # 同秒重跑不合并两轮数据
+        run_dir = RESULTS / "runs" / f"{stamp}_{n}"
+        n += 1
     run_dir.mkdir(parents=True, exist_ok=True)
     if args.phase == "audit-annotations":
         phase_audit(run_dir)

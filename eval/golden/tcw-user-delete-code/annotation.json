@@ -2,7 +2,7 @@
   "task_id": "tcw-user-delete-code",
   "skill": "test-case-writing",
   "mode": "code",
-  "description": "代码模式：用户资料模块，注入 3 个真实缺陷（注销残留/昵称长度不校验/VIP 宽限与到期判定矛盾），考察代码审查发现 + Cx 记录 + 测准声明 + 附录隔离",
+  "description": "代码模式：用户资料模块，注入 4 个真实缺陷（注销残留/昵称长度不校验/VIP 宽限与到期判定矛盾），考察代码审查发现 + Cx 记录 + 测准声明 + 附录隔离",
   "skill_files_on": [
     "test-case-writing/SKILL.md",
     "test-case-writing/references/templates.md",
@@ -152,7 +152,7 @@
   "audit": {
     "audited_by": "independent-reviewer(role) via glm-5-2-260617 + 人工(作者)复核",
     "date": "2026-08-20",
-    "note": "审计一致率 0.90;flagged 项人工逐条复核后落地",
+    "note": "审计一致率 0.55（12 任务均值 0.872）;flagged 项人工逐条复核后落地",
     "changes": [
       "P06/P07/P09/P10/P12/P13/P15 重写（P13 修正作者事实错误：>= 含当刻；审计接受）",
       "P16 移出（自包含摘录超范围）"

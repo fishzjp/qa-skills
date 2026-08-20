@@ -28,14 +28,14 @@ def import_coupons(csv_file):
     """批量导入优惠券。返回 (成功条数, [(行号, 错误信息), ...])"""
     reader = csv.DictReader(csv_file)
     results = []
-    for row in reader:                          # L24: 逐行读取，row 不含行号
+    for row in reader:
         try:
             coupon = parse_coupon(row)
             validate_coupon(coupon)
             save_coupon(coupon)
             results.append(("ok", None, None))
         except ValidationError as e:
-            line_no = reader.line_num + 1       # L31: line_num 已含表头行，再 +1 多算一行
+            line_no = reader.line_num + 1
             results.append(("fail", line_no, str(e)))
         except Exception as e:
             logging.exception("import error")

@@ -1,5 +1,7 @@
 # Benchmark 报告（v2 科学评估体系）— 20260820_1429_v2
 
+> **生成后勘误（2026-08-20）**：Wilson 区间原显示为倒挂的 [50.0%, 31.1%]（误把点估计当下界），正确为 **[31.1%, 69.0%]（点估计 50.0%）**；`effective_coverage_all` 的 Off 均值含 1 个 judge 错位样本且 On/Off 分母不对称（10 vs 11 任务）——harness 已修（配对口径 + GT-id 校验），本表保留原始口径供追溯。metrics.json 原始数据未动。
+
 - 生成模型：glm-5-2-260617；评审模型：glm-5-2-260617；每任务×模式 3 采样；judge 3 采样多数表决；成对评审含位置互换
 - 统计推断：任务层配对 bootstrap 10000 次报 95%CI；成对胜率报 Wilson 95%CI
 - 时间：2026-08-20T17:06:14
@@ -47,7 +49,7 @@
 - **execution_success**：{"e2e-markmap-to-spec__on": 0.7778, "e2e-markmap-to-spec__off": 0.0, "api-openapi-coupon__on": 0.5192, "api-openapi-coupon__off": 0.8693}
 - **gen_sd_effective_coverage**：{"api-openapi-coupon__on": 0.222, "api-openapi-coupon__off": 0.0444, "e2e-markmap-to-spec__on": 0.0641, "e2e-markmap-to-spec__off": 0.0641, "reg-diff-schema__on": 0.0, "reg-diff-schema__off": 0.0, "req-prd-contradictions__on": 0.0, "req-prd-contradictions__off": 0.0, "rev-flawed-cases__off": 0.0, "strategy-transfer-risk__on": 0.0, "strategy-transfer-risk__off": 0.1429, "tcw-coupon-prd__on": 0.0069, "tcw-coupon-prd__off": 0.0251, "tcw-export-noui__on": 0.0045, "tcw-export-noui__off": 0.0444, "tcw-incremental__on": 0.0847, "tcw-incremental__off": 0.0722, "tcw-order-state__on": 0.0463, "tcw-order-state__off": 0.1375, "tcw-user-delete-code__on": 0.0342, "tcw-user-delete-code__off": 0.0385}
 - **generalization**：{}
-- **pairwise 胜率(On, 平局=0.5)**：50.0%，Wilson95[50.0%, 31.1%]（1胜/1负/21平 / 23 对）
+- **pairwise 胜率(On, 平局=0.5)**：50.0%，Wilson95[31.1%, 69.0%]（点估计 50.0%；1胜/1负/21平 / 23 对）
 - **efficiency**：{"on": {"mean_cases": 39.3, "dup_rate": 0.0793, "mean_tokens_total": 26297}, "off": {"mean_cases": 10.3, "dup_rate": 0.0, "mean_tokens_total": 7858}}
 
 ## 预期效果门（v1.0 冻结版，见 eval/EXPECTED.md）

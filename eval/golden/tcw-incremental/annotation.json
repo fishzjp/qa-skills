@@ -60,7 +60,7 @@
   "audit": {
     "audited_by": "independent-reviewer(role) via glm-5-2-260617 + 人工(作者)复核",
     "date": "2026-08-20",
-    "note": "审计一致率 0.90;flagged 项人工逐条复核后落地",
+    "note": "审计一致率 1.0（12 任务均值 0.872）;flagged 项人工逐条复核后落地",
     "changes": [
       "P01/P03 重写（审计补充：存量用例前置补填、旧边界不留）"
     ]

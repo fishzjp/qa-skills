@@ -78,22 +78,22 @@
     },
     {
       "id": "P02",
-      "point": "scope 为范围+深度+理由结构，而非布尔开关；纳入理由可追溯到风险编号",
+      "point": "scope 以范围+深度+理由的结构表达（或等价结构）：每个纳入/排除维度给理由，理由可追溯到风险项",
       "type": "functional"
     },
     {
       "id": "P03",
-      "point": "性能/安全维度显式 handoff（include:false + 移交说明），不静默缺失",
+      "point": "性能/安全维度显式移交专项（include:false+移交说明，或等价的『不在本层测+去向』表述），不静默缺失",
       "type": "functional"
     },
     {
       "id": "P04",
-      "point": "automation_plan 为提案形态：建议自动化清单+框架+不自动化理由，不直接裁决",
+      "point": "自动化计划为提案形态（建议自动化清单+框架+不自动化理由，或等价结构），不直接裁决执行方式",
       "type": "functional"
     },
     {
       "id": "P05",
-      "point": "regression_plan 指定锚点用例（Critical 风险对应的 P0）",
+      "point": "回归计划指定锚点用例（最高风险对应的最高优先级用例，或等价表述）",
       "type": "functional"
     },
     {
@@ -112,7 +112,7 @@
   "audit": {
     "audited_by": "independent-reviewer(role) via glm-5-2-260617 + 人工(作者)复核",
     "date": "2026-08-20",
-    "note": "审计一致率 0.90;flagged 项人工逐条复核后落地",
+    "note": "审计一致率 1.0（12 任务均值 0.872）;flagged 项人工逐条复核后落地",
     "changes": [
       "新增 P07（材料可推导的深度理由）"
     ]

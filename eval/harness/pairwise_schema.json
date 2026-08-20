@@ -2,8 +2,9 @@
   "type": "object",
   "properties": {
     "winner": {"type": "string", "enum": ["A", "B", "tie"]},
-    "reason": {"type": "string"}
+    "reason": {"type": "string", "minLength": 1}
   },
   "required": ["winner", "reason"],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
 }

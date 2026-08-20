@@ -23,8 +23,8 @@ eval/
 ## 模型路由
 
 - 生成（主）：`EVAL_GEN_MODEL`（默认 glm-5-2-260617，走 arkcli +chat）
-- 逐点评审：`EVAL_JUDGE_MODEL`（默认 oc:deepseek-v4-flash，走 opencode Zen OpenAI 兼容端点）——与生成模型**异构**，消除自评偏差
-- 成对评审：`EVAL_PAIR_JUDGE_MODEL`（默认 oc:kimi-k3，强模型用于最需要判断力的对比）
+- 逐点评审：`EVAL_JUDGE_MODEL`（默认 oc:deepseek-v4-flash，走 opencode Zen OpenAI 兼容端点）——设计目标与生成模型**异构**消除自评偏差（当前因额度降级为同源，见顶部状态）
+- 成对评审：`EVAL_PAIR_JUDGE_MODEL`（默认 oc:kimi-k3，强模型用于最需要判断力的对比；实际所用模型落盘于 metrics.json）
 - 标注审计：`EVAL_AUDIT_MODEL`（默认 oc:kimi-k3）
 - 泛化生成：`--model oc:deepseek-v4-pro`（产物文件带模型标签，score 自动分组出 G7）
 - `oc:` 前缀走 opencode（`OPENCODE_GO_KEY` 放在仓库根 `.env`，**不入 git**）；其余走 arkcli
@@ -53,7 +53,8 @@ python3 eval/harness/run_eval.py score --samples 3 --run-dir <同上>
 
 ## 缓存与断点续跑规则（重要）
 
-- `generate` / `judge` / `pairwise` / `exec` 均按文件缓存，成功即跳过；重跑同一命令只补失败项
+- `generate` / `judge` / `pairwise` 按文件缓存，成功即跳过；重跑同一命令只补失败项
+- `exec` 仅缓存 `exec_ok=true` 的结果——环境错误（mock 起不来/端口被占/超时）会重试，不把 pass_rate=0 的环境失败固化成数据
 - **缓存不感知上游变更**：改了 annotation.json、judge prompt、judge 模型或 mock 应用/服务，必须先删除对应缓存（judge/、pairwise/、exec/ 下相关 json）再评分，否则结果是旧的
 - 失败的 judge/pairwise 文件会自动重试（ok=false 不算缓存命中）
 
@@ -68,13 +69,13 @@ python3 eval/harness/run_eval.py score --samples 3 --run-dir <同上>
 | 环节 | 做法 | 行业对应 |
 |------|------|---------|
 | 生成 | 每任务×模式 **n=3 独立采样**，任务指标 = 均值±SD | pass@k / τ-bench pass^k 的重复采样思想 |
-| 推断 | On/Off 差值在**任务层配对 bootstrap**（10k 次）报 95%CI；成对胜率报 Wilson 95%CI | SWE-bench 式 bootstrap；二项比例 Wilson 区间 |
+| 推断 | On/Off 差值在**任务层配对 bootstrap**（10k 次）报 95%CI；成对胜率先按任务聚合再报 Wilson 95%CI（避免同任务多对伪重复） | SWE-bench 式 bootstrap；二项比例 Wilson 区间 |
 | 成对评审 | On vs Off 并排 + **位置互换**，不一致记平局 | MT-Bench / AlpacaEval pairwise + position-swap |
-| judge | **异构模型** + 3 采样多数表决 + JSON Schema 约束 + 表格行检出规则 | multi-sample majority、judge panel |
+| judge | **异构模型**（设计目标）+ 3 采样多数表决 + JSON Schema 引导 + 本地校验（GT-id 集合、分值域 0-5）+ 表格行检出规则 | multi-sample majority、judge panel |
 | 执行验证 | E2E：mock 被测应用（与任务材料严格一致）+ 真实 chromium 跑生成 spec，双跑测稳定；API：mock 服务实现 OpenAPI 契约与业务规则，跑生成 pytest | SWE-bench execution-based；环境固定 |
 | 标注 | GT 由"未参与 skill 编写的独立审计角色"复核范围/歧义/遗漏，一致率落盘 | 标注者间一致性（IAA）思想的可行近似 |
 | 门 | 预注册冻结（EXPECTED.md），阈值来自校准轮+边际，验证轮独立采样判定 | pre-registration；evals as CI |
-| Executability | 客观正则逐条扫（占位符/模糊判定/正文代码/异步时限/断言超强度/导读四件套），脏率>50% 一票否决 | grounded-fact audit；无 judge 参与的可复核指标 |
+| Executability | 客观正则逐条扫（占位符/模糊判定/正文代码/异步时限/断言超强度/导读四件套），脏率>50% 一票否决。**口径注意**：TC 编号与导读四件套为 skill 教的模板格式，该指标同时度量模板遵从度（对 Off 有构造偏差）；无格式采样计 0 不剔除分母，另报无格式依赖的 content_violations 密度 | grounded-fact audit；无 judge 参与的可复核指标 |
 | Efficiency | 平均用例数 / 重复用例率 / tokens（On 的 Skill 成本） | correctness-latency-cost 三元组 |
 
 ## 固定执行环境说明

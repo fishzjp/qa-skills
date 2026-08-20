@@ -2,7 +2,7 @@
   "task_id": "req-prd-contradictions",
   "skill": "requirement-analysis",
   "mode": "analysis",
-  "description": "需求建模：5 处植入矛盾/模糊（铂金未定义/倍率矛盾/有效期矛盾/抵现上限缺数/冻结解冻时限缺），考察矛盾发现与 open_questions，不硬猜",
+  "description": "需求建模：10 处植入矛盾/模糊（铂金未定义/倍率矛盾/有效期矛盾/抵现上限缺数/冻结解冻时限缺），考察矛盾发现与 open_questions，不硬猜",
   "skill_files_on": [
     "requirement-analysis/SKILL.md",
     "core/evidence.md"
@@ -128,7 +128,7 @@
   "audit": {
     "audited_by": "independent-reviewer(role) via glm-5-2-260617 + 人工(作者)复核",
     "date": "2026-08-20",
-    "note": "审计一致率 0.90;flagged 项人工逐条复核后落地",
+    "note": "审计一致率 1.0（12 任务均值 0.872）;flagged 项人工逐条复核后落地",
     "changes": [
       "新增 Q9/Q10（材料可推导的不明确项）"
     ]

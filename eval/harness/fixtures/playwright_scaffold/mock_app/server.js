@@ -24,14 +24,15 @@ async function api(method, url, body) {
 }
 function renderProjects() {
   const q = (document.getElementById('search') && document.getElementById('search').value || '').trim();
+  const esc = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const list = __PROJECTS__.filter(p => !q || p.name.includes(q));
   document.getElementById('app').innerHTML = \`
     <h1>控制台 → 项目</h1>
-    <input id="search" placeholder="搜索项目" value="\${q}">
+    <input id="search" placeholder="搜索项目" value="\${esc(q)}">
     <button id="create-btn">新建项目</button>
     <div id="cards">\${list.map(p => \`
       <div class="project-card" data-id="\${p.id}">
-        <span class="project-name">\${p.name}</span>
+        <span class="project-name">\${esc(p.name)}</span>
         <span class="menu"><button class="more-btn" aria-haspopup="menu">更多</button>
           <span class="menu-list" role="menu"><button class="delete-btn" role="menuitem">删除</button></span></span>
       </div>\`).join('')}
@@ -91,7 +92,8 @@ const server = http.createServer((req, res) => {
     res.writeHead(code, {'Content-Type': type}); res.end(typeof body === 'string' ? body : JSON.stringify(body));
   };
   if (req.method === 'GET' && (url.pathname === '/login' || url.pathname === '/console' || url.pathname === '/console/projects')) {
-    const html = PAGE.replace('__PROJECTS_BOOT__', JSON.stringify(state.projects))
+    const boot = JSON.stringify(state.projects).replace(/</g, '\\u003c');  // 防 </script> 逃逸
+    const html = PAGE.replace('__PROJECTS_BOOT__', boot)
       .replace(/__PROJECTS__/g, 'window.__PROJECTS__');
     return send(200, html, 'text/html; charset=utf-8');
   }
@@ -100,7 +102,9 @@ const server = http.createServer((req, res) => {
   }
   if (url.pathname === '/api/projects' && req.method === 'POST') {
     let body = ''; req.on('data', (c) => (body += c)); req.on('end', () => {
-      const {name} = JSON.parse(body || '{}');
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); } catch (e) { return send(400, {code: 'BAD_JSON', message: '请求体不是合法 JSON'}); }
+      const {name} = parsed;
       if (!name || !name.trim()) return send(400, {code: 'NAME_REQUIRED', message: '项目名称不能为空'});
       if (state.projects.some((p) => p.name === name)) return send(400, {code: 'NAME_DUPLICATED', message: '名称已存在'});
       const p = {id: state.seq++, name};
@@ -116,7 +120,9 @@ const server = http.createServer((req, res) => {
   }
   if (url.pathname === '/login' && req.method === 'POST') {
     let body = ''; req.on('data', (c) => (body += c)); req.on('end', () => {
-      const {username, password} = JSON.parse(body || '{}');
+      let parsed;
+      try { parsed = JSON.parse(body || '{}'); } catch (e) { return send(400, {code: 'BAD_JSON', message: '请求体不是合法 JSON'}); }
+      const {username, password} = parsed;
       if (username === 'admin' && password === 'pass') return send(200, {ok: true, token: 't-' + crypto.randomUUID()});
       return send(401, {message: '用户名或密码错误'});
     });

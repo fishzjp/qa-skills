@@ -120,13 +120,14 @@ PRD / 代码
 
 | 指标 | 无 Skill | 有 Skill | 说明 |
 |------|:---:|:---:|------|
-| 用例可执行性 | 0.77 | **0.98** | 正则逐条扫描(占位符/模糊判定/虚构入口/无时限),无 judge 参与 |
+| 用例可执行性 | 0.77 | **0.98** | 正则逐条扫描(占位符/模糊判定/虚构入口/无时限),无 judge 参与;该口径含 skill 模板遵从度(编号/导读),构造上偏向 On,详见 eval 文档 |
 | E2E 代码真实执行通过率 | 0% | **78%** | 生成的 Playwright 代码跑真实浏览器 + 被测应用,无 judge 参与 |
 | 植入 bug 检出率 | — | **100%** | 代码审查类任务 |
 | 产出质量(LLM judge) | 0.87 | **0.92** | 配对 bootstrap 95%CI 显著 |
+| API 代码真实执行通过率 | **87%** | 52% | 如实披露的反向结果:skill 的三件套严断言更易暴露失败,弱断言易通过(1 个截断采样;诊断见 eval/EXPECTED.md) |
 | token 成本 | 1× | 3.3× | 如实披露:更好但更贵 |
 
-覆盖类增益约 +4pp(方向显著;早期单采样表观的 +29pp 经多样本复验为噪声)。诚实声明与门判定详见 [eval/EXPECTED.md](./eval/EXPECTED.md) 与 [eval/results/LATEST.md](./eval/results/LATEST.md)。
+覆盖类增益:tcw 口径 +3.8pp(CI[0.5,7.1] 显著);全任务口径 +5.2pp(CI 含 0,方向为正但不显著)。早期单采样表观的 +29pp 经多样本复验为噪声。诚实声明与门判定详见 [eval/EXPECTED.md](./eval/EXPECTED.md) 与 [eval/results/LATEST.md](./eval/results/LATEST.md)。
 
 ---
 

@@ -4,8 +4,8 @@
 严格实现任务材料中的 OpenAPI 契约与业务规则：
 - POST /api/v1/coupons：创建（必填/类型/边界校验、名称同商户唯一 400 NAME_DUPLICATED、
   门槛非 0 且 < 面额 400 THRESHOLD_INVALID）
-- POST /api/v1/coupons/{id}/claim：领取（Bearer 鉴权 401、不存在/已结束 404、
-  每人限领 3 张 409）
+- POST /api/v1/coupons/{id}/claim：领取（Bearer 鉴权 401、不存在/不可领取 404——新建券默认「待发布」，
+  未发布与已结束均按不可领取处理（404），每人限领 3 张 409）
 - 登录（兼容常见路径）→ Bearer Token
 无第三方依赖，纯标准库。
 """
@@ -89,7 +89,7 @@ class Handler(BaseHTTPRequestHandler):
             with _lock:
                 c = _state["coupons"].get(cid)
                 if not c or c.get("status") != "已发布":
-                    return self._send(404, {"code": "NOT_FOUND", "message": "券不存在或已结束"})
+                    return self._send(404, {"code": "NOT_FOUND", "message": "券不存在或不可领取（未发布/已结束）"})
                 got = _state["claims"].setdefault(cid, {}).get(user, 0)
                 if got >= 3:
                     return self._send(409, {"code": "CLAIM_LIMIT", "message": "超过每人限领数量"})
@@ -109,7 +109,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_DELETE(self):
         m = re.match(r"^/api/v1/coupons/([^/]+)$", self.path.split("?")[0].rstrip("/"))
-        if m and self._auth_user():
+        if m:
+            if not self._auth_user():
+                return self._send(401, {"code": "UNAUTHORIZED", "message": "未认证或 Token 无效"})
             _state["coupons"].pop(m.group(1), None)
             return self._send(200, {"deleted": True})
         return self._send(404, {"code": "NOT_FOUND"})

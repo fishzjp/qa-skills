@@ -22,15 +22,14 @@ export class LoginPage {
 
 export async function createDualSession(
   browser: Browser,
-  roleA: string,
-  roleB: string,
+  roleA: keyof typeof ACCOUNTS,
+  roleB: keyof typeof ACCOUNTS,
 ): Promise<{ pageA: Page; pageB: Page; contextA: BrowserContext; contextB: BrowserContext }> {
   const contextA = await browser.newContext();
   const contextB = await browser.newContext();
-  return {
-    pageA: await contextA.newPage(),
-    pageB: await contextB.newPage(),
-    contextA,
-    contextB,
-  };
+  const pageA = await contextA.newPage();
+  const pageB = await contextB.newPage();
+  await new LoginPage(pageA).loginAs(roleA);
+  await new LoginPage(pageB).loginAs(roleB);
+  return { pageA, pageB, contextA, contextB };
 }

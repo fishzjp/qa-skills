@@ -30,9 +30,9 @@
     "quality": {
       "type": "object",
       "properties": {
-        "correctness": {"type": "integer"},
-        "specificity": {"type": "integer"},
-        "actionability": {"type": "integer"}
+        "correctness": {"type": "integer", "minimum": 0, "maximum": 5},
+        "specificity": {"type": "integer", "minimum": 0, "maximum": 5},
+        "actionability": {"type": "integer", "minimum": 0, "maximum": 5}
       },
       "required": ["correctness", "specificity", "actionability"],
       "additionalProperties": false

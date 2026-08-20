@@ -56,7 +56,7 @@ risk:
   anchors: [TC-07-02]            # 覆盖此风险的用例编号（派生索引，主从规则见下）
 ```
 
-**双向引用主从规则**：`case.risk_ref`（Test Case Schema 字段）为权威方向，只在用例侧维护；`risk.anchors` 是由 Schema 抽取派生的反向索引，每次抽取再生、不接受手工编辑——避免两侧漂移。
+**双向引用主从规则**：`case.risk_ref`（Test Case Schema 字段）为权威方向，只在用例侧维护；`risk.anchors` 仅为 Strategy 文档里给人读的概览视图，**机器消费一律通过 Schema 的 `risk_ref` 反查**（`test-case-review` / `regression-testing` 等下游按此执行），不保证与最新用例同步——需要最新映射时从 Schema 重新生成，不手工编辑 anchors。
 
 ## 5. 推导链
 

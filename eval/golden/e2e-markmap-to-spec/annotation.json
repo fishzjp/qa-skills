@@ -66,7 +66,7 @@
   "audit": {
     "audited_by": "independent-reviewer(role) via glm-5-2-260617 + 人工(作者)复核",
     "date": "2026-08-20",
-    "note": "审计一致率 0.90;flagged 项人工逐条复核后落地",
+    "note": "审计一致率 1.0 仅基于已解析的 4/8 条（另 4 条审计输出未解析）；missing 5 条（M01-M05）未落地，补跑审计待额度恢复;flagged 项人工复核已落地",
     "changes": [
       "新增 P09（材料明确要求）"
     ]
