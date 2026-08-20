@@ -101,16 +101,23 @@ playwright/
 ### Playwright 配置
 
 ```typescript
-{
+// playwright.config.ts
+import { defineConfig } from '@playwright/test';
+
+export default defineConfig({
   testDir: './tests',
   fullyParallel: false,       // 串行执行，避免状态冲突
   timeout: 60_000,            // 单个测试超时 60s
-  actionTimeout: 10_000,      // 单个操作超时 10s
-  screenshot: 'only-on-failure',
-  trace: 'retain-on-failure',
-  baseURL: process.env.TEST_BASE_URL ?? '<你的测试环境地址>',
-}
+  use: {
+    actionTimeout: 10_000,      // 单个操作超时 10s
+    screenshot: 'only-on-failure',
+    trace: 'retain-on-failure',
+    baseURL: process.env.TEST_BASE_URL ?? '<你的测试环境地址>',
+  },
+});
 ```
+
+> 注意：`actionTimeout` / `screenshot` / `trace` / `baseURL` 必须放在 `use` 内——写在配置顶层会被 Playwright 静默忽略，导致失败时无截图、无 trace。
 
 ---
 
@@ -170,7 +177,7 @@ test('业务熟悉：探索{功能名}页面结构', async ({ page }) => {
 
 ### 步骤
 
-1. **解析测试用例**：从 markmap Markdown 提取场景与预期
+1. **解析测试用例**：从 markmap Markdown 提取场景与预期；test 名沿用用例的 TC 编号（如 `TC-01-03: {用例名称}`），手动用例缺编号时先补编号再转换
 2. **选择/新建 Page Object**：检查 `tests/pages/` 下是否已有对应 Page Object，优先复用
 3. **编写 spec**：使用 Page Object 封装所有页面交互
 4. **运行验证**：`npx playwright test tests/{文件名}.spec.ts`
@@ -182,22 +189,24 @@ test('业务熟悉：探索{功能名}页面结构', async ({ page }) => {
 ```typescript
 test.describe('{模块名}', () => {
   let createdName: string;
+  let xxxPage: XxxPage; // afterEach 清理要用，在 beforeEach 中初始化
 
   test.beforeEach(async ({ page }) => {
     // 登录 + 进入页面
+    xxxPage = new XxxPage(page);
   });
 
-  test.afterEach(async ({ page }) => {
+  test.afterEach(async () => {
     if (createdName) {
-      await pageObject.deleteResource(createdName).catch(() => {});
+      await xxxPage.deleteXxx(createdName).catch(() => {});
     }
   });
 
-  test('TC-XXX: {用例描述}', async ({ page }) => {
+  test('TC-01-01: {用例描述}', async () => {
     createdName = `{前缀}-${Date.now()}`;
-    await pageObject.createResource(createdName);
+    await xxxPage.createXxx(createdName);
 
-    const row = await pageObject.getResourceByName(createdName);
+    const row = await xxxPage.getXxxByName(createdName);
     expect(row).not.toBeNull();
     await expect(row!).toBeVisible();
   });
@@ -207,27 +216,21 @@ test.describe('{模块名}', () => {
 #### 表单提交
 
 ```typescript
-test('TC-XXX: {用例描述}', async ({ page }) => {
-  // 1. 监听网络请求（必须在操作之前）
-  let apiCalled = false;
-  page.on('request', req => {
-    if (req.url().includes('/api/target') && req.method() === 'POST') {
-      apiCalled = true;
-    }
-  });
+test('TC-01-02: {用例描述}', async ({ page }) => {
+  // 1. 先注册响应等待（必须在操作之前；勿用固定 waitForTimeout，见 Common Mistakes）
+  const responsePromise = page.waitForResponse(
+    resp => resp.url().includes('/api/target') && resp.request().method() === 'POST',
+  );
 
-  // 2. 填充表单（受控组件用 keyboard.type，不用 fill，详见速查表）
-  const input = page.locator('#field');
-  await input.click();
-  await page.keyboard.type('值', { delay: 50 });
-  await input.blur();
+  // 2. 填充表单（fill 优先；受控组件校验不触发/值不生效时改用 keyboard.type，详见速查表）
+  await page.locator('#field').fill('值');
 
   // 3. 提交
   await page.getByRole('button', { name: '提交' }).click();
 
   // 4. 验证 API 调用 + 持久化
-  await page.waitForTimeout(2000);
-  expect(apiCalled).toBe(true);
+  const response = await responsePromise;
+  expect(response.ok()).toBeTruthy();
   await page.reload();
   await expect(page.getByText('值')).toBeVisible();
 });
@@ -236,7 +239,7 @@ test('TC-XXX: {用例描述}', async ({ page }) => {
 #### 状态流转
 
 ```typescript
-test('TC-XXX: {用例描述}', async ({ page }) => {
+test('TC-01-03: {用例描述}', async ({ page }) => {
   // 前置：用对应 Page Object 创建一条可操作的业务数据
   const { resourceName } = await createResourceWithData(page, 'TC-STATUS');
   await xxxPage.performAction();
@@ -247,8 +250,8 @@ test('TC-XXX: {用例描述}', async ({ page }) => {
 #### 多用户并发
 
 ```typescript
-test('TC-XXX: {用例描述}', async ({ browser }) => {
-  // 创建两个独立会话（各自登录不同角色），见「通用 Helper 参考实现」
+test('TC-01-04: {用例描述}', async ({ browser }) => {
+  // 创建两个独立会话（各自登录不同角色），见 references/helpers_reference.md
   const { pageA, pageB, contextA, contextB } =
     await createDualSession(browser, 'admin', 'user');
   try {
@@ -283,7 +286,7 @@ export class XxxPage {
   }
 
   async createXxx(name: string) {
-    // 受控组件表单用 keyboard.type
+    // fill 优先；受控组件校验不触发/值不生效时改用 keyboard.type
     await this.page.getByRole('textbox', { name: /名称/ }).click();
     await this.page.keyboard.type(name, { delay: 30 });
   }
@@ -341,9 +344,10 @@ test('测试中发现 Bug', async ({ page }, testInfo) => {
   // 截图 1：操作前
   await page.screenshot({ path: 'bug-001-01-操作前.png', fullPage: true });
 
-  // 触发异常的操作
+  // 触发异常的操作（先注册响应等待，再点击；勿用固定 waitForTimeout）
+  const saveResponse = page.waitForResponse(resp => resp.url().includes('/api/save'));
   await page.getByRole('button', { name: '保存' }).click();
-  await page.waitForTimeout(2000);
+  await saveResponse;
 
   // 截图 2：异常现象
   await page.screenshot({ path: 'bug-001-02-异常.png', fullPage: true });
@@ -352,6 +356,8 @@ test('测试中发现 Bug', async ({ page }, testInfo) => {
   const evidence = await tracker.collect(testInfo, 'BUG-001', '保存失败无提示');
 });
 ```
+
+截图命名统一小写 `bug-{序号}-*` 前缀：手动截图记录过程两态（`bug-001-01-操作前.png`、`bug-001-02-异常.png`）；`tracker.collect()` 自动补一张整页汇总截图（`bug-001-汇总.png`）并 attach 到 HTML 报告。Bug 报告标题中的 `BUG-{序号}` 仅为显示格式。
 
 ### Bug 报告格式
 
@@ -376,195 +382,9 @@ test('测试中发现 Bug', async ({ page }, testInfo) => {
 
 ## 通用 Helper 参考实现
 
-工作流中反复使用的通用工具函数（登录、多用户会话、API/控制台监听、Bug 证据收集、服务端崩溃检测）建议集中放在 `tests/helpers.ts`。下面是**脱敏后的通用参考实现**，可直接作为起点，按你的系统调整选择器、登录后跳转规则和 token 存储位置。
+工作流中反复使用的通用工具函数（登录、多用户会话、API/控制台监听、Bug 证据收集、服务端崩溃检测）建议集中放在 `tests/helpers.ts`。落地时**加载本 skill 的 `references/helpers_reference.md`**：其中的脱敏参考实现可直接作为起点，按你的系统调整选择器、登录后跳转规则和 token 存储位置。
 
 > 业务专有的"造数"函数（如创建某类业务实体并灌入测试数据）请基于你的 Page Object 自行实现，不要塞进通用 helpers。
-
-```typescript
-// tests/helpers.ts
-import { Page, Locator, Browser, BrowserContext, TestInfo } from '@playwright/test';
-import { BASE_URL, ACCOUNTS } from './constants';
-
-type Role = keyof typeof ACCOUNTS;
-type ApiEntry = { method: string; url: string; status?: number; body?: string };
-
-/** 登录页 Page Object。按你的系统调整选择器和登录后跳转规则。 */
-export class LoginPage {
-  readonly page: Page;
-  readonly usernameInput: Locator;
-  readonly passwordInput: Locator;
-  readonly submitButton: Locator;
-
-  constructor(page: Page) {
-    this.page = page;
-    this.usernameInput = page.getByPlaceholder('请输入用户名'); // 按实际页面调整
-    this.passwordInput = page.getByPlaceholder('请输入密码');
-    this.submitButton = page.getByRole('button', { name: /登\s*录/ });
-  }
-
-  async goto() {
-    await this.page.goto(`${BASE_URL}/<登录页路由>`);
-    await this.page.waitForLoadState('networkidle');
-  }
-
-  /** 按角色登录，角色名对应 constants.ts 中 ACCOUNTS 的 key */
-  async loginAs(role: Role) {
-    const { username, password } = ACCOUNTS[role];
-    await this.goto();
-    // 用 keyboard.type 而非 fill，兼容受控组件（Ant Design / React 表单）
-    await this.usernameInput.click();
-    await this.page.keyboard.type(username, { delay: 30 });
-    await this.passwordInput.click();
-    await this.page.keyboard.type(password, { delay: 30 });
-    // 登录后等待跳转离开登录页（按你的系统调整预期 URL）
-    await Promise.all([
-      this.page.waitForURL(/\/(dashboard|home|task-center)/, { timeout: 15000 }),
-      this.submitButton.click(),
-    ]);
-  }
-}
-
-/** 创建两个独立会话（各自登录指定角色），用于多用户并发场景 */
-export async function createDualSession(browser: Browser, roleA: Role, roleB: Role) {
-  const contextA = await browser.newContext();
-  const contextB = await browser.newContext();
-  const pageA = await contextA.newPage();
-  const pageB = await contextB.newPage();
-  await new LoginPage(pageA).loginAs(roleA);
-  await new LoginPage(pageB).loginAs(roleB);
-  return { pageA, pageB, contextA, contextB };
-}
-
-/** 创建 N 个角色的会话（多角色场景） */
-export async function createMultiSession(browser: Browser, roles: Role[]) {
-  const sessions: Array<{ page: Page; context: BrowserContext; role: string }> = [];
-  for (const role of roles) {
-    const context = await browser.newContext();
-    const page = await context.newPage();
-    await new LoginPage(page).loginAs(role);
-    sessions.push({ page, context, role });
-  }
-  return sessions;
-}
-
-/** 安全关闭若干浏览器上下文（忽略已关闭的） */
-export function closeContexts(...contexts: (BrowserContext | null)[]) {
-  return Promise.all(
-    contexts.filter((c): c is BrowserContext => !!c).map(c => c.close().catch(() => {})),
-  );
-}
-
-/** 监听 /api/ 请求与响应，返回累积的 API 日志数组 */
-export function setupApiLogging(page: Page): ApiEntry[] {
-  const apiLog: ApiEntry[] = [];
-  page.on('request', req => {
-    if (req.url().includes('/api/')) {
-      const entry: ApiEntry = { method: req.method(), url: req.url() };
-      if (req.method() === 'POST') entry.body = req.postData() ?? undefined;
-      apiLog.push(entry);
-    }
-  });
-  page.on('response', resp => {
-    const entry = apiLog.find(e => e.url === resp.url() && !e.status);
-    if (entry) entry.status = resp.status();
-  });
-  return apiLog;
-}
-
-/** 监听控制台错误与未捕获异常，返回错误信息数组 */
-export function setupConsoleLogging(page: Page): string[] {
-  const consoleErrors: string[] = [];
-  page.on('console', msg => {
-    if (msg.type() === 'error') consoleErrors.push(msg.text());
-  });
-  page.on('pageerror', err => consoleErrors.push(`Uncaught: ${err.message}`));
-  return consoleErrors;
-}
-
-/** 检测页面文本中是否出现服务端错误（500/502 等） */
-export function isServerCrash(text: string): boolean {
-  return /HTTP\s*500|500|502\s*Bad\s*Gateway|Internal\s*Server\s*Error|服务器内部错误/i.test(text);
-}
-
-export interface BugEvidence {
-  id: string;
-  description: string;
-  screenshots: string[];
-  apiCalls: ApiEntry[];
-  consoleErrors: string[];
-  currentUrl: string;
-  pageTitle: string;
-}
-
-/** 收集 Bug 证据：截图 + attach 到报告 + 记录 URL/标题/API/控制台 */
-export async function collectBugEvidence(
-  page: Page,
-  testInfo: TestInfo,
-  bugId: string,
-  description: string,
-  options: { apiLog?: ApiEntry[]; consoleErrors?: string[]; fullPage?: boolean } = {},
-): Promise<BugEvidence> {
-  const fullPage = options.fullPage ?? true;
-  const screenshotPath = `${bugId}.png`;
-  const buffer = await page.screenshot({ path: screenshotPath, fullPage });
-  await testInfo.attach(`${bugId}: ${description}`, { body: buffer, contentType: 'image/png' });
-  return {
-    id: bugId,
-    description,
-    screenshots: [screenshotPath],
-    apiCalls: options.apiLog ? [...options.apiLog] : [],
-    consoleErrors: options.consoleErrors ? [...options.consoleErrors] : [],
-    currentUrl: page.url(),
-    pageTitle: await page.title(),
-  };
-}
-
-/** 一站式 Bug 跟踪：注册 API + 控制台监听，提供 collect() 一键收集证据 */
-export function setupBugTracking(page: Page) {
-  const apiLog = setupApiLogging(page);
-  const consoleErrors = setupConsoleLogging(page);
-  return {
-    apiLog,
-    consoleErrors,
-    async collect(
-      testInfo: TestInfo,
-      bugId: string,
-      description: string,
-      options?: { fullPage?: boolean },
-    ) {
-      return collectBugEvidence(page, testInfo, bugId, description, {
-        apiLog: [...apiLog],
-        consoleErrors: [...consoleErrors],
-        ...options,
-      });
-    },
-  };
-}
-
-/** （进阶）用浏览器内 fetch 携带认证 token 调用 API：绕过 UI 直接造数据或校验后端 */
-export async function apiFetch(page: Page, path: string, options?: RequestInit) {
-  const token = await page.evaluate(() => {
-    const raw = localStorage.getItem('<你的 token 存储 key>'); // 按实际调整
-    try {
-      return raw ? (JSON.parse(raw).token ?? raw) : null;
-    } catch {
-      return null;
-    }
-  });
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...((options?.headers as Record<string, string>) ?? {}),
-  };
-  if (token) headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-  return page.evaluate(
-    async ({ url, opts }) => {
-      const resp = await fetch(url, opts);
-      return { status: resp.status, body: await resp.text() };
-    },
-    { url: `${BASE_URL}${path}`, opts: { ...options, credentials: 'include' as RequestCredentials, headers } },
-  );
-}
-```
 
 ---
 
@@ -589,7 +409,7 @@ export async function apiFetch(page: Page, path: string, options?: RequestInit) 
 
 | 场景 | 方法 | 备注 |
 |------|------|------|
-| 受控组件输入框（Ant Design 等） | `keyboard.type()` | 不用 `fill()`，避免不触发校验 |
+| 受控组件输入框（Ant Design 等） | `fill()` 优先，不生效再 `keyboard.type()` | `fill` 会派发 input 事件，多数受控组件可用；`keyboard.type` 逐键最稳但慢 |
 | 隐藏必填字段 | `page.evaluate()` 直接设值 | 阻止表单提交的常见原因 |
 | 网络请求验证 | `page.on('request')` 监听 | 必须在操作之前设置 |
 | 数据持久化验证 | `page.reload()` + 断言 | 确认数据真正保存 |
@@ -605,7 +425,7 @@ export async function apiFetch(page: Page, path: string, options?: RequestInit) 
 
 | 错误 | 后果 | 正确做法 |
 |------|------|---------|
-| `fill()` 用于受控组件表单 | 校验不通过，表单无法提交 | 用 `keyboard.type()` |
+| 受控组件值不生效仍反复 `fill()` | 测试卡死或断言失败 | `fill` 失效时改用 `keyboard.type()`（见速查表） |
 | 网络监听放在 click 之后 | 捕捉不到请求 | 先注册 listener，再执行操作 |
 | 不清理测试数据 | 后续测试受影响 | afterEach 中删除创建的资源 |
 | 用固定 timeout 等待 | 时序不稳定 | 优先用 `waitForLoadState` / `waitForResponse` |

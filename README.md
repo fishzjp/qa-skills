@@ -39,7 +39,7 @@ cp -r automated-e2e-testing  <项目>/.claude/skills/
 
 1. **一个 Playwright 项目**：`npm init playwright@latest`，按 skill 中「代码架构」组织 `tests/`、`pages/`、`helpers.ts`、`constants.ts`。
 2. **环境与账号配置**：在 `tests/constants.ts` 或 `.env` 中配置 `BASE_URL` 和角色账号（skill 不硬编码任何环境地址或账号）。
-3. **通用 Helper**：按 skill 中「通用 Helper 参考实现」一节落地 `tests/helpers.ts`（登录、多用户会话、Bug 证据收集等），再按你的系统调整选择器。
+3. **通用 Helper**：按 skill 的 `references/helpers_reference.md` 落地 `tests/helpers.ts`（登录、多用户会话、Bug 证据收集等），再按你的系统调整选择器。
 
 `test-case-writing` 无前置条件，装好即用。
 
@@ -52,10 +52,11 @@ qa-skills/
 ├── CONTRIBUTING.md
 ├── test-case-writing/
 │   ├── SKILL.md
-│   ├── references/coverage_checklist.md   # 覆盖度检查表（18 个维度）
+│   ├── references/coverage_checklist.md   # 覆盖度检查表（19 个维度）
 │   └── templates/markmap_template.md      # 用例文件拼装模板
 └── automated-e2e-testing/
-    └── SKILL.md                            # 含通用 Helper 参考实现
+    ├── SKILL.md                            # 工作流与代码模板
+    └── references/helpers_reference.md     # 通用 Helper 参考实现（脱敏）
 ```
 
 ## 设计理念
