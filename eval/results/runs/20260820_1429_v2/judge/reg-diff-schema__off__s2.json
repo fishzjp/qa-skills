@@ -1,0 +1,66 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "S1",
+      "detected": true
+    },
+    {
+      "id": "S2",
+      "detected": true
+    },
+    {
+      "id": "S3",
+      "detected": true
+    },
+    {
+      "id": "S4",
+      "detected": true
+    },
+    {
+      "id": "S5",
+      "detected": true
+    },
+    {
+      "id": "S6",
+      "detected": true
+    },
+    {
+      "id": "S7",
+      "detected": false
+    },
+    {
+      "id": "S8",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 5,
+    "specificity": 5,
+    "actionability": 5
+  },
+  "notes": "最大缺陷是未按 suggest_new 要求给出手续费档位计算的新增用例建议，仅在 TC-01-01 顺带验证且未覆盖 5 元档与边界。",
+  "ok": true,
+  "n_samples": 2
+}

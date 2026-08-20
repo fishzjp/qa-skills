@@ -1,0 +1,7 @@
+{
+  "exec_ok": true,
+  "pass_rate": 0.875,
+  "n_tests": 32,
+  "n_failed": 4,
+  "raw_tail": "test_create_coupon.py:11: NameError\n=========================== short test summary info ============================\nFAILED test_claim_coupon.py::TestClaimCouponSuccess::test_claim_success - ass...\nFAILED test_claim_coupon.py::TestClaimCouponLimit::test_claim_exceeds_limit_returns_409\nFAILED test_claim_coupon.py::TestClaimCouponLimit::test_repeated_claim_same_coupon_reaches_limit\nFAILED test_create_coupon.py::TestCreateCouponAuth::test_no_auth_returns_401\n4 failed, 27 passed, 1 skipped in 0.16s\n"
+}

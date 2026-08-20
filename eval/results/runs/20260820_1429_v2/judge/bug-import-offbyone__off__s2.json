@@ -1,0 +1,33 @@
+{
+  "point_results": [],
+  "detection_results": [
+    {
+      "id": "F1",
+      "detected": true
+    },
+    {
+      "id": "F2",
+      "detected": true
+    },
+    {
+      "id": "F3",
+      "detected": true
+    },
+    {
+      "id": "F4",
+      "detected": true
+    },
+    {
+      "id": "F5",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 5,
+    "specificity": 5,
+    "actionability": 5
+  },
+  "notes": "产出在根因定位、影响面分析及修复回归建议上与黄金标准完全对齐，细节充分且可直接落地执行，无明显缺陷。",
+  "ok": true,
+  "n_samples": 3
+}

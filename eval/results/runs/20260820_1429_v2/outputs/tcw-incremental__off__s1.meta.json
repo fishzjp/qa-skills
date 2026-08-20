@@ -1,0 +1,14 @@
+{
+  "task": "tcw-incremental",
+  "mode": "off",
+  "sample": 1,
+  "ok": true,
+  "error": null,
+  "usage": {
+    "prompt_tokens": 1185,
+    "completion_tokens": 5083,
+    "total_tokens": 6268
+  },
+  "model": "glm-5-2-260617",
+  "ts": "2026-08-20T15:27:53"
+}

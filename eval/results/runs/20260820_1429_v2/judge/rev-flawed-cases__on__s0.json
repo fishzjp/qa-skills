@@ -1,0 +1,73 @@
+{
+  "point_results": [],
+  "detection_results": [
+    {
+      "id": "V01",
+      "detected": true
+    },
+    {
+      "id": "V02",
+      "detected": true
+    },
+    {
+      "id": "V03",
+      "detected": true
+    },
+    {
+      "id": "V04",
+      "detected": true
+    },
+    {
+      "id": "V05",
+      "detected": true
+    },
+    {
+      "id": "V06",
+      "detected": true
+    },
+    {
+      "id": "V07",
+      "detected": true
+    },
+    {
+      "id": "V08",
+      "detected": true
+    },
+    {
+      "id": "V09",
+      "detected": true
+    },
+    {
+      "id": "V10",
+      "detected": true
+    },
+    {
+      "id": "V11",
+      "detected": true
+    },
+    {
+      "id": "V12",
+      "detected": true
+    },
+    {
+      "id": "V13",
+      "detected": true
+    },
+    {
+      "id": "V14",
+      "detected": true
+    },
+    {
+      "id": "V15",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 5,
+    "specificity": 5,
+    "actionability": 4
+  },
+  "notes": "产出高质量修复了全部植入问题并无缝补齐覆盖缺口，无明显缺陷。",
+  "ok": true,
+  "n_samples": 3
+}

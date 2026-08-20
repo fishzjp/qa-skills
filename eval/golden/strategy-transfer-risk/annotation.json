@@ -11,21 +11,110 @@
   ],
   "expected_output": "测试策略文件：Risk Map（每条风险含等级/证据/置信度）+ scope（范围+深度+理由）+ automation_plan 提案 + regression_plan",
   "expected_risks": [
-    {"id": "RK1", "point": "三步无分布式事务，中途失败回滚不完整 → 双方余额不一致（资损/数据一致性）", "level": "Critical", "match_keywords": ["事务", "回滚", "不一致", "补偿"]},
-    {"id": "RK2", "point": "中间计算用 float → 精度误差（资金类高敏感）", "level": "High", "match_keywords": ["float", "精度"]},
-    {"id": "RK3", "point": "无幂等键 → 网络重试重复转账（资损）", "level": "Critical", "match_keywords": ["幂等", "重复"]},
-    {"id": "RK4", "point": "日累计读 30 秒缓存 → 30 秒窗口内并发绕过日限额", "level": "High", "match_keywords": ["缓存", "日累计", "限额"]},
-    {"id": "RK5", "point": "风控回调超时 10 分钟自动放行 → 大额风控被绕过", "level": "High", "match_keywords": ["风控", "超时", "放行"]},
-    {"id": "RK6", "point": "转账单号无唯一约束 → 并发/重试生成重复单号", "level": "Medium", "match_keywords": ["单号", "唯一"]}
+    {
+      "id": "RK1",
+      "point": "三步无分布式事务，中途失败回滚不完整 → 双方余额不一致（资损/数据一致性）",
+      "level": "Critical",
+      "match_keywords": [
+        "事务",
+        "回滚",
+        "不一致",
+        "补偿"
+      ]
+    },
+    {
+      "id": "RK2",
+      "point": "中间计算用 float → 精度误差（资金类高敏感）",
+      "level": "High",
+      "match_keywords": [
+        "float",
+        "精度"
+      ]
+    },
+    {
+      "id": "RK3",
+      "point": "无幂等键 → 网络重试重复转账（资损）",
+      "level": "Critical",
+      "match_keywords": [
+        "幂等",
+        "重复"
+      ]
+    },
+    {
+      "id": "RK4",
+      "point": "日累计读 30 秒缓存 → 30 秒窗口内并发绕过日限额",
+      "level": "High",
+      "match_keywords": [
+        "缓存",
+        "日累计",
+        "限额"
+      ]
+    },
+    {
+      "id": "RK5",
+      "point": "风控回调超时 10 分钟自动放行 → 大额风控被绕过",
+      "level": "High",
+      "match_keywords": [
+        "风控",
+        "超时",
+        "放行"
+      ]
+    },
+    {
+      "id": "RK6",
+      "point": "转账单号无唯一约束 → 并发/重试生成重复单号",
+      "level": "Medium",
+      "match_keywords": [
+        "单号",
+        "唯一"
+      ]
+    }
   ],
   "testable_points": [
-    {"id": "P01", "point": "每条风险带证据（指向材料 2 的具体要点）与置信度，评级有依据（Impact×Likelihood 或等价论证）", "type": "functional"},
-    {"id": "P02", "point": "scope 为范围+深度+理由结构，而非布尔开关；纳入理由可追溯到风险编号", "type": "functional"},
-    {"id": "P03", "point": "性能/安全维度显式 handoff（include:false + 移交说明），不静默缺失", "type": "functional"},
-    {"id": "P04", "point": "automation_plan 为提案形态：建议自动化清单+框架+不自动化理由，不直接裁决", "type": "functional"},
-    {"id": "P05", "point": "regression_plan 指定锚点用例（Critical 风险对应的 P0）", "type": "functional"},
-    {"id": "P06", "point": "不写具体测试用例（策略到范围/深度/优先级为止）", "type": "functional"}
+    {
+      "id": "P01",
+      "point": "每条风险带证据（指向材料 2 的具体要点）与置信度，评级有依据（Impact×Likelihood 或等价论证）",
+      "type": "functional"
+    },
+    {
+      "id": "P02",
+      "point": "scope 为范围+深度+理由结构，而非布尔开关；纳入理由可追溯到风险编号",
+      "type": "functional"
+    },
+    {
+      "id": "P03",
+      "point": "性能/安全维度显式 handoff（include:false + 移交说明），不静默缺失",
+      "type": "functional"
+    },
+    {
+      "id": "P04",
+      "point": "automation_plan 为提案形态：建议自动化清单+框架+不自动化理由，不直接裁决",
+      "type": "functional"
+    },
+    {
+      "id": "P05",
+      "point": "regression_plan 指定锚点用例（Critical 风险对应的 P0）",
+      "type": "functional"
+    },
+    {
+      "id": "P06",
+      "point": "不写具体测试用例（策略到范围/深度/优先级为止）",
+      "type": "functional"
+    },
+    {
+      "id": "P07",
+      "point": "scope 的 functional 深度理由覆盖大额风控分支（≥2000 审核、审核中冻结、通过才到账）与限额边界（单笔 5000/日累计 20000）",
+      "type": "functional"
+    }
   ],
   "known_bugs": [],
-  "executability_focus": []
+  "executability_focus": [],
+  "audit": {
+    "audited_by": "independent-reviewer(role) via glm-5-2-260617 + 人工(作者)复核",
+    "date": "2026-08-20",
+    "note": "审计一致率 0.90;flagged 项人工逐条复核后落地",
+    "changes": [
+      "新增 P07（材料可推导的深度理由）"
+    ]
+  }
 }

@@ -1,0 +1,7 @@
+{
+  "exec_ok": true,
+  "pass_rate": 0.8636,
+  "n_tests": 22,
+  "n_failed": 3,
+  "raw_tail": "UND\", \"message\": \"not found\"}\nE       assert 404 in (200, 204)\nE        +  where 404 = <Response [404]>.status_code\n\nconftest.py:107: AssertionError\n=========================== short test summary info ============================\nERROR test_claim_coupon.py::TestClaimCoupon::test_claim_success - AssertionEr...\nERROR test_claim_coupon.py::TestClaimCoupon::test_claim_without_token - Asser...\nERROR test_claim_coupon.py::TestClaimCoupon::test_claim_exceeds_per_user_limit\n19 passed, 3 errors in 0.15s\n"
+}

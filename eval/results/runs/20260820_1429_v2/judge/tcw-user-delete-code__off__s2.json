@@ -1,0 +1,90 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": false
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    },
+    {
+      "id": "P06",
+      "covered": true
+    },
+    {
+      "id": "P07",
+      "covered": true
+    },
+    {
+      "id": "P08",
+      "covered": true
+    },
+    {
+      "id": "P09",
+      "covered": true
+    },
+    {
+      "id": "P10",
+      "covered": false
+    },
+    {
+      "id": "P11",
+      "covered": true
+    },
+    {
+      "id": "P12",
+      "covered": true
+    },
+    {
+      "id": "P13",
+      "covered": true
+    },
+    {
+      "id": "P14",
+      "covered": true
+    },
+    {
+      "id": "P15",
+      "covered": true
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "BUG-1",
+      "detected": true
+    },
+    {
+      "id": "BUG-2",
+      "detected": true
+    },
+    {
+      "id": "BUG-3",
+      "detected": true
+    },
+    {
+      "id": "BUG-4",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 5,
+    "specificity": 5,
+    "actionability": 5
+  },
+  "notes": "缺陷检出全面且有数据级验证步骤，但BUG-3判定与黄金标准存在偏差，且缺中文长度计数验证用例。",
+  "ok": true,
+  "n_samples": 2
+}

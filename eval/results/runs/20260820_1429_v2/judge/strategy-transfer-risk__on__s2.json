@@ -1,0 +1,66 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    },
+    {
+      "id": "P06",
+      "covered": true
+    },
+    {
+      "id": "P07",
+      "covered": true
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "RK1",
+      "detected": true
+    },
+    {
+      "id": "RK2",
+      "detected": true
+    },
+    {
+      "id": "RK3",
+      "detected": true
+    },
+    {
+      "id": "RK4",
+      "detected": true
+    },
+    {
+      "id": "RK5",
+      "detected": true
+    },
+    {
+      "id": "RK6",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 5,
+    "specificity": 5,
+    "actionability": 5
+  },
+  "notes": "产出高度完备，风险识别挂证据、scope 结构与 handoff、自动化提案及回归锚点均符合黄金标准，无明显缺陷。",
+  "ok": true,
+  "n_samples": 3
+}

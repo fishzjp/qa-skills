@@ -1,0 +1,31 @@
+{
+  "type": "object",
+  "properties": {
+    "audit_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "verdict": {"type": "string", "enum": ["kept", "revise", "remove"]},
+          "reason": {"type": "string"},
+          "revised_point": {"type": "string"}
+        },
+        "required": ["id", "verdict", "reason"]
+      }
+    },
+    "missing_points": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "point": {"type": "string"},
+          "basis": {"type": "string"}
+        },
+        "required": ["point", "basis"]
+      }
+    }
+  },
+  "required": ["audit_results", "missing_points"],
+  "additionalProperties": false
+}

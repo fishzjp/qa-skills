@@ -1,0 +1,45 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": false
+    },
+    {
+      "id": "P05",
+      "covered": true
+    },
+    {
+      "id": "P06",
+      "covered": true
+    },
+    {
+      "id": "P07",
+      "covered": true
+    },
+    {
+      "id": "P08",
+      "covered": true
+    }
+  ],
+  "detection_results": [],
+  "quality": {
+    "correctness": 4,
+    "specificity": 4,
+    "actionability": 3
+  },
+  "notes": "缺少 49999 边界用例，且环境账号仍为 TODO 占位符影响直接执行。",
+  "ok": true,
+  "n_samples": 3
+}

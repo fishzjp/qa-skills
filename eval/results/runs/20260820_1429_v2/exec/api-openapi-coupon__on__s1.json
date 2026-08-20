@@ -1,0 +1,7 @@
+{
+  "exec_ok": true,
+  "pass_rate": 0.7885,
+  "n_tests": 52,
+  "n_failed": 11,
+  "raw_tail": "oundary::test_TC_CREATE_24_name为纯空格返回400\nERROR test_coupon_claim.py::TestClaimCouponSuccess::test_TC_CLAIM_01_正常领取已发布券返回200和user_coupon_id\nERROR test_coupon_claim.py::TestClaimCouponAuth::test_TC_CLAIM_05_无Token返回401\nERROR test_coupon_claim.py::TestClaimCouponAuth::test_TC_CLAIM_06_过期Token返回401\nERROR test_coupon_claim.py::TestClaimCouponAuth::test_TC_CLAIM_07_错误Token返回401\nERROR test_coupon_claim.py::TestClaimCouponConsistency::test_TC_CLAIM_10_领取后用户券列表包含该券\n6 failed, 41 passed, 5 errors in 0.25s\n"
+}

@@ -1,0 +1,134 @@
+{
+  "point_results": [
+    {
+      "id": "V01",
+      "covered": false
+    },
+    {
+      "id": "V02",
+      "covered": true
+    },
+    {
+      "id": "V03",
+      "covered": true
+    },
+    {
+      "id": "V04",
+      "covered": true
+    },
+    {
+      "id": "V05",
+      "covered": true
+    },
+    {
+      "id": "V06",
+      "covered": false
+    },
+    {
+      "id": "V07",
+      "covered": false
+    },
+    {
+      "id": "V08",
+      "covered": false
+    },
+    {
+      "id": "V09",
+      "covered": true
+    },
+    {
+      "id": "V10",
+      "covered": false
+    },
+    {
+      "id": "V11",
+      "covered": true
+    },
+    {
+      "id": "V12",
+      "covered": true
+    },
+    {
+      "id": "V13",
+      "covered": true
+    },
+    {
+      "id": "V14",
+      "covered": true
+    },
+    {
+      "id": "V15",
+      "covered": true
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "V01",
+      "detected": true
+    },
+    {
+      "id": "V02",
+      "detected": true
+    },
+    {
+      "id": "V03",
+      "detected": true
+    },
+    {
+      "id": "V04",
+      "detected": true
+    },
+    {
+      "id": "V05",
+      "detected": true
+    },
+    {
+      "id": "V06",
+      "detected": false
+    },
+    {
+      "id": "V07",
+      "detected": false
+    },
+    {
+      "id": "V08",
+      "detected": false
+    },
+    {
+      "id": "V09",
+      "detected": true
+    },
+    {
+      "id": "V10",
+      "detected": true
+    },
+    {
+      "id": "V11",
+      "detected": true
+    },
+    {
+      "id": "V12",
+      "detected": true
+    },
+    {
+      "id": "V13",
+      "detected": true
+    },
+    {
+      "id": "V14",
+      "detected": true
+    },
+    {
+      "id": "V15",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 4,
+    "specificity": 3,
+    "actionability": 2
+  },
+  "notes": "大量可执行性违规（无入口路径、P0泛滥未改、DMP无时限无解释）在修订版中仍未解决，零上下文执行者无法直接开工。",
+  "ok": true,
+  "n_samples": 3
+}

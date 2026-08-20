@@ -9,16 +9,64 @@
   ],
   "expected_output": "Bug 分析条目：现象/复现/Root Cause（含 status 标注）/Evidence/影响范围/修复建议/回归建议",
   "expected_findings": [
-    {"id": "F1", "point": "根因定位到 L31：reader.line_num 在 DictReader 迭代时已指向当前数据行（含表头计数），再 +1 导致行号大 1", "match_keywords": ["line_num", "+1", "L31", "31"]},
-    {"id": "F2", "point": "指出 L35-37 通用异常分支行号处理不一致（不加 1），同一文件内两分支行为不统一——修复时应一并统一", "match_keywords": ["L35", "不一致", "通用异常", "分支"]},
-    {"id": "F3", "point": "影响范围：所有含校验失败行的导入都会错位提示；含'系统错误'的行行为又不同（错位方向不同），均误导排查", "match_keywords": ["影响", "错位"]},
-    {"id": "F4", "point": "修复建议方向：统一行号口径（以 line_num 为准或统一偏移），不越界写完整补丁", "match_keywords": ["统一", "口径", "修复"]},
-    {"id": "F5", "point": "回归建议：单行失败/多行失败/首数据行失败/系统错误行的行号提示 + 全部成功无提示，至少覆盖", "match_keywords": ["回归", "行号"]}
+    {
+      "id": "F1",
+      "point": "根因定位到 L31：line_num 在迭代时已指向当前数据行（含表头计数），再 +1 导致行号大 1；结合复现（第 3 行报错提示第 4 行）相互印证",
+      "match_keywords": [
+        "line_num",
+        "+1",
+        "L31",
+        "31"
+      ]
+    },
+    {
+      "id": "F2",
+      "point": "指出 L35-37 通用异常分支行号处理不一致（不加 1），同一文件内两分支行为不统一——修复时应一并统一",
+      "match_keywords": [
+        "L35",
+        "不一致",
+        "通用异常",
+        "分支"
+      ]
+    },
+    {
+      "id": "F3",
+      "point": "影响范围：所有含校验失败行的导入统一偏移 +1（非仅首条）；名称唯一性冲突走 IntegrityError→L35 通用异常分支，行号口径不一致",
+      "match_keywords": [
+        "影响",
+        "错位"
+      ]
+    },
+    {
+      "id": "F4",
+      "point": "修复建议方向：统一行号口径（以 line_num 为准或统一偏移），不越界写完整补丁",
+      "match_keywords": [
+        "统一",
+        "口径",
+        "修复"
+      ]
+    },
+    {
+      "id": "F5",
+      "point": "回归建议：单行失败/多行失败/首数据行失败/系统错误行的行号提示 + 全部成功无提示，至少覆盖",
+      "match_keywords": [
+        "回归",
+        "行号"
+      ]
+    }
   ],
   "testable_points": [],
   "known_bugs": [],
   "executability_focus": [
     "Root Cause 标注 status（读代码推断为 Inference，或已复现验证为 Verified）",
     "Evidence 给出文件:行"
-  ]
+  ],
+  "audit": {
+    "audited_by": "independent-reviewer(role) via glm-5-2-260617 + 人工(作者)复核",
+    "date": "2026-08-20",
+    "note": "审计一致率 0.90;flagged 项人工逐条复核后落地",
+    "changes": [
+      "F1/F3 表述补充（审计细化）"
+    ]
+  }
 }

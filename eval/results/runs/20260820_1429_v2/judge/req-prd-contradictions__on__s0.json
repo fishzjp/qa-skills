@@ -1,0 +1,74 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "Q1",
+      "detected": true
+    },
+    {
+      "id": "Q2",
+      "detected": false
+    },
+    {
+      "id": "Q3",
+      "detected": true
+    },
+    {
+      "id": "Q4",
+      "detected": false
+    },
+    {
+      "id": "Q5",
+      "detected": false
+    },
+    {
+      "id": "Q6",
+      "detected": false
+    },
+    {
+      "id": "Q7",
+      "detected": true
+    },
+    {
+      "id": "Q8",
+      "detected": false
+    },
+    {
+      "id": "Q9",
+      "detected": false
+    },
+    {
+      "id": "Q10",
+      "detected": false
+    }
+  ],
+  "quality": {
+    "correctness": 4,
+    "specificity": 4,
+    "actionability": 4
+  },
+  "notes": "模型结构与来源标注完善，但 open_questions 检出遗漏多项核心矛盾（Q4/Q5/Q6/Q8/Q10）且个别处隐含硬猜。",
+  "ok": true,
+  "n_samples": 3
+}

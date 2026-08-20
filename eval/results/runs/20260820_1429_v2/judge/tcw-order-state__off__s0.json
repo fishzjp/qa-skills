@@ -1,0 +1,97 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    },
+    {
+      "id": "P06",
+      "covered": true
+    },
+    {
+      "id": "P07",
+      "covered": true
+    },
+    {
+      "id": "P08",
+      "covered": true
+    },
+    {
+      "id": "P09",
+      "covered": true
+    },
+    {
+      "id": "P10",
+      "covered": true
+    },
+    {
+      "id": "P11",
+      "covered": false
+    },
+    {
+      "id": "P12",
+      "covered": false
+    },
+    {
+      "id": "P13",
+      "covered": true
+    },
+    {
+      "id": "P14",
+      "covered": true
+    },
+    {
+      "id": "P15",
+      "covered": true
+    },
+    {
+      "id": "P16",
+      "covered": true
+    },
+    {
+      "id": "P17",
+      "covered": false
+    },
+    {
+      "id": "P18",
+      "covered": false
+    },
+    {
+      "id": "P19",
+      "covered": false
+    },
+    {
+      "id": "P20",
+      "covered": true
+    },
+    {
+      "id": "P21",
+      "covered": false
+    }
+  ],
+  "detection_results": [],
+  "quality": {
+    "correctness": 4,
+    "specificity": 3,
+    "actionability": 4
+  },
+  "notes": "非法转换验证与时间边界（72h/7天）用例缺失，且未覆盖循环流转与数据持久化验证。",
+  "ok": true,
+  "n_samples": 3
+}

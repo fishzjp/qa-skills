@@ -1,0 +1,33 @@
+{
+  "point_results": [],
+  "detection_results": [
+    {
+      "id": "F1",
+      "detected": true
+    },
+    {
+      "id": "F2",
+      "detected": true
+    },
+    {
+      "id": "F3",
+      "detected": true
+    },
+    {
+      "id": "F4",
+      "detected": true
+    },
+    {
+      "id": "F5",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 5,
+    "specificity": 5,
+    "actionability": 5
+  },
+  "notes": "产出完整覆盖根因、影响面、修复建议及回归建议，但影响范围中 IntegrityError 路径仅作待澄清，未在主影响分析中明确判定行号口径不一致。",
+  "ok": true,
+  "n_samples": 3
+}

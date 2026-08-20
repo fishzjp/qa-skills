@@ -1,0 +1,33 @@
+{
+  "point_results": [],
+  "detection_results": [
+    {
+      "id": "F1",
+      "detected": true
+    },
+    {
+      "id": "F2",
+      "detected": true
+    },
+    {
+      "id": "F3",
+      "detected": true
+    },
+    {
+      "id": "F4",
+      "detected": true
+    },
+    {
+      "id": "F5",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 5,
+    "specificity": 5,
+    "actionability": 5
+  },
+  "notes": "根因定位准确，影响面分析清晰，修复建议及回归场景具体可执行，无最大缺陷。",
+  "ok": true,
+  "n_samples": 3
+}

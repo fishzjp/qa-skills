@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "winner": {"type": "string", "enum": ["A", "B", "tie"]},
+    "reason": {"type": "string"}
+  },
+  "required": ["winner", "reason"],
+  "additionalProperties": false
+}

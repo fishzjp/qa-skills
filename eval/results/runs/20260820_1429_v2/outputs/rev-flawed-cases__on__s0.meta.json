@@ -1,0 +1,14 @@
+{
+  "task": "rev-flawed-cases",
+  "mode": "on",
+  "sample": 0,
+  "ok": true,
+  "error": null,
+  "usage": {
+    "prompt_tokens": 9550,
+    "completion_tokens": 26841,
+    "total_tokens": 36391
+  },
+  "model": "glm-5-2-260617",
+  "ts": "2026-08-20T15:05:13"
+}

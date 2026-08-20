@@ -1,0 +1,66 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "S1",
+      "detected": true
+    },
+    {
+      "id": "S2",
+      "detected": true
+    },
+    {
+      "id": "S3",
+      "detected": true
+    },
+    {
+      "id": "S4",
+      "detected": true
+    },
+    {
+      "id": "S5",
+      "detected": false
+    },
+    {
+      "id": "S6",
+      "detected": false
+    },
+    {
+      "id": "S7",
+      "detected": false
+    },
+    {
+      "id": "S8",
+      "detected": false
+    }
+  ],
+  "quality": {
+    "correctness": 5,
+    "specificity": 5,
+    "actionability": 4
+  },
+  "notes": "回归分桶存在严重错误：TC-01-03误入必须区，TC-03-01误入建议区，且TC-04-01等未归入显式排除区，新增用例也仅建议移交而未实质输出。",
+  "ok": true,
+  "n_samples": 2
+}

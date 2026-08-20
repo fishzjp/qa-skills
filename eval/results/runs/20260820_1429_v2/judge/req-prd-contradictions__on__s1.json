@@ -1,0 +1,74 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "Q1",
+      "detected": true
+    },
+    {
+      "id": "Q2",
+      "detected": true
+    },
+    {
+      "id": "Q3",
+      "detected": true
+    },
+    {
+      "id": "Q4",
+      "detected": true
+    },
+    {
+      "id": "Q5",
+      "detected": true
+    },
+    {
+      "id": "Q6",
+      "detected": true
+    },
+    {
+      "id": "Q7",
+      "detected": true
+    },
+    {
+      "id": "Q8",
+      "detected": true
+    },
+    {
+      "id": "Q9",
+      "detected": true
+    },
+    {
+      "id": "Q10",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 5,
+    "specificity": 5,
+    "actionability": 5
+  },
+  "notes": "产出质量极高，完整覆盖所有可测点并精准命中全部检出项，结构清晰、来源标注完备，无明显缺陷。",
+  "ok": true,
+  "n_samples": 3
+}

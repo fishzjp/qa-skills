@@ -1,0 +1,97 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    },
+    {
+      "id": "P06",
+      "covered": true
+    },
+    {
+      "id": "P07",
+      "covered": true
+    },
+    {
+      "id": "P08",
+      "covered": true
+    },
+    {
+      "id": "P09",
+      "covered": true
+    },
+    {
+      "id": "P10",
+      "covered": true
+    },
+    {
+      "id": "P11",
+      "covered": true
+    },
+    {
+      "id": "P12",
+      "covered": true
+    },
+    {
+      "id": "P13",
+      "covered": true
+    },
+    {
+      "id": "P14",
+      "covered": true
+    },
+    {
+      "id": "P15",
+      "covered": true
+    },
+    {
+      "id": "P16",
+      "covered": true
+    },
+    {
+      "id": "P17",
+      "covered": false
+    },
+    {
+      "id": "P18",
+      "covered": false
+    },
+    {
+      "id": "P19",
+      "covered": true
+    },
+    {
+      "id": "P20",
+      "covered": true
+    },
+    {
+      "id": "P21",
+      "covered": true
+    }
+  ],
+  "detection_results": [],
+  "quality": {
+    "correctness": 4,
+    "specificity": 4,
+    "actionability": 3
+  },
+  "notes": "缺失特定非法转换（待分配提交方案、处理中撤单）及精确边界时间用例，且多处地址入口和Mock触发方式仍为TODO，无法直接执行。",
+  "ok": true,
+  "n_samples": 3
+}

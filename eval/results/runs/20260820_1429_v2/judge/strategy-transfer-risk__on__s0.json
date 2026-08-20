@@ -1,0 +1,66 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    },
+    {
+      "id": "P06",
+      "covered": true
+    },
+    {
+      "id": "P07",
+      "covered": true
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "RK1",
+      "detected": true
+    },
+    {
+      "id": "RK2",
+      "detected": true
+    },
+    {
+      "id": "RK3",
+      "detected": true
+    },
+    {
+      "id": "RK4",
+      "detected": true
+    },
+    {
+      "id": "RK5",
+      "detected": true
+    },
+    {
+      "id": "RK6",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 5,
+    "specificity": 5,
+    "actionability": 5
+  },
+  "notes": "产出质量极高，无明显缺陷；超出黄金标准额外补充了 R7-R11 与待澄清清单，结构完整且可直接落地执行。",
+  "ok": true,
+  "n_samples": 3
+}

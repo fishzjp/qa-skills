@@ -1,0 +1,66 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": false
+    },
+    {
+      "id": "P04",
+      "covered": false
+    },
+    {
+      "id": "P05",
+      "covered": false
+    },
+    {
+      "id": "P06",
+      "covered": true
+    },
+    {
+      "id": "P07",
+      "covered": true
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "RK1",
+      "detected": true
+    },
+    {
+      "id": "RK2",
+      "detected": true
+    },
+    {
+      "id": "RK3",
+      "detected": true
+    },
+    {
+      "id": "RK4",
+      "detected": true
+    },
+    {
+      "id": "RK5",
+      "detected": true
+    },
+    {
+      "id": "RK6",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 4,
+    "specificity": 5,
+    "actionability": 3
+  },
+  "notes": "风险地图极为扎实，但缺失 scope 深度理由、性能/安全 handoff、automation_plan 与 regression_plan 多项必需产物，执行者无法据此完成全流程开工。",
+  "ok": true,
+  "n_samples": 3
+}

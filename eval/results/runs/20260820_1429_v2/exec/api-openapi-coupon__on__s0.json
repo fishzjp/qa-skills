@@ -1,0 +1,7 @@
+{
+  "exec_ok": true,
+  "pass_rate": 0.7692,
+  "n_tests": 52,
+  "n_failed": 12,
+  "raw_tail": "::TestClaimCouponLimitExceeded::test_TC_02_04_领取第4张返回409\nERROR test_coupon_claim.py::TestClaimCouponLimitExceeded::test_TC_02_05_重复领取到上限后持续409\nERROR test_coupon_claim.py::TestClaimCouponAuth::test_TC_02_10_无Token领取返回401\nERROR test_coupon_claim.py::TestClaimCouponAuth::test_TC_02_11_过期Token领取返回401\nERROR test_coupon_claim.py::TestClaimCouponAuth::test_TC_02_12_错误Token领取返回401\nERROR test_coupon_claim.py::TestClaimCouponConcurrent::test_TC_02_13_并发领取5次最多成功3次无超发\n3 failed, 40 passed, 9 errors in 0.28s\n"
+}

@@ -1,0 +1,19 @@
+{
+  "exec_ok": true,
+  "pass_rate": 0.0,
+  "n_tests_total": 2,
+  "stable_across_runs": true,
+  "runs": [
+    {
+      "passed": 0,
+      "failed": 1,
+      "total": 1
+    },
+    {
+      "passed": 0,
+      "failed": 1,
+      "total": 1
+    }
+  ],
+  "raw_fail_tail": "    \"id\": \"d2e0cadbfff4e116a53c-43ce6179133cb95a8419\",\n              \"file\": \"specs/project-management.spec.ts\",\n              \"line\": 44,\n              \"column\": 7\n            }\n          ]\n        }\n      ]\n    }\n  ],\n  \"errors\": [],\n  \"stats\": {\n    \"startTime\": \"2026-08-20T09:05:22.794Z\",\n    \"duration\": 21038.088,\n    \"expected\": 0,\n    \"skipped\": 2,\n    \"unexpected\": 1,\n    \"flaky\": 0\n  }\n}\n"
+}

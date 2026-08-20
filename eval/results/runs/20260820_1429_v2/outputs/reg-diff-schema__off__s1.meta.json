@@ -1,0 +1,14 @@
+{
+  "task": "reg-diff-schema",
+  "mode": "off",
+  "sample": 1,
+  "ok": true,
+  "error": null,
+  "usage": {
+    "prompt_tokens": 1210,
+    "completion_tokens": 4483,
+    "total_tokens": 5693
+  },
+  "model": "glm-5-2-260617",
+  "ts": "2026-08-20T14:52:57"
+}

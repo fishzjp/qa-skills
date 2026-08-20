@@ -1,0 +1,66 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "S1",
+      "detected": true
+    },
+    {
+      "id": "S2",
+      "detected": true
+    },
+    {
+      "id": "S3",
+      "detected": true
+    },
+    {
+      "id": "S4",
+      "detected": true
+    },
+    {
+      "id": "S5",
+      "detected": true
+    },
+    {
+      "id": "S6",
+      "detected": true
+    },
+    {
+      "id": "S7",
+      "detected": false
+    },
+    {
+      "id": "S8",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 4,
+    "specificity": 5,
+    "actionability": 4
+  },
+  "notes": "最大缺陷是未给出手续费新功能的新增用例建议，且排除清单遗漏了 TC-02-01。",
+  "ok": true,
+  "n_samples": 3
+}

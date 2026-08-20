@@ -1,0 +1,19 @@
+{
+  "exec_ok": true,
+  "pass_rate": 1.0,
+  "n_tests_total": 6,
+  "stable_across_runs": true,
+  "runs": [
+    {
+      "passed": 3,
+      "failed": 0,
+      "total": 3
+    },
+    {
+      "passed": 3,
+      "failed": 0,
+      "total": 3
+    }
+  ],
+  "raw_fail_tail": ""
+}

@@ -1,0 +1,74 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "Q1",
+      "detected": true
+    },
+    {
+      "id": "Q2",
+      "detected": true
+    },
+    {
+      "id": "Q3",
+      "detected": true
+    },
+    {
+      "id": "Q4",
+      "detected": false
+    },
+    {
+      "id": "Q5",
+      "detected": false
+    },
+    {
+      "id": "Q6",
+      "detected": true
+    },
+    {
+      "id": "Q7",
+      "detected": true
+    },
+    {
+      "id": "Q8",
+      "detected": false
+    },
+    {
+      "id": "Q9",
+      "detected": true
+    },
+    {
+      "id": "Q10",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 4,
+    "specificity": 4,
+    "actionability": 4
+  },
+  "notes": "最大缺陷是遗漏了多项关键矛盾（抵现叠加顺序、冻结失败时限、风控扣分目标、有效评价标准），导致澄清清单不完整，且角色描述中存在‘普通会员1倍’的轻度硬猜。",
+  "ok": true,
+  "n_samples": 3
+}

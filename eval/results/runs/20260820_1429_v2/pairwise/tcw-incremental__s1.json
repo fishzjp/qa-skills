@@ -1,0 +1,10 @@
+{
+  "ok": true,
+  "round1": {
+    "winner": "B",
+    "reason": ""
+  },
+  "round2": "on",
+  "result": "tie",
+  "position_consistent": false
+}

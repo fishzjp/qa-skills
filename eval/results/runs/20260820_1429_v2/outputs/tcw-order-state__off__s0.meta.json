@@ -1,0 +1,14 @@
+{
+  "task": "tcw-order-state",
+  "mode": "off",
+  "sample": 0,
+  "ok": true,
+  "error": null,
+  "usage": {
+    "prompt_tokens": 587,
+    "completion_tokens": 3372,
+    "total_tokens": 3959
+  },
+  "model": "glm-5-2-260617",
+  "ts": "2026-08-20T15:29:55"
+}

@@ -1,0 +1,90 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    },
+    {
+      "id": "P06",
+      "covered": true
+    },
+    {
+      "id": "P07",
+      "covered": true
+    },
+    {
+      "id": "P08",
+      "covered": true
+    },
+    {
+      "id": "P09",
+      "covered": true
+    },
+    {
+      "id": "P10",
+      "covered": true
+    },
+    {
+      "id": "P11",
+      "covered": true
+    },
+    {
+      "id": "P12",
+      "covered": true
+    },
+    {
+      "id": "P13",
+      "covered": false
+    },
+    {
+      "id": "P14",
+      "covered": true
+    },
+    {
+      "id": "P15",
+      "covered": true
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "BUG-1",
+      "detected": true
+    },
+    {
+      "id": "BUG-2",
+      "detected": true
+    },
+    {
+      "id": "BUG-3",
+      "detected": true
+    },
+    {
+      "id": "BUG-4",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 4,
+    "specificity": 5,
+    "actionability": 4
+  },
+  "notes": "未严格覆盖VIP到期当刻查询状态验证，且VIP宽限语意测试中未能从需求层面明确指出宽限期形同虚设的矛盾点。",
+  "ok": true,
+  "n_samples": 3
+}

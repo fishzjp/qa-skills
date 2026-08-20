@@ -1,0 +1,7 @@
+{
+  "exec_ok": true,
+  "pass_rate": 0.0,
+  "n_tests": 1,
+  "n_failed": 1,
+  "raw_tail": "n3.12/ast.py:52: in parse\n    return compile(source, filename, mode, flags,\nE     File \"/private/var/folders/yh/vvssztsx2vg5v1jwf8n1j01m0000gn/T/api_exec_cf6u61er/test_coupon_create.py\", line 285\nE       expected_fields={\"code\":\nE                       ^\nE   SyntaxError: '{' was never closed\n=========================== short test summary info ============================\nERROR test_coupon_create.py\n!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!\n1 error in 0.15s\n"
+}

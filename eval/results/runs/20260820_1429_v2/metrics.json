@@ -1,0 +1,1764 @@
+{
+  "rows": {
+    "api-openapi-coupon__on": [
+      {
+        "objective": {
+          "compile_pass": true,
+          "n_blocks": 5,
+          "errors": [],
+          "env_injected": true,
+          "assert_depth": true
+        },
+        "coverage": 1.0,
+        "detection": null,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 4452,
+          "completion_tokens": 20725,
+          "total_tokens": 25177
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {
+          "compile_pass": true,
+          "n_blocks": 5,
+          "errors": [],
+          "env_injected": true,
+          "assert_depth": true
+        },
+        "coverage": 1.0,
+        "detection": null,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 4452,
+          "completion_tokens": 24924,
+          "total_tokens": 29376
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {
+          "compile_pass": false,
+          "n_blocks": 5,
+          "errors": [
+            "api-tests/test_coupon_create.py: '{' was never closed (test_coupon_create.py, line 285)"
+          ],
+          "env_injected": true,
+          "assert_depth": true
+        },
+        "coverage": 0.6154,
+        "detection": null,
+        "quality": 0.7333,
+        "tokens": {
+          "prompt_tokens": 4452,
+          "completion_tokens": 32768,
+          "total_tokens": 37220
+        },
+        "effective_coverage": 0.6154
+      }
+    ],
+    "api-openapi-coupon__off": [
+      {
+        "objective": {
+          "compile_pass": true,
+          "n_blocks": 3,
+          "errors": [],
+          "env_injected": true,
+          "assert_depth": true
+        },
+        "coverage": 1.0,
+        "detection": null,
+        "quality": 0.8667,
+        "tokens": {
+          "prompt_tokens": 701,
+          "completion_tokens": 3903,
+          "total_tokens": 4604
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {
+          "compile_pass": true,
+          "n_blocks": 3,
+          "errors": [],
+          "env_injected": true,
+          "assert_depth": true
+        },
+        "coverage": 0.9231,
+        "detection": null,
+        "quality": 0.9333,
+        "tokens": {
+          "prompt_tokens": 701,
+          "completion_tokens": 13876,
+          "total_tokens": 14577
+        },
+        "effective_coverage": 0.9231
+      },
+      {
+        "objective": {
+          "compile_pass": false,
+          "n_blocks": 0,
+          "errors": [
+            "no python code blocks"
+          ]
+        },
+        "coverage": 1.0,
+        "detection": null,
+        "quality": 0.8667,
+        "tokens": {
+          "prompt_tokens": 701,
+          "completion_tokens": 14695,
+          "total_tokens": 15396
+        },
+        "effective_coverage": 1.0
+      }
+    ],
+    "bug-import-offbyone__on": [
+      {
+        "objective": {},
+        "coverage": null,
+        "detection": 1.0,
+        "quality": 0.9333,
+        "tokens": {
+          "prompt_tokens": 3294,
+          "completion_tokens": 2839,
+          "total_tokens": 6133
+        }
+      },
+      {
+        "objective": {},
+        "coverage": null,
+        "detection": 1.0,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 3294,
+          "completion_tokens": 2072,
+          "total_tokens": 5366
+        }
+      },
+      {
+        "objective": {},
+        "coverage": null,
+        "detection": 1.0,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 3294,
+          "completion_tokens": 4005,
+          "total_tokens": 7299
+        }
+      }
+    ],
+    "bug-import-offbyone__off": [
+      {
+        "objective": {},
+        "coverage": null,
+        "detection": 1.0,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 879,
+          "completion_tokens": 1573,
+          "total_tokens": 2452
+        }
+      },
+      {
+        "objective": {},
+        "coverage": null,
+        "detection": 1.0,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 879,
+          "completion_tokens": 1729,
+          "total_tokens": 2608
+        }
+      },
+      {
+        "objective": {},
+        "coverage": null,
+        "detection": 1.0,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 879,
+          "completion_tokens": 1518,
+          "total_tokens": 2397
+        }
+      }
+    ],
+    "e2e-markmap-to-spec__on": [
+      {
+        "objective": {
+          "compile_pass": true,
+          "errors": [],
+          "spec_checks": {
+            "tc_naming": true,
+            "no_fixed_wait": true,
+            "po_usage": true,
+            "assert_persist": true,
+            "assert_present": true
+          }
+        },
+        "coverage": 1.0,
+        "detection": null,
+        "quality": 0.9333,
+        "tokens": {
+          "prompt_tokens": 8249,
+          "completion_tokens": 12662,
+          "total_tokens": 20911
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {
+          "compile_pass": true,
+          "errors": [],
+          "spec_checks": {
+            "tc_naming": true,
+            "no_fixed_wait": true,
+            "po_usage": true,
+            "assert_persist": true,
+            "assert_present": true
+          }
+        },
+        "coverage": 1.0,
+        "detection": null,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 8249,
+          "completion_tokens": 7326,
+          "total_tokens": 15575
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {
+          "compile_pass": true,
+          "errors": [],
+          "spec_checks": {
+            "tc_naming": true,
+            "no_fixed_wait": true,
+            "po_usage": true,
+            "assert_persist": true,
+            "assert_present": true
+          }
+        },
+        "coverage": 0.8889,
+        "detection": null,
+        "quality": 0.7333,
+        "tokens": {
+          "prompt_tokens": 8249,
+          "completion_tokens": 20105,
+          "total_tokens": 28354
+        },
+        "effective_coverage": 0.8889
+      }
+    ],
+    "e2e-markmap-to-spec__off": [
+      {
+        "objective": {
+          "compile_pass": true,
+          "errors": [],
+          "spec_checks": {
+            "tc_naming": true,
+            "no_fixed_wait": true,
+            "po_usage": true,
+            "assert_persist": true,
+            "assert_present": true
+          }
+        },
+        "coverage": 0.8889,
+        "detection": null,
+        "quality": 0.9333,
+        "tokens": {
+          "prompt_tokens": 858,
+          "completion_tokens": 18356,
+          "total_tokens": 19214
+        },
+        "effective_coverage": 0.8889
+      },
+      {
+        "objective": {
+          "compile_pass": false,
+          "errors": [
+            "tests/projects.spec.ts(3,27): error TS2307: Cannot find module '../helpers' or its corresponding type declarations.",
+            "tests/projects.spec.ts(4,30): error TS2307: Cannot find module '../pages/ProjectsPage' or its corresponding type declarations."
+          ],
+          "spec_checks": {
+            "tc_naming": true,
+            "no_fixed_wait": true,
+            "po_usage": true,
+            "assert_persist": true,
+            "assert_present": true
+          }
+        },
+        "coverage": 0.7778,
+        "detection": null,
+        "quality": 0.8,
+        "tokens": {
+          "prompt_tokens": 858,
+          "completion_tokens": 25515,
+          "total_tokens": 26373
+        },
+        "effective_coverage": 0.7778
+      },
+      {
+        "objective": {
+          "compile_pass": false,
+          "n_blocks": 0,
+          "errors": [
+            "no ts code blocks"
+          ]
+        },
+        "coverage": 0.7778,
+        "detection": null,
+        "quality": 0.7333,
+        "tokens": {
+          "prompt_tokens": 858,
+          "completion_tokens": 19908,
+          "total_tokens": 20766
+        },
+        "effective_coverage": 0.7778
+      }
+    ],
+    "reg-diff-schema__on": [
+      {
+        "objective": {},
+        "coverage": 1.0,
+        "detection": 1.0,
+        "quality": 0.8667,
+        "tokens": {
+          "prompt_tokens": 2751,
+          "completion_tokens": 10421,
+          "total_tokens": 13172
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {},
+        "coverage": 1.0,
+        "detection": 0.875,
+        "quality": 0.7333,
+        "tokens": {
+          "prompt_tokens": 2751,
+          "completion_tokens": 10722,
+          "total_tokens": 13473
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {},
+        "coverage": 1.0,
+        "detection": 0.5,
+        "quality": 0.9333,
+        "tokens": {
+          "prompt_tokens": 2751,
+          "completion_tokens": 15064,
+          "total_tokens": 17815
+        },
+        "effective_coverage": 1.0
+      }
+    ],
+    "reg-diff-schema__off": [
+      {
+        "objective": {},
+        "coverage": 1.0,
+        "detection": 0.875,
+        "quality": 0.8667,
+        "tokens": {
+          "prompt_tokens": 1210,
+          "completion_tokens": 2596,
+          "total_tokens": 3806
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {},
+        "coverage": 1.0,
+        "detection": 0.875,
+        "quality": 0.8667,
+        "tokens": {
+          "prompt_tokens": 1210,
+          "completion_tokens": 4483,
+          "total_tokens": 5693
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {},
+        "coverage": 1.0,
+        "detection": 0.875,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 1210,
+          "completion_tokens": 5128,
+          "total_tokens": 6338
+        },
+        "effective_coverage": 1.0
+      }
+    ],
+    "req-prd-contradictions__on": [
+      {
+        "objective": {},
+        "coverage": 1.0,
+        "detection": 0.3,
+        "quality": 0.8,
+        "tokens": {
+          "prompt_tokens": 3028,
+          "completion_tokens": 5774,
+          "total_tokens": 8802
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {},
+        "coverage": 1.0,
+        "detection": 1.0,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 3028,
+          "completion_tokens": 10684,
+          "total_tokens": 13712
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {},
+        "coverage": 1.0,
+        "detection": 1.0,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 3028,
+          "completion_tokens": 5842,
+          "total_tokens": 8870
+        },
+        "effective_coverage": 1.0
+      }
+    ],
+    "req-prd-contradictions__off": [
+      {
+        "objective": {},
+        "coverage": 1.0,
+        "detection": 1.0,
+        "quality": 0.9333,
+        "tokens": {
+          "prompt_tokens": 575,
+          "completion_tokens": 7042,
+          "total_tokens": 7617
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {},
+        "coverage": 1.0,
+        "detection": 0.7,
+        "quality": 0.8,
+        "tokens": {
+          "prompt_tokens": 575,
+          "completion_tokens": 3172,
+          "total_tokens": 3747
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {},
+        "coverage": 1.0,
+        "detection": 0.6,
+        "quality": 0.8,
+        "tokens": {
+          "prompt_tokens": 575,
+          "completion_tokens": 4188,
+          "total_tokens": 4763
+        },
+        "effective_coverage": 1.0
+      }
+    ],
+    "rev-flawed-cases__on": [
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 29,
+            "n_dirty": 4,
+            "clean_ratio": 0.8621,
+            "guide_score": 1.0,
+            "exec_score": 0.931,
+            "veto": false,
+            "dup_titles": 14,
+            "dup_rate": 0.4828
+          }
+        },
+        "coverage": null,
+        "detection": 1.0,
+        "quality": 0.9333,
+        "tokens": {
+          "prompt_tokens": 9550,
+          "completion_tokens": 26841,
+          "total_tokens": 36391
+        }
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 25,
+            "n_dirty": 1,
+            "clean_ratio": 0.96,
+            "guide_score": 1.0,
+            "exec_score": 0.98,
+            "veto": false,
+            "dup_titles": 10,
+            "dup_rate": 0.4
+          }
+        },
+        "coverage": null,
+        "detection": 1.0,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 9550,
+          "completion_tokens": 15911,
+          "total_tokens": 25461
+        }
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 22,
+            "n_dirty": 3,
+            "clean_ratio": 0.8636,
+            "guide_score": 1.0,
+            "exec_score": 0.9318,
+            "veto": false,
+            "dup_titles": 10,
+            "dup_rate": 0.4545
+          }
+        },
+        "coverage": null,
+        "detection": 1.0,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 9550,
+          "completion_tokens": 11469,
+          "total_tokens": 21019
+        }
+      }
+    ],
+    "rev-flawed-cases__off": [
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 8,
+            "n_dirty": 1,
+            "clean_ratio": 0.875,
+            "guide_score": 0.25,
+            "exec_score": 0.5625,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 0.6667,
+        "detection": 0.8,
+        "quality": 0.6,
+        "tokens": {
+          "prompt_tokens": 778,
+          "completion_tokens": 3133,
+          "total_tokens": 3911
+        },
+        "effective_coverage": 0.375
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 12,
+            "n_dirty": 1,
+            "clean_ratio": 0.9167,
+            "guide_score": 0.25,
+            "exec_score": 0.5833,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": null,
+        "detection": 0.8667,
+        "quality": 0.8667,
+        "tokens": {
+          "prompt_tokens": 778,
+          "completion_tokens": 5253,
+          "total_tokens": 6031
+        }
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 8,
+            "n_dirty": 2,
+            "clean_ratio": 0.75,
+            "guide_score": 0.25,
+            "exec_score": 0.5,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": null,
+        "detection": 0.6667,
+        "quality": 0.5333,
+        "tokens": {
+          "prompt_tokens": 778,
+          "completion_tokens": 3623,
+          "total_tokens": 4401
+        }
+      }
+    ],
+    "strategy-transfer-risk__on": [
+      {
+        "objective": {},
+        "coverage": 1.0,
+        "detection": 1.0,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 5084,
+          "completion_tokens": 5997,
+          "total_tokens": 11081
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {},
+        "coverage": 1.0,
+        "detection": 1.0,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 5084,
+          "completion_tokens": 5599,
+          "total_tokens": 10683
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {},
+        "coverage": 1.0,
+        "detection": 1.0,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 5084,
+          "completion_tokens": 14602,
+          "total_tokens": 19686
+        },
+        "effective_coverage": 1.0
+      }
+    ],
+    "strategy-transfer-risk__off": [
+      {
+        "objective": {},
+        "coverage": 0.7143,
+        "detection": 1.0,
+        "quality": 0.7333,
+        "tokens": {
+          "prompt_tokens": 573,
+          "completion_tokens": 4561,
+          "total_tokens": 5134
+        },
+        "effective_coverage": 0.7143
+      },
+      {
+        "objective": {},
+        "coverage": 0.8571,
+        "detection": 1.0,
+        "quality": 0.9333,
+        "tokens": {
+          "prompt_tokens": 573,
+          "completion_tokens": 4587,
+          "total_tokens": 5160
+        },
+        "effective_coverage": 0.8571
+      },
+      {
+        "objective": {},
+        "coverage": 0.5714,
+        "detection": 1.0,
+        "quality": 0.8,
+        "tokens": {
+          "prompt_tokens": 573,
+          "completion_tokens": 7764,
+          "total_tokens": 8337
+        },
+        "effective_coverage": 0.5714
+      }
+    ],
+    "tcw-coupon-prd__on": [
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 59,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 1.0,
+            "exec_score": 1.0,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 1.0,
+        "detection": null,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 15323,
+          "completion_tokens": 32423,
+          "total_tokens": 47746
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 91,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 1.0,
+            "exec_score": 1.0,
+            "veto": false,
+            "dup_titles": 1,
+            "dup_rate": 0.011
+          }
+        },
+        "coverage": 1.0,
+        "detection": null,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 15323,
+          "completion_tokens": 31885,
+          "total_tokens": 47208
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 84,
+            "n_dirty": 2,
+            "clean_ratio": 0.9762,
+            "guide_score": 1.0,
+            "exec_score": 0.9881,
+            "veto": false,
+            "dup_titles": 1,
+            "dup_rate": 0.0119
+          }
+        },
+        "coverage": 1.0,
+        "detection": null,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 15323,
+          "completion_tokens": 24302,
+          "total_tokens": 39625
+        },
+        "effective_coverage": 0.9881
+      }
+    ],
+    "tcw-coupon-prd__off": [
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 0,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 0.25,
+            "exec_score": null,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 0.9565,
+        "detection": null,
+        "quality": 0.9,
+        "tokens": {
+          "prompt_tokens": 686,
+          "completion_tokens": 6304,
+          "total_tokens": 6990
+        },
+        "effective_coverage": 0.9565
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 0,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 0.25,
+            "exec_score": null,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 0.9565,
+        "detection": null,
+        "quality": 0.9333,
+        "tokens": {
+          "prompt_tokens": 686,
+          "completion_tokens": 16417,
+          "total_tokens": 17103
+        },
+        "effective_coverage": 0.9565
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 0,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 0.25,
+            "exec_score": null,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 1.0,
+        "detection": null,
+        "quality": 0.9333,
+        "tokens": {
+          "prompt_tokens": 686,
+          "completion_tokens": 13520,
+          "total_tokens": 14206
+        },
+        "effective_coverage": 1.0
+      }
+    ],
+    "tcw-export-noui__on": [
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 41,
+            "n_dirty": 1,
+            "clean_ratio": 0.9756,
+            "guide_score": 1.0,
+            "exec_score": 0.9878,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 1.0,
+        "detection": null,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 13833,
+          "completion_tokens": 24113,
+          "total_tokens": 37946
+        },
+        "effective_coverage": 0.9878
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 46,
+            "n_dirty": 1,
+            "clean_ratio": 0.9783,
+            "guide_score": 1.0,
+            "exec_score": 0.9891,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 1.0,
+        "detection": null,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 13833,
+          "completion_tokens": 28086,
+          "total_tokens": 41919
+        },
+        "effective_coverage": 0.9891
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 26,
+            "n_dirty": 1,
+            "clean_ratio": 0.9615,
+            "guide_score": 1.0,
+            "exec_score": 0.9808,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 1.0,
+        "detection": null,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 13833,
+          "completion_tokens": 18214,
+          "total_tokens": 32047
+        },
+        "effective_coverage": 0.9808
+      }
+    ],
+    "tcw-export-noui__off": [
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 0,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 0.0,
+            "exec_score": null,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 1.0,
+        "detection": null,
+        "quality": 0.8667,
+        "tokens": {
+          "prompt_tokens": 490,
+          "completion_tokens": 2711,
+          "total_tokens": 3201
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 0,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 0.0,
+            "exec_score": null,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 1.0,
+        "detection": null,
+        "quality": 0.9333,
+        "tokens": {
+          "prompt_tokens": 490,
+          "completion_tokens": 3400,
+          "total_tokens": 3890
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 0,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 0.0,
+            "exec_score": null,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 0.9231,
+        "detection": null,
+        "quality": 0.8667,
+        "tokens": {
+          "prompt_tokens": 490,
+          "completion_tokens": 3115,
+          "total_tokens": 3605
+        },
+        "effective_coverage": 0.9231
+      }
+    ],
+    "tcw-incremental__on": [
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 11,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 1.0,
+            "exec_score": 1.0,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 1.0,
+        "detection": null,
+        "quality": 0.8667,
+        "tokens": {
+          "prompt_tokens": 13027,
+          "completion_tokens": 12426,
+          "total_tokens": 25453
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 12,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 1.0,
+            "exec_score": 1.0,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 0.875,
+        "detection": null,
+        "quality": 0.7333,
+        "tokens": {
+          "prompt_tokens": 13027,
+          "completion_tokens": 12899,
+          "total_tokens": 25926
+        },
+        "effective_coverage": 0.875
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 12,
+            "n_dirty": 1,
+            "clean_ratio": 0.9167,
+            "guide_score": 1.0,
+            "exec_score": 0.9583,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 0.875,
+        "detection": null,
+        "quality": 0.7333,
+        "tokens": {
+          "prompt_tokens": 13027,
+          "completion_tokens": 13975,
+          "total_tokens": 27002
+        },
+        "effective_coverage": 0.8385
+      }
+    ],
+    "tcw-incremental__off": [
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 13,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 1.0,
+            "exec_score": 1.0,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 1.0,
+        "detection": null,
+        "quality": 0.8,
+        "tokens": {
+          "prompt_tokens": 1185,
+          "completion_tokens": 3264,
+          "total_tokens": 4449
+        },
+        "effective_coverage": 1.0
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 12,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 1.0,
+            "exec_score": 1.0,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 0.875,
+        "detection": null,
+        "quality": 0.9333,
+        "tokens": {
+          "prompt_tokens": 1185,
+          "completion_tokens": 5083,
+          "total_tokens": 6268
+        },
+        "effective_coverage": 0.875
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 9,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 1.0,
+            "exec_score": 1.0,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 0.875,
+        "detection": null,
+        "quality": 0.8,
+        "tokens": {
+          "prompt_tokens": 1185,
+          "completion_tokens": 3667,
+          "total_tokens": 4852
+        },
+        "effective_coverage": 0.875
+      }
+    ],
+    "tcw-order-state__on": [
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 47,
+            "n_dirty": 2,
+            "clean_ratio": 0.9574,
+            "guide_score": 1.0,
+            "exec_score": 0.9787,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 0.9048,
+        "detection": null,
+        "quality": 0.7333,
+        "tokens": {
+          "prompt_tokens": 14723,
+          "completion_tokens": 14082,
+          "total_tokens": 28805
+        },
+        "effective_coverage": 0.8855
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 44,
+            "n_dirty": 2,
+            "clean_ratio": 0.9545,
+            "guide_score": 1.0,
+            "exec_score": 0.9773,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 1.0,
+        "detection": null,
+        "quality": 0.9333,
+        "tokens": {
+          "prompt_tokens": 14723,
+          "completion_tokens": 13973,
+          "total_tokens": 28696
+        },
+        "effective_coverage": 0.9773
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 45,
+            "n_dirty": 1,
+            "clean_ratio": 0.9778,
+            "guide_score": 1.0,
+            "exec_score": 0.9889,
+            "veto": false,
+            "dup_titles": 3,
+            "dup_rate": 0.0667
+          }
+        },
+        "coverage": 0.9524,
+        "detection": null,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 14723,
+          "completion_tokens": 29845,
+          "total_tokens": 44568
+        },
+        "effective_coverage": 0.9418
+      }
+    ],
+    "tcw-order-state__off": [
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 0,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 0.0,
+            "exec_score": null,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 0.7143,
+        "detection": null,
+        "quality": 0.7333,
+        "tokens": {
+          "prompt_tokens": 587,
+          "completion_tokens": 3372,
+          "total_tokens": 3959
+        },
+        "effective_coverage": 0.7143
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 0,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 0.25,
+            "exec_score": null,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 0.9524,
+        "detection": null,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 587,
+          "completion_tokens": 6851,
+          "total_tokens": 7438
+        },
+        "effective_coverage": 0.9524
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 0,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 0.0,
+            "exec_score": null,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 0.9524,
+        "detection": 1.0,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 587,
+          "completion_tokens": 9276,
+          "total_tokens": 9863
+        },
+        "effective_coverage": 0.9524
+      }
+    ],
+    "tcw-user-delete-code__on": [
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 39,
+            "n_dirty": 1,
+            "clean_ratio": 0.9744,
+            "guide_score": 1.0,
+            "exec_score": 0.9872,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 0.9333,
+        "detection": 1.0,
+        "quality": 0.8667,
+        "tokens": {
+          "prompt_tokens": 16520,
+          "completion_tokens": 32646,
+          "total_tokens": 49166
+        },
+        "effective_coverage": 0.9214
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 39,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 1.0,
+            "exec_score": 1.0,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 0.9333,
+        "detection": 1.0,
+        "quality": 0.8667,
+        "tokens": {
+          "prompt_tokens": 16520,
+          "completion_tokens": 29209,
+          "total_tokens": 45729
+        },
+        "effective_coverage": 0.9333
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 35,
+            "n_dirty": 1,
+            "clean_ratio": 0.9714,
+            "guide_score": 1.0,
+            "exec_score": 0.9857,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 1.0,
+        "detection": 1.0,
+        "quality": 0.8667,
+        "tokens": {
+          "prompt_tokens": 16520,
+          "completion_tokens": 32768,
+          "total_tokens": 49288
+        },
+        "effective_coverage": 0.9857
+      }
+    ],
+    "tcw-user-delete-code__off": [
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 0,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 0.0,
+            "exec_score": null,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 0.8667,
+        "detection": 1.0,
+        "quality": 0.8667,
+        "tokens": {
+          "prompt_tokens": 987,
+          "completion_tokens": 7380,
+          "total_tokens": 8367
+        },
+        "effective_coverage": 0.8667
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 0,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 0.0,
+            "exec_score": null,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 0.8,
+        "detection": 1.0,
+        "quality": 0.7333,
+        "tokens": {
+          "prompt_tokens": 987,
+          "completion_tokens": 7800,
+          "total_tokens": 8787
+        },
+        "effective_coverage": 0.8
+      },
+      {
+        "objective": {
+          "executability": {
+            "n_cases": 0,
+            "n_dirty": 0,
+            "clean_ratio": 1.0,
+            "guide_score": 0.0,
+            "exec_score": null,
+            "veto": false,
+            "dup_titles": 0,
+            "dup_rate": 0.0
+          }
+        },
+        "coverage": 0.8667,
+        "detection": 1.0,
+        "quality": 1.0,
+        "tokens": {
+          "prompt_tokens": 987,
+          "completion_tokens": 5599,
+          "total_tokens": 6586
+        },
+        "effective_coverage": 0.8667
+      }
+    ]
+  },
+  "stats": {
+    "effective_coverage_tcw": {
+      "mean_diff": 0.0377,
+      "ci95": [
+        0.0048,
+        0.0714
+      ],
+      "n_tasks": 5,
+      "detail": {
+        "tcw-coupon-prd": [
+          0.971,
+          0.996
+        ],
+        "tcw-export-noui": [
+          0.9744,
+          0.9859
+        ],
+        "tcw-incremental": [
+          0.9167,
+          0.9045
+        ],
+        "tcw-order-state": [
+          0.873,
+          0.9349
+        ],
+        "tcw-user-delete-code": [
+          0.8445,
+          0.9468
+        ]
+      },
+      "on_avg": 0.9536,
+      "off_avg": 0.9159
+    },
+    "effective_coverage_all": {
+      "mean_diff": 0.052,
+      "ci95": [
+        -0.006,
+        0.118
+      ],
+      "n_tasks": 10,
+      "detail": {
+        "api-openapi-coupon": [
+          0.9744,
+          0.8718
+        ],
+        "e2e-markmap-to-spec": [
+          0.8148,
+          0.963
+        ],
+        "reg-diff-schema": [
+          1.0,
+          1.0
+        ],
+        "req-prd-contradictions": [
+          1.0,
+          1.0
+        ],
+        "rev-flawed-cases": [
+          0.375,
+          null
+        ],
+        "strategy-transfer-risk": [
+          0.7143,
+          1.0
+        ],
+        "tcw-coupon-prd": [
+          0.971,
+          0.996
+        ],
+        "tcw-export-noui": [
+          0.9744,
+          0.9859
+        ],
+        "tcw-incremental": [
+          0.9167,
+          0.9045
+        ],
+        "tcw-order-state": [
+          0.873,
+          0.9349
+        ],
+        "tcw-user-delete-code": [
+          0.8445,
+          0.9468
+        ]
+      },
+      "on_avg": 0.9603,
+      "off_avg": 0.8598
+    },
+    "quality": {
+      "mean_diff": 0.0565,
+      "ci95": [
+        0.0018,
+        0.1185
+      ],
+      "n_tasks": 12,
+      "detail": {
+        "api-openapi-coupon": [
+          0.8889,
+          0.9111
+        ],
+        "bug-import-offbyone": [
+          1.0,
+          0.9778
+        ],
+        "e2e-markmap-to-spec": [
+          0.8222,
+          0.8889
+        ],
+        "reg-diff-schema": [
+          0.9111,
+          0.8444
+        ],
+        "req-prd-contradictions": [
+          0.8444,
+          0.9333
+        ],
+        "rev-flawed-cases": [
+          0.6667,
+          0.9778
+        ],
+        "strategy-transfer-risk": [
+          0.8222,
+          1.0
+        ],
+        "tcw-coupon-prd": [
+          0.9222,
+          1.0
+        ],
+        "tcw-export-noui": [
+          0.8889,
+          1.0
+        ],
+        "tcw-incremental": [
+          0.8444,
+          0.7778
+        ],
+        "tcw-order-state": [
+          0.9111,
+          0.8889
+        ],
+        "tcw-user-delete-code": [
+          0.8667,
+          0.8667
+        ]
+      },
+      "on_avg": 0.9222,
+      "off_avg": 0.8657
+    },
+    "detection": {
+      "mean_diff": 0.0231,
+      "ci95": [
+        -0.0417,
+        0.1111
+      ],
+      "n_tasks": 6,
+      "detail": {
+        "bug-import-offbyone": [
+          1.0,
+          1.0
+        ],
+        "reg-diff-schema": [
+          0.875,
+          0.7917
+        ],
+        "req-prd-contradictions": [
+          0.7667,
+          0.7667
+        ],
+        "rev-flawed-cases": [
+          0.7778,
+          1.0
+        ],
+        "strategy-transfer-risk": [
+          1.0,
+          1.0
+        ],
+        "tcw-order-state": [
+          1.0,
+          null
+        ],
+        "tcw-user-delete-code": [
+          1.0,
+          1.0
+        ]
+      },
+      "on_avg": 0.9264,
+      "off_avg": 0.9171
+    },
+    "pairwise": {
+      "win_rate_on": 0.5,
+      "wilson95": [
+        0.5,
+        0.3108,
+        0.6892
+      ],
+      "on": 1,
+      "off": 1,
+      "tie": 21,
+      "n": 23
+    },
+    "executability_on": 0.9814,
+    "executability_off": 0.7743,
+    "bug_detection_on": 1.0,
+    "compile_on": {
+      "api-openapi-coupon": 0.6667,
+      "e2e-markmap-to-spec": 1.0
+    },
+    "execution_success": {
+      "e2e-markmap-to-spec__on": 0.7778,
+      "e2e-markmap-to-spec__off": 0.0,
+      "api-openapi-coupon__on": 0.5192,
+      "api-openapi-coupon__off": 0.8693
+    },
+    "efficiency": {
+      "on": {
+        "mean_cases": 39.3,
+        "dup_rate": 0.0793,
+        "mean_tokens_total": 26297
+      },
+      "off": {
+        "mean_cases": 10.3,
+        "dup_rate": 0.0,
+        "mean_tokens_total": 7858
+      }
+    },
+    "gen_sd_effective_coverage": {
+      "api-openapi-coupon__on": 0.222,
+      "api-openapi-coupon__off": 0.0444,
+      "e2e-markmap-to-spec__on": 0.0641,
+      "e2e-markmap-to-spec__off": 0.0641,
+      "reg-diff-schema__on": 0.0,
+      "reg-diff-schema__off": 0.0,
+      "req-prd-contradictions__on": 0.0,
+      "req-prd-contradictions__off": 0.0,
+      "rev-flawed-cases__off": 0.0,
+      "strategy-transfer-risk__on": 0.0,
+      "strategy-transfer-risk__off": 0.1429,
+      "tcw-coupon-prd__on": 0.0069,
+      "tcw-coupon-prd__off": 0.0251,
+      "tcw-export-noui__on": 0.0045,
+      "tcw-export-noui__off": 0.0444,
+      "tcw-incremental__on": 0.0847,
+      "tcw-incremental__off": 0.0722,
+      "tcw-order-state__on": 0.0463,
+      "tcw-order-state__off": 0.1375,
+      "tcw-user-delete-code__on": 0.0342,
+      "tcw-user-delete-code__off": 0.0385
+    },
+    "generalization": {}
+  },
+  "gates": {
+    "G1_tcw_cov_mean": {
+      "desc": "tcw 类有效覆盖均值差 ≥ +5pp 且 bootstrap 95%CI 下界 > 0",
+      "pass": false,
+      "detail": "Δ=3.8% CI95=[0.5%, 7.1%] (n=5)"
+    },
+    "G1_state_cov": {
+      "desc": "状态机任务有效覆盖差 ≥ +20pp",
+      "pass": false,
+      "detail": "On=93.5% Off=87.3% Δ=6.2%"
+    },
+    "G2_exec": {
+      "desc": "tcw 类 On 可执行性均值 ≥ 0.85",
+      "pass": true,
+      "detail": "On 可执行性均值=0.9814"
+    },
+    "G3_bug": {
+      "desc": "代码任务 bug 检出 On ≥ 75%",
+      "pass": true,
+      "detail": "On 检出=100.0%"
+    },
+    "G4_compile": {
+      "desc": "代码类任务 On 编译通过率 100%",
+      "pass": false,
+      "detail": "{'api-openapi-coupon': 0.6667, 'e2e-markmap-to-spec': 1.0}"
+    },
+    "G5_quality": {
+      "desc": "质量均分 On ≥ 0.80 且 > Off",
+      "pass": true,
+      "detail": "On=0.9222 Off=0.8657 Δ=0.0565"
+    },
+    "G6_no_regression": {
+      "desc": "On 在 ≥ 2/3 可比任务上不劣于 Off（-10pp 容差）",
+      "pass": true,
+      "detail": "不劣于 11/12"
+    }
+  },
+  "pair_stats": {
+    "api-openapi-coupon": {
+      "on": 0,
+      "off": 0,
+      "tie": 2,
+      "n": 2
+    },
+    "bug-import-offbyone": {
+      "on": 0,
+      "off": 0,
+      "tie": 2,
+      "n": 2
+    },
+    "e2e-markmap-to-spec": {
+      "on": 1,
+      "off": 0,
+      "tie": 1,
+      "n": 2
+    },
+    "reg-diff-schema": {
+      "on": 0,
+      "off": 0,
+      "tie": 2,
+      "n": 2
+    },
+    "req-prd-contradictions": {
+      "on": 0,
+      "off": 1,
+      "tie": 1,
+      "n": 2
+    },
+    "rev-flawed-cases": {
+      "on": 0,
+      "off": 0,
+      "tie": 2,
+      "n": 2
+    },
+    "strategy-transfer-risk": {
+      "on": 0,
+      "off": 0,
+      "tie": 2,
+      "n": 2
+    },
+    "tcw-coupon-prd": {
+      "on": 0,
+      "off": 0,
+      "tie": 1,
+      "n": 1
+    },
+    "tcw-export-noui": {
+      "on": 0,
+      "off": 0,
+      "tie": 2,
+      "n": 2
+    },
+    "tcw-incremental": {
+      "on": 0,
+      "off": 0,
+      "tie": 2,
+      "n": 2
+    },
+    "tcw-order-state": {
+      "on": 0,
+      "off": 0,
+      "tie": 2,
+      "n": 2
+    },
+    "tcw-user-delete-code": {
+      "on": 0,
+      "off": 0,
+      "tie": 2,
+      "n": 2
+    }
+  },
+  "gen_model": "glm-5-2-260617",
+  "judge_model": "glm-5-2-260617",
+  "samples": 3,
+  "judge_samples": 3
+}

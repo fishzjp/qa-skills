@@ -1,0 +1,73 @@
+{
+  "point_results": [],
+  "detection_results": [
+    {
+      "id": "V01",
+      "detected": true
+    },
+    {
+      "id": "V02",
+      "detected": true
+    },
+    {
+      "id": "V03",
+      "detected": false
+    },
+    {
+      "id": "V04",
+      "detected": true
+    },
+    {
+      "id": "V05",
+      "detected": false
+    },
+    {
+      "id": "V06",
+      "detected": false
+    },
+    {
+      "id": "V07",
+      "detected": false
+    },
+    {
+      "id": "V08",
+      "detected": false
+    },
+    {
+      "id": "V09",
+      "detected": true
+    },
+    {
+      "id": "V10",
+      "detected": true
+    },
+    {
+      "id": "V11",
+      "detected": true
+    },
+    {
+      "id": "V12",
+      "detected": true
+    },
+    {
+      "id": "V13",
+      "detected": true
+    },
+    {
+      "id": "V14",
+      "detected": true
+    },
+    {
+      "id": "V15",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 3,
+    "specificity": 3,
+    "actionability": 2
+  },
+  "notes": "未检出处且多处遗留违规",
+  "ok": true,
+  "n_samples": 3
+}

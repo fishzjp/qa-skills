@@ -1,0 +1,32 @@
+{
+  "ok": true,
+  "summary": {
+    "n_items": 5,
+    "n_kept": 5,
+    "n_unparsed": 0,
+    "agreement": 1.0,
+    "flagged": [],
+    "missing": [
+      {
+        "id": "M1",
+        "point": "根因分析应结合复现步骤说明：CSV 第 3 行数据报错时，reader.line_num 为 3（DictReader 已跳过表头），L31 再 +1 得到 4，正好印证现象中提示第 4 行。",
+        "依据": "任务要求定位根因到具体代码行；Bug 报告现象与材料 2 代码行号之间存在映射关系，说明这一映射是根因分析的直接落点。"
+      },
+      {
+        "id": "M2",
+        "point": "影响范围分析应指出：若 CSV 含多条校验失败行，所有失败行行号都会统一偏移 +1，而不是仅第一条错位。",
+        "依据": "材料 2 的 L31 在 except ValidationError 分支内，会对每个失败行执行 +1；材料 1 也要求影响范围分析。"
+      },
+      {
+        "id": "M3",
+        "point": "影响范围分析应指出：名称唯一性冲突由数据库唯一索引保证，会抛 IntegrityError（非 ValidationError），会进入 L35-37 通用异常分支，行号错位方向与 ValidationError 分支不同。",
+        "依据": "材料 2 validate_coupon 注释明确冲突时抛 IntegrityError，且 L35-37 分支行号处理不同；任务要求影响范围分析。"
+      },
+      {
+        "id": "M4",
+        "point": "修复建议应说明：parse_coupon 对 int 转换（如面额非数字）可能抛 ValueError，会进入 L35-37 通用异常分支，其行号口径也需一并统一。",
+        "依据": "材料 2 parse_coupon 直接 int(row[\"面额\"])，任务要求修复建议；F2 只提到通用异常分支不一致，未覆盖数据格式错误这一触发场景。"
+      }
+    ]
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    },
+    {
+      "id": "P06",
+      "covered": true
+    },
+    {
+      "id": "P07",
+      "covered": false
+    },
+    {
+      "id": "P08",
+      "covered": true
+    }
+  ],
+  "detection_results": [],
+  "quality": {
+    "correctness": 5,
+    "specificity": 4,
+    "actionability": 3
+  },
+  "notes": "最大缺陷是变更标记不合规（使用 [v1.3变更] 而非标准 [已变更]）、缺少 49999 总量边界，且测试环境与账号全为 TODO 占位符导致无法直接执行。",
+  "ok": true,
+  "n_samples": 3
+}

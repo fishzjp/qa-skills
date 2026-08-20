@@ -1,0 +1,66 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "S1",
+      "detected": true
+    },
+    {
+      "id": "S2",
+      "detected": true
+    },
+    {
+      "id": "S3",
+      "detected": true
+    },
+    {
+      "id": "S4",
+      "detected": true
+    },
+    {
+      "id": "S5",
+      "detected": true
+    },
+    {
+      "id": "S6",
+      "detected": true
+    },
+    {
+      "id": "S7",
+      "detected": true
+    },
+    {
+      "id": "S8",
+      "detected": false
+    }
+  ],
+  "quality": {
+    "correctness": 2,
+    "specificity": 5,
+    "actionability": 4
+  },
+  "notes": "分桶错误严重：TC-04-01/TC-05-01/TC-02-01 应显式排除却进入回归清单，且未给出手续费新增用例的具体边界建议。",
+  "ok": true,
+  "n_samples": 3
+}

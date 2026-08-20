@@ -1,0 +1,73 @@
+{
+  "point_results": [],
+  "detection_results": [
+    {
+      "id": "V01",
+      "detected": true
+    },
+    {
+      "id": "V02",
+      "detected": true
+    },
+    {
+      "id": "V03",
+      "detected": true
+    },
+    {
+      "id": "V04",
+      "detected": true
+    },
+    {
+      "id": "V05",
+      "detected": true
+    },
+    {
+      "id": "V06",
+      "detected": true
+    },
+    {
+      "id": "V07",
+      "detected": false
+    },
+    {
+      "id": "V08",
+      "detected": false
+    },
+    {
+      "id": "V09",
+      "detected": true
+    },
+    {
+      "id": "V10",
+      "detected": true
+    },
+    {
+      "id": "V11",
+      "detected": true
+    },
+    {
+      "id": "V12",
+      "detected": true
+    },
+    {
+      "id": "V13",
+      "detected": true
+    },
+    {
+      "id": "V14",
+      "detected": true
+    },
+    {
+      "id": "V15",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 5,
+    "specificity": 4,
+    "actionability": 4
+  },
+  "notes": "未能识别并修复非核心拦截用例的 P0 优先级泛滥问题，且仍未在操作步骤中提供到达兑换页的具体 UI 路径，影响零上下文执行。",
+  "ok": true,
+  "n_samples": 3
+}

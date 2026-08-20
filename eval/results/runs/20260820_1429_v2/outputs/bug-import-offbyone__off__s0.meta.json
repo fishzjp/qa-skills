@@ -1,0 +1,14 @@
+{
+  "task": "bug-import-offbyone",
+  "mode": "off",
+  "sample": 0,
+  "ok": true,
+  "error": null,
+  "usage": {
+    "prompt_tokens": 879,
+    "completion_tokens": 1573,
+    "total_tokens": 2452
+  },
+  "model": "glm-5-2-260617",
+  "ts": "2026-08-20T14:37:05"
+}

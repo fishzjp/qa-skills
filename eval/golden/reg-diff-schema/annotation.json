@@ -8,22 +8,114 @@
   ],
   "expected_output": "回归清单：必须/建议/可选三级 + 每条依据 + 影响不明 + 显式排除",
   "expected_selections": [
-    {"id": "S1", "bucket": "must", "case": "TC-01-01", "reason": "coupon/service.py:122 直连（code_refs 命中改动文件），且 R1 High 锚点 + 手续费新逻辑影响创建结果", "match_keywords": ["TC-01-01"]},
-    {"id": "S2", "bucket": "must", "case": "TC-01-02", "reason": "common/validator.py:18 code_refs 直连，面额上限 1000→500 使原边界断言失效", "match_keywords": ["TC-01-02"]},
-    {"id": "S3", "bucket": "must", "case": "TC-02-02", "reason": "validator 为公共组件，编辑路径消费方（code_refs 命中 validator），新上限须在编辑路径同样生效", "match_keywords": ["TC-02-02"]},
-    {"id": "S4", "bucket": "must", "case": "TC-03-02", "reason": "validator 公共组件消费方（批量导入路径），新上限须在导入路径同样生效", "match_keywords": ["TC-03-02"]},
-    {"id": "S5", "bucket": "should", "case": "TC-01-03", "reason": "同模块（创建）间接受影响：service.py 改动区域相邻/校验链路", "match_keywords": ["TC-01-03"]},
-    {"id": "S6", "bucket": "should", "case": "TC-03-01", "reason": "导入主流程间接（导入校验链路共用 validator，主流程回归保险）", "match_keywords": ["TC-03-01"]},
-    {"id": "S7", "bucket": "suggest_new", "case": "新增用例建议：手续费档位计算（0.5/2/5 元三档 + 边界 100/101/500/501）", "match_keywords": ["手续费", "档位"]},
-    {"id": "S8", "bucket": "excluded", "case": "TC-04-01/TC-04-02/TC-05-01/TC-02-01", "reason": "发布/领取/调度模块与本次 diff 无 code_refs 或功能关联，显式排除（TC-02-01 仅调发放总量，不涉面额）", "match_keywords": ["排除"]}
+    {
+      "id": "S1",
+      "bucket": "must",
+      "case": "TC-01-01",
+      "reason": "coupon/service.py:122 直连（code_refs 命中改动文件），且 R1 High 锚点 + 手续费新逻辑影响创建结果",
+      "match_keywords": [
+        "TC-01-01"
+      ]
+    },
+    {
+      "id": "S2",
+      "bucket": "must",
+      "case": "TC-01-02",
+      "reason": "common/validator.py:18 code_refs 直连，面额上限 1000→500 使原边界断言失效",
+      "match_keywords": [
+        "TC-01-02"
+      ]
+    },
+    {
+      "id": "S3",
+      "bucket": "must",
+      "case": "TC-02-02",
+      "reason": "validator 为公共组件，编辑路径消费方（code_refs 命中 validator），新上限须在编辑路径同样生效",
+      "match_keywords": [
+        "TC-02-02"
+      ]
+    },
+    {
+      "id": "S4",
+      "bucket": "must",
+      "case": "TC-03-02",
+      "reason": "validator 公共组件消费方（批量导入路径），新上限须在导入路径同样生效",
+      "match_keywords": [
+        "TC-03-02"
+      ]
+    },
+    {
+      "id": "S5",
+      "bucket": "should",
+      "case": "TC-01-03",
+      "reason": "同模块（创建）间接受影响：service.py 改动区域相邻/校验链路",
+      "match_keywords": [
+        "TC-01-03"
+      ]
+    },
+    {
+      "id": "S6",
+      "bucket": "should",
+      "case": "TC-03-01",
+      "reason": "导入主流程回归保险（validator 链路共用），建议回归区（should）",
+      "match_keywords": [
+        "TC-03-01"
+      ]
+    },
+    {
+      "id": "S7",
+      "bucket": "suggest_new",
+      "case": "新增用例建议：手续费档位计算（0.5/2/5 元三档 + 边界 100/101/500/501）",
+      "match_keywords": [
+        "手续费",
+        "档位"
+      ]
+    },
+    {
+      "id": "S8",
+      "bucket": "excluded",
+      "case": "TC-04-01/TC-04-02/TC-05-01/TC-02-01",
+      "reason": "TC-02-01 单独显式排除（发放总量调整不涉面额校验）；发布/领取/调度模块用例（TC-04-01/04-02/05-01）列明排除及理由（至少 2 项）",
+      "match_keywords": [
+        "排除"
+      ]
+    }
   ],
   "testable_points": [
-    {"id": "P01", "point": "公共组件 validator 的全部消费方（创建/编辑/导入）都被纳入，无一遗漏", "type": "functional"},
-    {"id": "P02", "point": "每条选择给依据（code_refs 命中 / module / risk_ref）", "type": "functional"},
-    {"id": "P03", "point": "显式排除清单：未受影响用例列明并给排除理由", "type": "functional"},
-    {"id": "P04", "point": "识别出手续费为新增功能、建议新增用例（存量用例未覆盖新逻辑）", "type": "functional"},
-    {"id": "P05", "point": "面额上限 1000→500 导致 TC-01-02 原断言过时：指出需更新用例本身（移交 test-case-writing）", "type": "functional"}
+    {
+      "id": "P01",
+      "point": "公共组件 validator 的全部消费方（创建/编辑/导入）都被纳入，无一遗漏",
+      "type": "functional"
+    },
+    {
+      "id": "P02",
+      "point": "每条选择给依据（code_refs 命中 / module / risk_ref）",
+      "type": "functional"
+    },
+    {
+      "id": "P03",
+      "point": "输出含显式排除清单：不受影响的用例被列明并给排除理由（与选择清单区分）",
+      "type": "functional"
+    },
+    {
+      "id": "P04",
+      "point": "识别出手续费为新增功能、建议新增用例（存量用例未覆盖新逻辑）",
+      "type": "functional"
+    },
+    {
+      "id": "P05",
+      "point": "识别面额上限 1000→500 使 TC-01-02 原断言过时，指出需更新用例（标注/移交均可，不强求产出新用例）",
+      "type": "functional"
+    }
   ],
   "known_bugs": [],
-  "executability_focus": []
+  "executability_focus": [],
+  "audit": {
+    "audited_by": "independent-reviewer(role) via glm-5-2-260617 + 人工(作者)复核",
+    "date": "2026-08-20",
+    "note": "审计一致率 0.90;flagged 项人工逐条复核后落地",
+    "changes": [
+      "P03/P05/S6/S8 表述重写（判定歧义，审计接受）"
+    ]
+  }
 }

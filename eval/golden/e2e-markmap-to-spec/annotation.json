@@ -9,14 +9,51 @@
   ],
   "expected_output": "Page Object（projects.page.ts）+ spec（01-project-management.spec.ts）等代码文件",
   "testable_points": [
-    {"id": "P01", "point": "三条用例各对应一个 test，test 名含 TC 编号（TC-01-01/02/03）", "type": "functional"},
-    {"id": "P02", "point": "页面交互封装在 Page Object 中（spec 内不出现裸定位器 page.locator/getByRole 直连业务元素）", "type": "functional"},
-    {"id": "P03", "point": "创建项目用唯一名称（如拼接时间戳），避免与存量冲突", "type": "functional"},
-    {"id": "P04", "point": "删除验证含持久化断言（reload 后仍不存在）", "type": "functional"},
-    {"id": "P05", "point": "等待用网络/元素等待（waitForResponse/waitForLoadState），不用固定 waitForTimeout", "type": "functional"},
-    {"id": "P06", "point": "afterEach/测试末尾清理创建的项目（删除），测试自清理", "type": "functional"},
-    {"id": "P07", "point": "登录复用脚手架 LoginPage.loginAs('admin')，不重写登录", "type": "functional"},
-    {"id": "P08", "point": "搜索用例断言'仅显示该项目'（排除其他项目）", "type": "functional"}
+    {
+      "id": "P01",
+      "point": "三条用例各对应一个 test，test 名含 TC 编号（TC-01-01/02/03）",
+      "type": "functional"
+    },
+    {
+      "id": "P02",
+      "point": "页面交互封装在 Page Object 中（spec 内不出现裸定位器 page.locator/getByRole 直连业务元素）",
+      "type": "functional"
+    },
+    {
+      "id": "P03",
+      "point": "创建项目用唯一名称（如拼接时间戳），避免与存量冲突",
+      "type": "functional"
+    },
+    {
+      "id": "P04",
+      "point": "删除验证含持久化断言（reload 后仍不存在）",
+      "type": "functional"
+    },
+    {
+      "id": "P05",
+      "point": "等待用网络/元素等待（waitForResponse/waitForLoadState），不用固定 waitForTimeout",
+      "type": "functional"
+    },
+    {
+      "id": "P06",
+      "point": "afterEach/测试末尾清理创建的项目（删除），测试自清理",
+      "type": "functional"
+    },
+    {
+      "id": "P07",
+      "point": "登录复用脚手架 LoginPage.loginAs('admin')，不重写登录",
+      "type": "functional"
+    },
+    {
+      "id": "P08",
+      "point": "搜索用例断言'仅显示该项目'（排除其他项目）",
+      "type": "functional"
+    },
+    {
+      "id": "P09",
+      "point": "复用脚手架常量（BASE_URL/ACCOUNTS），不硬编码 URL 与账号密码",
+      "type": "functional"
+    }
   ],
   "known_bugs": [],
   "objective_checks": {
@@ -25,5 +62,13 @@
     "no_fixed_wait": "不出现 waitForTimeout",
     "tc_naming": "test( 名含 TC-\\d+-\\d+"
   },
-  "executability_focus": []
+  "executability_focus": [],
+  "audit": {
+    "audited_by": "independent-reviewer(role) via glm-5-2-260617 + 人工(作者)复核",
+    "date": "2026-08-20",
+    "note": "审计一致率 0.90;flagged 项人工逐条复核后落地",
+    "changes": [
+      "新增 P09（材料明确要求）"
+    ]
+  }
 }
