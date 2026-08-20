@@ -1,0 +1,14 @@
+{
+  "task": "tcw-coupon-prd",
+  "mode": "on",
+  "ok": true,
+  "error": null,
+  "usage": {
+    "prompt_tokens": 15323,
+    "completion_tokens": 25833,
+    "total_tokens": 41156
+  },
+  "resp_id": "resp_02178719969996739b762a1076dab7efa142e82428347fd324f64",
+  "model": "glm-5-2-260617",
+  "ts": "2026-08-20T12:26:58"
+}

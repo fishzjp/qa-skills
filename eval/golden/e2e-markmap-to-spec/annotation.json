@@ -1,0 +1,29 @@
+{
+  "task_id": "e2e-markmap-to-spec",
+  "skill": "automated-e2e-testing",
+  "mode": "code-gen",
+  "description": "Playwright spec + Page Object 生成：客观指标 = TypeScript 可编译 + PO 封装 + TC 编号命名 + 请求等待先于点击 + 自清理；主观 = 断言质量",
+  "skill_files_on": [
+    "automated-e2e-testing/SKILL.md",
+    "automated-e2e-testing/references/helpers_reference.md"
+  ],
+  "expected_output": "Page Object（projects.page.ts）+ spec（01-project-management.spec.ts）等代码文件",
+  "testable_points": [
+    {"id": "P01", "point": "三条用例各对应一个 test，test 名含 TC 编号（TC-01-01/02/03）", "type": "functional"},
+    {"id": "P02", "point": "页面交互封装在 Page Object 中（spec 内不出现裸定位器 page.locator/getByRole 直连业务元素）", "type": "functional"},
+    {"id": "P03", "point": "创建项目用唯一名称（如拼接时间戳），避免与存量冲突", "type": "functional"},
+    {"id": "P04", "point": "删除验证含持久化断言（reload 后仍不存在）", "type": "functional"},
+    {"id": "P05", "point": "等待用网络/元素等待（waitForResponse/waitForLoadState），不用固定 waitForTimeout", "type": "functional"},
+    {"id": "P06", "point": "afterEach/测试末尾清理创建的项目（删除），测试自清理", "type": "functional"},
+    {"id": "P07", "point": "登录复用脚手架 LoginPage.loginAs('admin')，不重写登录", "type": "functional"},
+    {"id": "P08", "point": "搜索用例断言'仅显示该项目'（排除其他项目）", "type": "functional"}
+  ],
+  "known_bugs": [],
+  "objective_checks": {
+    "tsc_compile": "提取 typescript 代码块写入临时工程（@playwright/test 环境）npx tsc --noEmit 通过 = 1",
+    "po_usage": "spec 中 page.locator/page.getByRole 直连业务元素 ≤ 2 处",
+    "no_fixed_wait": "不出现 waitForTimeout",
+    "tc_naming": "test( 名含 TC-\\d+-\\d+"
+  },
+  "executability_focus": []
+}

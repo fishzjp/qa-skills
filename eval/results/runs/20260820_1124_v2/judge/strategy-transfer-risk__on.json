@@ -1,0 +1,67 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    },
+    {
+      "id": "P06",
+      "covered": true
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "RK1",
+      "detected": true
+    },
+    {
+      "id": "RK2",
+      "detected": true
+    },
+    {
+      "id": "RK3",
+      "detected": true
+    },
+    {
+      "id": "RK4",
+      "detected": true
+    },
+    {
+      "id": "RK5",
+      "detected": true
+    },
+    {
+      "id": "RK6",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 5,
+    "specificity": 5,
+    "actionability": 5
+  },
+  "notes": "整体高度符合策略黄金标准，各模块结构与论证完整，但Risk详情中anchors标记为空待回填，对下游用例编写的直接指引略有断点。",
+  "ok": true,
+  "n_samples": 3,
+  "usage": {
+    "prompt_tokens": 6653,
+    "completion_tokens": 564,
+    "total_tokens": 7217
+  }
+}

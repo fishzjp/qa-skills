@@ -1,0 +1,99 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    },
+    {
+      "id": "P06",
+      "covered": true
+    },
+    {
+      "id": "P07",
+      "covered": true
+    },
+    {
+      "id": "P08",
+      "covered": true
+    },
+    {
+      "id": "P09",
+      "covered": true
+    },
+    {
+      "id": "P10",
+      "covered": true
+    },
+    {
+      "id": "P11",
+      "covered": true
+    },
+    {
+      "id": "P12",
+      "covered": true
+    },
+    {
+      "id": "P13",
+      "covered": false
+    },
+    {
+      "id": "P14",
+      "covered": true
+    },
+    {
+      "id": "P15",
+      "covered": true
+    },
+    {
+      "id": "P16",
+      "covered": false
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "BUG-1",
+      "detected": true
+    },
+    {
+      "id": "BUG-2",
+      "detected": true
+    },
+    {
+      "id": "BUG-3",
+      "detected": false
+    },
+    {
+      "id": "BUG-4",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 4,
+    "specificity": 5,
+    "actionability": 4
+  },
+  "notes": "BUG-3被误认为仅是精度差异而非失效逻辑矛盾，且P16交叉校验路径被武断排除。",
+  "ok": true,
+  "n_samples": 3,
+  "usage": {
+    "prompt_tokens": 9928,
+    "completion_tokens": 928,
+    "total_tokens": 10856
+  }
+}

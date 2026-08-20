@@ -1,0 +1,94 @@
+{
+  "task_id": "tcw-export-noui",
+  "skill": "test-case-writing",
+  "mode": "doc-only-noui",
+  "description": "无 UI 后端功能：考察执行模型判定（测试-开发协作清单五段式），异步/重试/幂等/大数据量边界",
+  "skill_files_on": [
+    "test-case-writing/SKILL.md",
+    "test-case-writing/references/templates.md",
+    "test-case-writing/references/data-driven.md",
+    "test-case-writing/references/coverage.md",
+    "core/executability.md",
+    "core/testing-principles.md"
+  ],
+  "expected_output": "markmap 用例，协作五段式（请开发执行/请开发反馈/验证方式=查库查日志），开发可整包执行",
+  "testable_points": [
+    {
+      "id": "P01",
+      "point": "正常导出：前一日已完成订单全部导出，条数与库中一致（主流程）",
+      "type": "functional",
+      "priority": "P0"
+    },
+    {
+      "id": "P02",
+      "point": "导出范围边界：只含前一自然日，当日/前两日订单不混入（时区 Asia/Shanghai）",
+      "type": "boundary"
+    },
+    {
+      "id": "P03",
+      "point": "状态过滤：仅「已完成」，进行中/已取消订单不导出",
+      "type": "functional"
+    },
+    {
+      "id": "P04",
+      "point": "跨日边界：23:59:59 完成的订单计入，次日 00:00:00 完成的不计入",
+      "type": "boundary"
+    },
+    {
+      "id": "P05",
+      "point": "CSV 内容：列顺序、金额单位为分、UTF-8 编码（中文不乱码）",
+      "type": "data"
+    },
+    {
+      "id": "P06",
+      "point": "上传成功后导出记录登记（文件路径/条数/状态=成功）",
+      "type": "functional"
+    },
+    {
+      "id": "P07",
+      "point": "无数据日（前一日 0 单）：空文件或跳过的行为明确、记录登记",
+      "type": "exception"
+    },
+    {
+      "id": "P08",
+      "point": "失败重试：首次失败后重试最多 3 次、间隔 5 分钟",
+      "type": "exception"
+    },
+    {
+      "id": "P09",
+      "point": "重试 3 次仍失败：记录状态=失败并触发告警",
+      "type": "exception"
+    },
+    {
+      "id": "P10",
+      "point": "重跑幂等：同一天重复执行覆盖同名文件，记录新增，数据不重复",
+      "type": "regression"
+    },
+    {
+      "id": "P11",
+      "point": "大促数据量：500 万行导出成功（超时/内存不崩）",
+      "type": "boundary"
+    },
+    {
+      "id": "P12",
+      "point": "对象存储不可用时的表现（依赖异常）",
+      "type": "exception"
+    },
+    {
+      "id": "P13",
+      "point": "从库延迟场景：数据未同步完成时导出的行为",
+      "type": "exception"
+    },
+    {
+      "id": "P14",
+      "point": "定时触发：凌晨 2:00 准点触发（触发时间的验证方式）",
+      "type": "functional"
+    }
+  ],
+  "known_bugs": [],
+  "executability_focus": [
+    "无 UI → 操作步骤标「请开发执行」、预期标「请开发反馈」、验证方式=查库/查日志的具体位置",
+    "不得出现'登录后台''点击按钮'等 UI 操作",
+    "重试/异步场景给明确判定标准（重试次数、间隔、告警渠道）"
+  ]
+}

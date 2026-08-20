@@ -1,0 +1,14 @@
+{
+  "task": "strategy-transfer-risk",
+  "mode": "off",
+  "ok": true,
+  "error": null,
+  "usage": {
+    "prompt_tokens": 573,
+    "completion_tokens": 2920,
+    "total_tokens": 3493
+  },
+  "resp_id": "resp_021787196850044c2531bd3ff98f8d456851518a83e6729768048",
+  "model": "glm-5-2-260617",
+  "ts": "2026-08-20T11:35:01"
+}

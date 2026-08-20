@@ -1,0 +1,14 @@
+{
+  "task": "e2e-markmap-to-spec",
+  "mode": "off",
+  "ok": true,
+  "error": null,
+  "usage": {
+    "prompt_tokens": 858,
+    "completion_tokens": 18926,
+    "total_tokens": 19784
+  },
+  "resp_id": "resp_02178719649620913e3cfc91b78ae8df851b156ce35e24d1af036",
+  "model": "glm-5-2-260617",
+  "ts": "2026-08-20T11:32:57"
+}

@@ -1,0 +1,51 @@
+{
+  "task_id": "tcw-user-delete-code",
+  "skill": "test-case-writing",
+  "mode": "code",
+  "description": "代码模式：用户资料模块，注入 3 个真实缺陷（注销残留/昵称长度不校验/VIP 宽限与到期判定矛盾），考察代码审查发现 + Cx 记录 + 测准声明 + 附录隔离",
+  "skill_files_on": [
+    "test-case-writing/SKILL.md",
+    "test-case-writing/references/templates.md",
+    "test-case-writing/references/coverage.md",
+    "test-case-writing/references/boundary.md",
+    "core/evidence.md",
+    "core/risk-model.md",
+    "core/executability.md",
+    "core/testing-principles.md"
+  ],
+  "expected_output": "markmap 用例 + 测准声明 + 附录（Cx 缺陷记录、Dn 风险点、代码证据清单、文档偏离对照）",
+  "testable_points": [
+    {"id": "P01", "point": "注销用户后账号不可再登录（主流程）", "type": "functional", "priority": "P0"},
+    {"id": "P02", "point": "注销不存在的用户报错拦截", "type": "exception"},
+    {"id": "P03", "point": "注销后缓存清除生效（再次读取无残留）", "type": "functional"},
+    {"id": "P04", "point": "注销后关联表 user_profiles 残留（bug C1 的验证用例，协作用例查库）", "type": "regression"},
+    {"id": "P05", "point": "注销后 orders 历史订单数据处置（残留或级联，须有用例验证现状）", "type": "data"},
+    {"id": "P06", "point": "注销后 30 天内从搜索索引清除（每日任务，定时/异步时限）", "type": "functional"},
+    {"id": "P07", "point": "修改昵称：正常值成功（1-20 字符）", "type": "functional", "priority": "P0"},
+    {"id": "P08", "point": "昵称为空/纯空格拦截", "type": "boundary"},
+    {"id": "P09", "point": "昵称 20 字符边界通过、21 字符应拦截（bug C2：代码无长度校验，DB 列宽 255 会入库）", "type": "boundary"},
+    {"id": "P10", "point": "昵称特殊字符/emoji 的行为", "type": "boundary"},
+    {"id": "P11", "point": "开通 VIP 1 个月：到期时间 = 当前 + 30 天 + 1 宽限（bug C3：宽限 1 天与'到期即失效'语义矛盾）", "type": "functional"},
+    {"id": "P12", "point": "VIP months 边界：0 / 13 拦截，1 / 12 通过", "type": "boundary"},
+    {"id": "P13", "point": "VIP 到期时刻边界：到期当刻 is_vip 已为 False（≥ 判定），宽限日内仍为 VIP 的矛盾", "type": "boundary"},
+    {"id": "P14", "point": "无 VIP 记录用户 is_vip 为 False", "type": "functional"},
+    {"id": "P15", "point": "每日清理任务对'已注销但硬删除'用户的处理（deleted=1 路径与 DELETE 路径不一致——bug，索引清除永不生效）", "type": "regression"},
+    {"id": "P16", "point": "昵称校验的写入路径交叉：若存在其他写入昵称的路径（注册/编辑资料），校验是否同样生效", "type": "regression"}
+  ],
+  "known_bugs": [
+    {"id": "BUG-1", "desc": "注销用户未清理关联表 user_profiles 与 orders，公开资料残留（合规风险）", "evidence": "user_service.py delete_user 只删 users 表与缓存", "match_keywords": ["user_profiles", "残留", "关联"]},
+    {"id": "BUG-2", "desc": "update_nickname 未校验长度上限（需求 1-20 字符），超长昵称直接入库（DB 列 255 兜不住需求语义）", "evidence": "user_service.py update_nickname 仅校验非空", "match_keywords": ["昵称", "长度", "20", "校验"]},
+    {"id": "BUG-3", "desc": "VIP 到期逻辑自相矛盾：open_vip 多给 1 天宽限，但 is_vip 用 expire >= now 在到期当刻即判失效；宽限期形同虚设（且到期当天会员权益中断与'多给1天'意图不符）", "evidence": "vip_service.py open_vip 的 +1 与 is_vip 的 >= 判定", "match_keywords": ["VIP", "宽限", "到期", "失效"]},
+    {"id": "BUG-4", "desc": "每日清理任务查询 deleted=1 的软删除标记，但 delete_user 是硬删除（DELETE），deleted 字段从不写入——索引清除永不生效，30 天合规清除不可能达成", "evidence": "profile_cleanup.py daily_cleanup 的 WHERE deleted=1 与 user_service.py 的 db.delete", "match_keywords": ["deleted", "索引", "清理", "软删除", "硬删除"]}
+  ],
+  "doc_deviations": [
+    "需求说'注销后公开内容下线'，实现无即时下线动作（依赖每日任务，但该任务因 BUG-4 失效）",
+    "需求说昵称 1-20 字符，实现无长度校验",
+    "需求说'30 天内从索引清除'，实现为每日全量重建任务且失效"
+  ],
+  "executability_focus": [
+    "文件顶部测准声明（以代码为基线）",
+    "代码证据与 Cx/Dn 全部在附录，正文零代码内部",
+    "无 UI 后端功能用协作五段式（请开发执行/反馈/查库）"
+  ]
+}

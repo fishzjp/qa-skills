@@ -1,0 +1,14 @@
+{
+  "task": "tcw-user-delete-code",
+  "mode": "on",
+  "ok": true,
+  "error": null,
+  "usage": {
+    "prompt_tokens": 16520,
+    "completion_tokens": 24519,
+    "total_tokens": 41039
+  },
+  "resp_id": "resp_021787197435031dcfe136397decd58ea2a86a2e871129683328d",
+  "model": "glm-5-2-260617",
+  "ts": "2026-08-20T11:49:55"
+}

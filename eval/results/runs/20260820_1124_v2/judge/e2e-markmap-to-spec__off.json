@@ -1,0 +1,50 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": false
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    },
+    {
+      "id": "P06",
+      "covered": true
+    },
+    {
+      "id": "P07",
+      "covered": true
+    },
+    {
+      "id": "P08",
+      "covered": true
+    }
+  ],
+  "detection_results": [],
+  "quality": {
+    "correctness": 5,
+    "specificity": 4,
+    "actionability": 4
+  },
+  "notes": "未使用动态时间戳创建唯一项目名，存在与存量项目冲突的风险。",
+  "ok": true,
+  "n_samples": 3,
+  "usage": {
+    "prompt_tokens": 2749,
+    "completion_tokens": 400,
+    "total_tokens": 3149
+  }
+}

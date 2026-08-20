@@ -1,0 +1,74 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    },
+    {
+      "id": "P06",
+      "covered": true
+    },
+    {
+      "id": "P07",
+      "covered": true
+    },
+    {
+      "id": "P08",
+      "covered": true
+    },
+    {
+      "id": "P09",
+      "covered": true
+    },
+    {
+      "id": "P10",
+      "covered": true
+    },
+    {
+      "id": "P11",
+      "covered": true
+    },
+    {
+      "id": "P12",
+      "covered": true
+    },
+    {
+      "id": "P13",
+      "covered": false
+    },
+    {
+      "id": "P14",
+      "covered": true
+    }
+  ],
+  "detection_results": [],
+  "quality": {
+    "correctness": 4,
+    "specificity": 4,
+    "actionability": 3
+  },
+  "notes": "核心用例覆盖较全但缺失从库延迟场景的具体验证逻辑，对状态变更与时间口径等争议点未做兜底断言。",
+  "ok": true,
+  "n_samples": 3,
+  "usage": {
+    "prompt_tokens": 3631,
+    "completion_tokens": 797,
+    "total_tokens": 4428
+  }
+}

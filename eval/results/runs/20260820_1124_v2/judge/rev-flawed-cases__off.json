@@ -1,0 +1,123 @@
+{
+  "point_results": [
+    {
+      "id": "V01",
+      "covered": true
+    },
+    {
+      "id": "V02",
+      "covered": true
+    },
+    {
+      "id": "V03",
+      "covered": true
+    },
+    {
+      "id": "V04",
+      "covered": true
+    },
+    {
+      "id": "V05",
+      "covered": true
+    },
+    {
+      "id": "V06",
+      "covered": false
+    },
+    {
+      "id": "V07",
+      "covered": true
+    },
+    {
+      "id": "V08",
+      "covered": false
+    },
+    {
+      "id": "V09",
+      "covered": true
+    },
+    {
+      "id": "V10",
+      "covered": true
+    },
+    {
+      "id": "V11",
+      "covered": true
+    },
+    {
+      "id": "V12",
+      "covered": true
+    },
+    {
+      "id": "V13",
+      "covered": true
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "V01",
+      "detected": true
+    },
+    {
+      "id": "V02",
+      "detected": true
+    },
+    {
+      "id": "V03",
+      "detected": true
+    },
+    {
+      "id": "V04",
+      "detected": true
+    },
+    {
+      "id": "V05",
+      "detected": true
+    },
+    {
+      "id": "V06",
+      "detected": false
+    },
+    {
+      "id": "V07",
+      "detected": false
+    },
+    {
+      "id": "V08",
+      "detected": false
+    },
+    {
+      "id": "V09",
+      "detected": true
+    },
+    {
+      "id": "V10",
+      "detected": true
+    },
+    {
+      "id": "V11",
+      "detected": true
+    },
+    {
+      "id": "V12",
+      "detected": true
+    },
+    {
+      "id": "V13",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 4,
+    "specificity": 4,
+    "actionability": 4
+  },
+  "notes": "P0优先级泛滥问题未修正，且部分用例如TC-01-06/TC-01-07亦被过度标为P0。",
+  "ok": true,
+  "n_samples": 3,
+  "usage": {
+    "prompt_tokens": 3718,
+    "completion_tokens": 1178,
+    "total_tokens": 4896
+  }
+}

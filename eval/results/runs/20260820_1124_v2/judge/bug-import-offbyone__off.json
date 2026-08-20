@@ -1,0 +1,38 @@
+{
+  "point_results": [],
+  "detection_results": [
+    {
+      "id": "F1",
+      "detected": true
+    },
+    {
+      "id": "F2",
+      "detected": true
+    },
+    {
+      "id": "F3",
+      "detected": true
+    },
+    {
+      "id": "F4",
+      "detected": true
+    },
+    {
+      "id": "F5",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 5,
+    "specificity": 5,
+    "actionability": 4
+  },
+  "notes": "影响范围分析遗漏系统错误行错位方向不同的场景，回归建议也只覆盖单分支，未验证两分支行为一致性。",
+  "ok": true,
+  "n_samples": 3,
+  "usage": {
+    "prompt_tokens": 1540,
+    "completion_tokens": 343,
+    "total_tokens": 1883
+  }
+}

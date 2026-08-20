@@ -1,0 +1,651 @@
+{
+  "rows": {
+    "api-openapi-coupon__on": {
+      "task": "api-openapi-coupon",
+      "skill": "api-testing",
+      "mode": "on",
+      "tokens": {
+        "prompt_tokens": 4452,
+        "completion_tokens": 25918,
+        "total_tokens": 30370
+      },
+      "coverage": 0.9231,
+      "detection": null,
+      "quality": 0.9333,
+      "objective": {
+        "compile_pass": true,
+        "n_blocks": 5,
+        "errors": [],
+        "env_injected": true,
+        "assert_depth": true
+      },
+      "effective_coverage": 0.9231
+    },
+    "api-openapi-coupon__off": {
+      "task": "api-openapi-coupon",
+      "skill": "api-testing",
+      "mode": "off",
+      "tokens": {
+        "prompt_tokens": 701,
+        "completion_tokens": 20242,
+        "total_tokens": 20943
+      },
+      "coverage": 1.0,
+      "detection": null,
+      "quality": 0.9333,
+      "objective": {
+        "compile_pass": true,
+        "n_blocks": 4,
+        "errors": [],
+        "env_injected": true,
+        "assert_depth": true
+      },
+      "effective_coverage": 1.0
+    },
+    "bug-import-offbyone__on": {
+      "task": "bug-import-offbyone",
+      "skill": "bug-analysis",
+      "mode": "on",
+      "tokens": {
+        "prompt_tokens": 3294,
+        "completion_tokens": 4022,
+        "total_tokens": 7316
+      },
+      "coverage": null,
+      "detection": 1.0,
+      "quality": 1.0,
+      "objective": {}
+    },
+    "bug-import-offbyone__off": {
+      "task": "bug-import-offbyone",
+      "skill": "bug-analysis",
+      "mode": "off",
+      "tokens": {
+        "prompt_tokens": 879,
+        "completion_tokens": 2943,
+        "total_tokens": 3822
+      },
+      "coverage": null,
+      "detection": 1.0,
+      "quality": 0.9333,
+      "objective": {}
+    },
+    "e2e-markmap-to-spec__on": {
+      "task": "e2e-markmap-to-spec",
+      "skill": "automated-e2e-testing",
+      "mode": "on",
+      "tokens": {
+        "prompt_tokens": 8249,
+        "completion_tokens": 7745,
+        "total_tokens": 15994
+      },
+      "coverage": 1.0,
+      "detection": null,
+      "quality": 0.8667,
+      "objective": {
+        "compile_pass": true,
+        "n_blocks": 2,
+        "errors": [],
+        "spec_checks": {
+          "tc_naming": true,
+          "no_fixed_wait": true,
+          "po_usage": true,
+          "assert_persist": true
+        }
+      },
+      "effective_coverage": 1.0
+    },
+    "e2e-markmap-to-spec__off": {
+      "task": "e2e-markmap-to-spec",
+      "skill": "automated-e2e-testing",
+      "mode": "off",
+      "tokens": {
+        "prompt_tokens": 858,
+        "completion_tokens": 18926,
+        "total_tokens": 19784
+      },
+      "coverage": 0.875,
+      "detection": null,
+      "quality": 0.8667,
+      "objective": {
+        "compile_pass": true,
+        "n_blocks": 2,
+        "errors": [],
+        "spec_checks": {
+          "tc_naming": true,
+          "no_fixed_wait": true,
+          "po_usage": true,
+          "assert_persist": true
+        }
+      },
+      "effective_coverage": 0.875
+    },
+    "reg-diff-schema__on": {
+      "task": "reg-diff-schema",
+      "skill": "regression-testing",
+      "mode": "on",
+      "tokens": {
+        "prompt_tokens": 2751,
+        "completion_tokens": 8888,
+        "total_tokens": 11639
+      },
+      "coverage": 1.0,
+      "detection": 0.875,
+      "quality": 0.8667,
+      "objective": {},
+      "effective_coverage": 1.0
+    },
+    "reg-diff-schema__off": {
+      "task": "reg-diff-schema",
+      "skill": "regression-testing",
+      "mode": "off",
+      "tokens": {
+        "prompt_tokens": 1210,
+        "completion_tokens": 5798,
+        "total_tokens": 7008
+      },
+      "coverage": 0.8,
+      "detection": 1.0,
+      "quality": 0.8667,
+      "objective": {},
+      "effective_coverage": 0.8
+    },
+    "req-prd-contradictions__on": {
+      "task": "req-prd-contradictions",
+      "skill": "requirement-analysis",
+      "mode": "on",
+      "tokens": {
+        "prompt_tokens": 3028,
+        "completion_tokens": 3557,
+        "total_tokens": 6585
+      },
+      "coverage": 1.0,
+      "detection": 0.625,
+      "quality": 0.7333,
+      "objective": {},
+      "effective_coverage": 1.0
+    },
+    "req-prd-contradictions__off": {
+      "task": "req-prd-contradictions",
+      "skill": "requirement-analysis",
+      "mode": "off",
+      "tokens": {
+        "prompt_tokens": 575,
+        "completion_tokens": 6070,
+        "total_tokens": 6645
+      },
+      "coverage": 1.0,
+      "detection": 0.875,
+      "quality": 0.9333,
+      "objective": {},
+      "effective_coverage": 1.0
+    },
+    "rev-flawed-cases__on": {
+      "task": "rev-flawed-cases",
+      "skill": "test-case-review",
+      "mode": "on",
+      "tokens": {
+        "prompt_tokens": 9550,
+        "completion_tokens": 20102,
+        "total_tokens": 29652
+      },
+      "coverage": 1.0,
+      "detection": 1.0,
+      "quality": 0.9333,
+      "objective": {
+        "executability": {
+          "n_cases": 22,
+          "n_dirty": 1,
+          "clean_ratio": 0.9545,
+          "violations": {
+            "placeholder": 1,
+            "code_leak": 1,
+            "no_time_limit": 1
+          },
+          "guide": {
+            "intro_role": true,
+            "env_account": true,
+            "glossary": true,
+            "legend": true
+          },
+          "guide_score": 1.0,
+          "exec_score": 0.9773,
+          "veto": false
+        }
+      },
+      "effective_coverage": 0.9773
+    },
+    "rev-flawed-cases__off": {
+      "task": "rev-flawed-cases",
+      "skill": "test-case-review",
+      "mode": "off",
+      "tokens": {
+        "prompt_tokens": 778,
+        "completion_tokens": 4837,
+        "total_tokens": 5615
+      },
+      "coverage": 0.8462,
+      "detection": 0.7692,
+      "quality": 0.8,
+      "objective": {
+        "executability": {
+          "n_cases": 13,
+          "n_dirty": 1,
+          "clean_ratio": 0.9231,
+          "violations": {
+            "placeholder": 1,
+            "code_leak": 1,
+            "overclaim": 1
+          },
+          "guide": {
+            "intro_role": false,
+            "env_account": true,
+            "glossary": false,
+            "legend": false
+          },
+          "guide_score": 0.25,
+          "exec_score": 0.5865,
+          "veto": false
+        }
+      },
+      "effective_coverage": 0.4963
+    },
+    "strategy-transfer-risk__on": {
+      "task": "strategy-transfer-risk",
+      "skill": "test-strategy",
+      "mode": "on",
+      "tokens": {
+        "prompt_tokens": 5084,
+        "completion_tokens": 15318,
+        "total_tokens": 20402
+      },
+      "coverage": 1.0,
+      "detection": 1.0,
+      "quality": 1.0,
+      "objective": {},
+      "effective_coverage": 1.0
+    },
+    "strategy-transfer-risk__off": {
+      "task": "strategy-transfer-risk",
+      "skill": "test-strategy",
+      "mode": "off",
+      "tokens": {
+        "prompt_tokens": 573,
+        "completion_tokens": 2920,
+        "total_tokens": 3493
+      },
+      "coverage": 0.0,
+      "detection": 1.0,
+      "quality": 0.6,
+      "objective": {},
+      "effective_coverage": 0.0
+    },
+    "tcw-coupon-prd__on": {
+      "task": "tcw-coupon-prd",
+      "skill": "test-case-writing",
+      "mode": "on",
+      "tokens": {
+        "prompt_tokens": 15323,
+        "completion_tokens": 25833,
+        "total_tokens": 41156
+      },
+      "coverage": 1.0,
+      "detection": null,
+      "quality": 1.0,
+      "objective": {
+        "executability": {
+          "n_cases": 81,
+          "n_dirty": 1,
+          "clean_ratio": 0.9877,
+          "violations": {
+            "no_time_limit": 1
+          },
+          "guide": {
+            "intro_role": true,
+            "env_account": true,
+            "glossary": true,
+            "legend": true
+          },
+          "guide_score": 1.0,
+          "exec_score": 0.9938,
+          "veto": false
+        }
+      },
+      "effective_coverage": 0.9938
+    },
+    "tcw-coupon-prd__off": {
+      "task": "tcw-coupon-prd",
+      "skill": "test-case-writing",
+      "mode": "off",
+      "tokens": {
+        "prompt_tokens": 686,
+        "completion_tokens": 6825,
+        "total_tokens": 7511
+      },
+      "coverage": 0.913,
+      "detection": null,
+      "quality": 0.8667,
+      "objective": {
+        "executability": {
+          "n_cases": 0,
+          "n_dirty": 0,
+          "clean_ratio": 1.0,
+          "violations": {},
+          "guide": {
+            "intro_role": false,
+            "env_account": true,
+            "glossary": false,
+            "legend": false
+          },
+          "guide_score": 0.25,
+          "exec_score": null,
+          "veto": false
+        }
+      },
+      "effective_coverage": 0.913
+    },
+    "tcw-export-noui__on": {
+      "task": "tcw-export-noui",
+      "skill": "test-case-writing",
+      "mode": "on",
+      "tokens": {
+        "prompt_tokens": 13833,
+        "completion_tokens": 6882,
+        "total_tokens": 20715
+      },
+      "coverage": 0.7143,
+      "detection": null,
+      "quality": 0.8,
+      "objective": {
+        "executability": {
+          "n_cases": 12,
+          "n_dirty": 0,
+          "clean_ratio": 1.0,
+          "violations": {},
+          "guide": {
+            "intro_role": true,
+            "env_account": true,
+            "glossary": true,
+            "legend": true
+          },
+          "guide_score": 1.0,
+          "exec_score": 1.0,
+          "veto": false
+        }
+      },
+      "effective_coverage": 0.7143
+    },
+    "tcw-export-noui__off": {
+      "task": "tcw-export-noui",
+      "skill": "test-case-writing",
+      "mode": "off",
+      "tokens": {
+        "prompt_tokens": 490,
+        "completion_tokens": 2739,
+        "total_tokens": 3229
+      },
+      "coverage": 0.9286,
+      "detection": null,
+      "quality": 0.7333,
+      "objective": {
+        "executability": {
+          "n_cases": 0,
+          "n_dirty": 0,
+          "clean_ratio": 1.0,
+          "violations": {},
+          "guide": {
+            "intro_role": false,
+            "env_account": false,
+            "glossary": false,
+            "legend": false
+          },
+          "guide_score": 0.0,
+          "exec_score": null,
+          "veto": false
+        }
+      },
+      "effective_coverage": 0.9286
+    },
+    "tcw-incremental__on": {
+      "task": "tcw-incremental",
+      "skill": "test-case-writing",
+      "mode": "on",
+      "tokens": {
+        "prompt_tokens": 13027,
+        "completion_tokens": 16835,
+        "total_tokens": 29862
+      },
+      "coverage": 1.0,
+      "detection": null,
+      "quality": 0.8,
+      "objective": {
+        "executability": {
+          "n_cases": 12,
+          "n_dirty": 0,
+          "clean_ratio": 1.0,
+          "violations": {},
+          "guide": {
+            "intro_role": true,
+            "env_account": true,
+            "glossary": true,
+            "legend": true
+          },
+          "guide_score": 1.0,
+          "exec_score": 1.0,
+          "veto": false
+        }
+      },
+      "effective_coverage": 1.0
+    },
+    "tcw-incremental__off": {
+      "task": "tcw-incremental",
+      "skill": "test-case-writing",
+      "mode": "off",
+      "tokens": {
+        "prompt_tokens": 1185,
+        "completion_tokens": 6689,
+        "total_tokens": 7874
+      },
+      "coverage": 0.875,
+      "detection": null,
+      "quality": 0.9333,
+      "objective": {
+        "executability": {
+          "n_cases": 10,
+          "n_dirty": 0,
+          "clean_ratio": 1.0,
+          "violations": {},
+          "guide": {
+            "intro_role": true,
+            "env_account": true,
+            "glossary": true,
+            "legend": true
+          },
+          "guide_score": 1.0,
+          "exec_score": 1.0,
+          "veto": false
+        }
+      },
+      "effective_coverage": 0.875
+    },
+    "tcw-order-state__on": {
+      "task": "tcw-order-state",
+      "skill": "test-case-writing",
+      "mode": "on",
+      "tokens": {
+        "prompt_tokens": 14723,
+        "completion_tokens": 23970,
+        "total_tokens": 38693
+      },
+      "coverage": 1.0,
+      "detection": null,
+      "quality": 1.0,
+      "objective": {
+        "executability": {
+          "n_cases": 41,
+          "n_dirty": 1,
+          "clean_ratio": 0.9756,
+          "violations": {
+            "no_time_limit": 1
+          },
+          "guide": {
+            "intro_role": true,
+            "env_account": true,
+            "glossary": true,
+            "legend": true
+          },
+          "guide_score": 1.0,
+          "exec_score": 0.9878,
+          "veto": false
+        }
+      },
+      "effective_coverage": 0.9878
+    },
+    "tcw-order-state__off": {
+      "task": "tcw-order-state",
+      "skill": "test-case-writing",
+      "mode": "off",
+      "tokens": {
+        "prompt_tokens": 587,
+        "completion_tokens": 7130,
+        "total_tokens": 7717
+      },
+      "coverage": 0.7,
+      "detection": 0.0,
+      "quality": 0.7333,
+      "objective": {
+        "executability": {
+          "n_cases": 0,
+          "n_dirty": 0,
+          "clean_ratio": 1.0,
+          "violations": {},
+          "guide": {
+            "intro_role": false,
+            "env_account": false,
+            "glossary": false,
+            "legend": false
+          },
+          "guide_score": 0.0,
+          "exec_score": null,
+          "veto": false
+        }
+      },
+      "effective_coverage": 0.7
+    },
+    "tcw-user-delete-code__on": {
+      "task": "tcw-user-delete-code",
+      "skill": "test-case-writing",
+      "mode": "on",
+      "tokens": {
+        "prompt_tokens": 16520,
+        "completion_tokens": 24519,
+        "total_tokens": 41039
+      },
+      "coverage": 0.875,
+      "detection": 0.75,
+      "quality": 0.8667,
+      "objective": {
+        "executability": {
+          "n_cases": 32,
+          "n_dirty": 0,
+          "clean_ratio": 1.0,
+          "violations": {},
+          "guide": {
+            "intro_role": true,
+            "env_account": true,
+            "glossary": true,
+            "legend": true
+          },
+          "guide_score": 1.0,
+          "exec_score": 1.0,
+          "veto": false
+        }
+      },
+      "effective_coverage": 0.875
+    },
+    "tcw-user-delete-code__off": {
+      "task": "tcw-user-delete-code",
+      "skill": "test-case-writing",
+      "mode": "off",
+      "tokens": {
+        "prompt_tokens": 987,
+        "completion_tokens": 5460,
+        "total_tokens": 6447
+      },
+      "coverage": 0.8125,
+      "detection": 1.0,
+      "quality": 0.8667,
+      "objective": {
+        "executability": {
+          "n_cases": 0,
+          "n_dirty": 0,
+          "clean_ratio": 1.0,
+          "violations": {},
+          "guide": {
+            "intro_role": false,
+            "env_account": false,
+            "glossary": false,
+            "legend": false
+          },
+          "guide_score": 0.0,
+          "exec_score": null,
+          "veto": false
+        }
+      },
+      "effective_coverage": 0.8125
+    }
+  },
+  "aggregate": {
+    "有效覆盖均值(tcw类)|on": 0.9519,
+    "有效覆盖均值(tcw类)|off": 0.7637,
+    "检出率均值|on": 0.875,
+    "检出率均值|off": 0.8063,
+    "质量均分|on": 0.9,
+    "质量均分|off": 0.8389
+  },
+  "gates": [
+    {
+      "id": "G1a",
+      "name": "tcw 任务有效覆盖均值 On ≥ Off + 5pp",
+      "pass": true,
+      "detail": "On=91.4% Off=84.6% Δ=6.8pp（G1 定义见 eval/EXPECTED.md 修订记录）"
+    },
+    {
+      "id": "G1b",
+      "name": "状态机任务覆盖 On ≥ Off + 20pp",
+      "pass": true,
+      "detail": "On=98.8% Off=70.0% Δ=28.8pp"
+    },
+    {
+      "id": "G2",
+      "name": "tcw 类 On 可执行性均分 ≥ 0.75",
+      "pass": true,
+      "detail": "On 可执行性均值=0.99315"
+    },
+    {
+      "id": "G3",
+      "name": "代码任务 bug 检出 On ≥ 75%",
+      "pass": true,
+      "detail": "On 检出=75.0%（4 个植入 bug）"
+    },
+    {
+      "id": "G4",
+      "name": "代码类任务 On 编译通过率 100%",
+      "pass": true,
+      "detail": "结果=[True, True]"
+    },
+    {
+      "id": "G5",
+      "name": "质量均分 On ≥ 4.0/5 且 ≥ Off",
+      "pass": true,
+      "detail": "On=0.9 Off=0.8388833333333333"
+    },
+    {
+      "id": "G6",
+      "name": "On 在 ≥ 2/3 任务上不劣于 Off（-10pp 容差）",
+      "pass": true,
+      "detail": "不劣于 11/12"
+    }
+  ],
+  "model": "glm-5-2-260617"
+}

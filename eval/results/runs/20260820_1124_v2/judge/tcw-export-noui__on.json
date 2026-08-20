@@ -1,0 +1,74 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": false
+    },
+    {
+      "id": "P05",
+      "covered": true
+    },
+    {
+      "id": "P06",
+      "covered": true
+    },
+    {
+      "id": "P07",
+      "covered": false
+    },
+    {
+      "id": "P08",
+      "covered": true
+    },
+    {
+      "id": "P09",
+      "covered": true
+    },
+    {
+      "id": "P10",
+      "covered": true
+    },
+    {
+      "id": "P11",
+      "covered": true
+    },
+    {
+      "id": "P12",
+      "covered": true
+    },
+    {
+      "id": "P13",
+      "covered": false
+    },
+    {
+      "id": "P14",
+      "covered": false
+    }
+  ],
+  "detection_results": [],
+  "quality": {
+    "correctness": 4,
+    "specificity": 4,
+    "actionability": 4
+  },
+  "notes": "跨日边界23:59:59/00:00:00、无数据日0单行为及从库延迟未实质覆盖，且凌晨2:00准点触发未验证。",
+  "ok": true,
+  "n_samples": 3,
+  "usage": {
+    "prompt_tokens": 3439,
+    "completion_tokens": 745,
+    "total_tokens": 4184
+  }
+}

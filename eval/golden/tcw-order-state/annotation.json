@@ -1,0 +1,128 @@
+{
+  "task_id": "tcw-order-state",
+  "skill": "test-case-writing",
+  "mode": "doc-only-state",
+  "description": "状态机驱动：10 条边 + 终态 + 并发竞态 + 必填守卫，考察按状态组织/每边一例/非法转换",
+  "skill_files_on": [
+    "test-case-writing/SKILL.md",
+    "test-case-writing/references/templates.md",
+    "test-case-writing/references/state-machine.md",
+    "test-case-writing/references/boundary.md",
+    "test-case-writing/references/coverage.md",
+    "core/executability.md",
+    "core/testing-principles.md"
+  ],
+  "expected_output": "markmap 用例，状态机驱动组织，每条边至少一例 + 非法转换 + 并发",
+  "testable_points": [
+    {
+      "id": "P01",
+      "point": "创建工单进入待分配（主流程）",
+      "type": "functional",
+      "priority": "P0"
+    },
+    {
+      "id": "P02",
+      "point": "待分配 →(接单)→ 处理中",
+      "type": "state",
+      "priority": "P0"
+    },
+    {
+      "id": "P03",
+      "point": "待分配 →(撤单)→ 已取消",
+      "type": "state"
+    },
+    {
+      "id": "P04",
+      "point": "处理中 →(提交方案)→ 待用户确认",
+      "type": "state",
+      "priority": "P0"
+    },
+    {
+      "id": "P05",
+      "point": "处理中 →(转派)→ 待分配，记录转派原因；原因必填",
+      "type": "state"
+    },
+    {
+      "id": "P06",
+      "point": "待用户确认 →(确认)→ 已完成",
+      "type": "state",
+      "priority": "P0"
+    },
+    {
+      "id": "P07",
+      "point": "待用户确认 →(拒绝)→ 处理中，拒绝理由必填",
+      "type": "state"
+    },
+    {
+      "id": "P08",
+      "point": "待用户确认 →(72h 无操作)→ 已完成（自动确认，异步须判定时限）",
+      "type": "state"
+    },
+    {
+      "id": "P09",
+      "point": "已完成 →(7 天内申诉+管理员审批)→ 处理中",
+      "type": "state"
+    },
+    {
+      "id": "P10",
+      "point": "终态约束：已取消不可接单/撤单/提交方案；已完成超 7 天不可申诉",
+      "type": "state"
+    },
+    {
+      "id": "P11",
+      "point": "非法转换：待分配直接提交方案被拒（跳过接单）",
+      "type": "state"
+    },
+    {
+      "id": "P12",
+      "point": "非法转换：处理中用户撤单被拒（撤单仅限待分配）",
+      "type": "state"
+    },
+    {
+      "id": "P13",
+      "point": "并发：撤单与接单同时到达，先到成功后到失败并提示",
+      "type": "state"
+    },
+    {
+      "id": "P14",
+      "point": "并发：两客服同时接同一工单，仅一个成功（单一持有）",
+      "type": "state"
+    },
+    {
+      "id": "P15",
+      "point": "转派原因缺失拦截（必填校验）",
+      "type": "exception"
+    },
+    {
+      "id": "P16",
+      "point": "拒绝理由缺失拦截（必填校验）",
+      "type": "exception"
+    },
+    {
+      "id": "P17",
+      "point": "72 小时边界：71h59m 未确认仍在待确认，超过 72h 自动完成",
+      "type": "boundary"
+    },
+    {
+      "id": "P18",
+      "point": "申诉 7 天边界：第 7 天可申诉，第 8 天不可",
+      "type": "boundary"
+    },
+    {
+      "id": "P19",
+      "point": "拒绝 → 处理中后再次提交方案 → 再次待确认（循环流转，历史记录累积）",
+      "type": "state"
+    },
+    {
+      "id": "P20",
+      "point": "申诉审批被管理员驳回时工单保持已完成",
+      "type": "state"
+    }
+  ],
+  "known_bugs": [],
+  "executability_focus": [
+    "P08 异步自动确认必须写判定时限（72 小时起算点 + 系统延迟容忍）",
+    "并发用例写清双会话操作与判定（谁成功/谁收到什么提示）",
+    "状态用例的预期含状态值与可见现象两方面"
+  ]
+}

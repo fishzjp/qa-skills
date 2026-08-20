@@ -1,0 +1,14 @@
+{
+  "task": "api-openapi-coupon",
+  "mode": "off",
+  "ok": true,
+  "error": null,
+  "usage": {
+    "prompt_tokens": 701,
+    "completion_tokens": 20242,
+    "total_tokens": 20943
+  },
+  "resp_id": "resp_0217871962645766a00aaadbf856d05e5e786a533a144222f9a98",
+  "model": "glm-5-2-260617",
+  "ts": "2026-08-20T11:29:03"
+}

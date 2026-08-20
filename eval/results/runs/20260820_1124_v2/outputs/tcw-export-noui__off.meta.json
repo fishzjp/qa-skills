@@ -1,0 +1,14 @@
+{
+  "task": "tcw-export-noui",
+  "mode": "off",
+  "ok": true,
+  "error": null,
+  "usage": {
+    "prompt_tokens": 490,
+    "completion_tokens": 2739,
+    "total_tokens": 3229
+  },
+  "resp_id": "resp_0217871971097215dcdee1d192a1f0abe210e97cc0cd1a4d53238",
+  "model": "glm-5-2-260617",
+  "ts": "2026-08-20T11:39:10"
+}

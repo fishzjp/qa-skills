@@ -1,0 +1,71 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": false
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "S1",
+      "detected": true
+    },
+    {
+      "id": "S2",
+      "detected": true
+    },
+    {
+      "id": "S3",
+      "detected": true
+    },
+    {
+      "id": "S4",
+      "detected": true
+    },
+    {
+      "id": "S5",
+      "detected": true
+    },
+    {
+      "id": "S6",
+      "detected": true
+    },
+    {
+      "id": "S7",
+      "detected": true
+    },
+    {
+      "id": "S8",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 4,
+    "specificity": 5,
+    "actionability": 4
+  },
+  "notes": "P05 未明确将 TC-01-02 断言过时移交 test-case-writing，且 S7 缺少边界 501。",
+  "ok": true,
+  "n_samples": 3,
+  "usage": {
+    "prompt_tokens": 2130,
+    "completion_tokens": 736,
+    "total_tokens": 2866
+  }
+}

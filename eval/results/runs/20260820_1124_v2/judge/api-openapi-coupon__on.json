@@ -1,0 +1,70 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    },
+    {
+      "id": "P06",
+      "covered": true
+    },
+    {
+      "id": "P07",
+      "covered": true
+    },
+    {
+      "id": "P08",
+      "covered": true
+    },
+    {
+      "id": "P09",
+      "covered": true
+    },
+    {
+      "id": "P10",
+      "covered": true
+    },
+    {
+      "id": "P11",
+      "covered": true
+    },
+    {
+      "id": "P12",
+      "covered": true
+    },
+    {
+      "id": "P13",
+      "covered": false
+    }
+  ],
+  "detection_results": [],
+  "quality": {
+    "correctness": 5,
+    "specificity": 5,
+    "actionability": 4
+  },
+  "notes": "最大缺陷：缺少测试数据自建自清理（teardown 删除/独立旁路），仅在 TODO 中提出，未实现清理动作。",
+  "ok": true,
+  "n_samples": 3,
+  "usage": {
+    "prompt_tokens": 7811,
+    "completion_tokens": 712,
+    "total_tokens": 8523
+  }
+}

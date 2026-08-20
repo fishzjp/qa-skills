@@ -1,0 +1,45 @@
+{
+  "type": "object",
+  "properties": {
+    "point_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "covered": {"type": "boolean"},
+          "evidence": {"type": "string"}
+        },
+        "required": ["id", "covered", "evidence"],
+        "additionalProperties": false
+      }
+    },
+    "detection_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "detected": {"type": "boolean"},
+          "evidence": {"type": "string"}
+        },
+        "required": ["id", "detected", "evidence"],
+        "additionalProperties": false
+      }
+    },
+    "quality": {
+      "type": "object",
+      "properties": {
+        "correctness": {"type": "integer"},
+        "specificity": {"type": "integer"},
+        "actionability": {"type": "integer"}
+      },
+      "required": ["correctness", "specificity", "actionability"],
+      "additionalProperties": false
+    },
+    "notes": {"type": "string"}
+  },
+  "required": ["point_results", "detection_results", "quality", "notes"],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

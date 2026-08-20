@@ -1,0 +1,60 @@
+{
+  "task_id": "tcw-incremental",
+  "skill": "test-case-writing",
+  "mode": "incremental",
+  "description": "增量更新：4 项变更映射到受影响用例的标记/修改/新增，考察不重写、TC 编号沿用、变更报告",
+  "skill_files_on": [
+    "test-case-writing/SKILL.md",
+    "test-case-writing/references/templates.md",
+    "test-case-writing/references/coverage.md",
+    "core/executability.md"
+  ],
+  "expected_output": "增量更新后的用例文件：变更标记（[已变更]/[已废弃]/新增编号）+ 变更报告",
+  "testable_points": [
+    {
+      "id": "P01",
+      "point": "TC-01-02 面额边界受影响：1000 由通过变为拦截、1001 仍拦截；边界应改为 0/1/500/501（标记已变更并改写）",
+      "type": "regression"
+    },
+    {
+      "id": "P02",
+      "point": "新增每人限领用例：默认值 1、正常 1-10、0 与 11 拦截（新 TC 编号追加）",
+      "type": "boundary"
+    },
+    {
+      "id": "P03",
+      "point": "TC-01-01 主流程需补填每人限领字段（变更后必填）",
+      "type": "regression"
+    },
+    {
+      "id": "P04",
+      "point": "发放总量上限 50000：新增/调整边界用例（49999/50000/50001 或等价）",
+      "type": "boundary"
+    },
+    {
+      "id": "P05",
+      "point": "TC-02-03 提前结束权限变更：运营组长也可操作；普通运营不可（角色用例调整/新增）",
+      "type": "permission"
+    },
+    {
+      "id": "P06",
+      "point": "不重写：未受影响的用例（TC-01-03 门槛、TC-01-04 名称重复、TC-02-01/02）保持原样",
+      "type": "regression"
+    },
+    {
+      "id": "P07",
+      "point": "变更标记规范：受影响用例有 [已变更] 或等效标记，废弃用 [已废弃-原因] + 删除线",
+      "type": "regression"
+    },
+    {
+      "id": "P08",
+      "point": "文件末尾有变更报告：变更来源、影响模块、新增/修改/废弃条数",
+      "type": "regression"
+    }
+  ],
+  "known_bugs": [],
+  "executability_focus": [
+    "新增用例沿用 TC 编号规则与既有格式（四段式、具体数据）",
+    "不得丢失原有用例内容"
+  ]
+}

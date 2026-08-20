@@ -1,0 +1,14 @@
+{
+  "task": "req-prd-contradictions",
+  "mode": "off",
+  "ok": true,
+  "error": null,
+  "usage": {
+    "prompt_tokens": 575,
+    "completion_tokens": 6070,
+    "total_tokens": 6645
+  },
+  "resp_id": "resp_0217871966968012f7309b89ef4aa83d5a6323dac40bcdeb6fcb9",
+  "model": "glm-5-2-260617",
+  "ts": "2026-08-20T11:33:08"
+}

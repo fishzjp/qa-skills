@@ -1,0 +1,162 @@
+{
+  "task_id": "tcw-coupon-prd",
+  "skill": "test-case-writing",
+  "mode": "doc-only",
+  "description": "PRD 模式：优惠券创建，有 UI 后台表单，考察输入校验/边界/状态流转/FAQ/非目标/编辑路径交叉",
+  "skill_files_on": [
+    "test-case-writing/SKILL.md",
+    "test-case-writing/references/templates.md",
+    "test-case-writing/references/boundary.md",
+    "test-case-writing/references/state-machine.md",
+    "test-case-writing/references/permission.md",
+    "test-case-writing/references/coverage.md",
+    "core/executability.md",
+    "core/testing-principles.md"
+  ],
+  "expected_output": "markmap 测试用例文件，正文业务语言、具体数据、导读四件套（环境未知应列 TODO）",
+  "testable_points": [
+    {
+      "id": "P01",
+      "point": "正常创建：全部必填项合法填写，创建成功（主流程）",
+      "type": "functional",
+      "priority": "P0"
+    },
+    {
+      "id": "P02",
+      "point": "券名称必填缺失拦截（空名称提交被拦/按钮置灰）",
+      "type": "exception"
+    },
+    {
+      "id": "P03",
+      "point": "券名称超长拦截（>20 字符）",
+      "type": "boundary"
+    },
+    {
+      "id": "P04",
+      "point": "券名称 20 字符边界恰好通过",
+      "type": "boundary"
+    },
+    {
+      "id": "P05",
+      "point": "同商户券名称重复提示'名称已存在'（唯一性）",
+      "type": "exception"
+    },
+    {
+      "id": "P06",
+      "point": "不同商户名称重复允许创建（FAQ 边界）",
+      "type": "exception"
+    },
+    {
+      "id": "P07",
+      "point": "面额边界：0 拦截 / 1 通过 / 1000 通过 / 1001 拦截",
+      "type": "boundary"
+    },
+    {
+      "id": "P08",
+      "point": "面额非整数拦截（小数、非数字）",
+      "type": "boundary"
+    },
+    {
+      "id": "P09",
+      "point": "门槛=0 无门槛通过",
+      "type": "boundary"
+    },
+    {
+      "id": "P10",
+      "point": "门槛非 0 时 < 面额被拦截；= 面额通过；> 面额通过",
+      "type": "boundary"
+    },
+    {
+      "id": "P11",
+      "point": "固定时间段：开始 ≥ 结束被拦截；跨度 >90 天被拦截",
+      "type": "boundary"
+    },
+    {
+      "id": "P12",
+      "point": "领取后 N 天：0 / 31 拦截，1 / 30 通过",
+      "type": "boundary"
+    },
+    {
+      "id": "P13",
+      "point": "发放总量边界：0 拦截 / 1 通过 / 100000 通过 / 100001 拦截",
+      "type": "boundary"
+    },
+    {
+      "id": "P14",
+      "point": "每人限领边界：0 拦截 / 1 通过 / 10 通过 / 11 拦截",
+      "type": "boundary"
+    },
+    {
+      "id": "P15",
+      "point": "状态流转：待发布 → 已发布（发布操作）",
+      "type": "state",
+      "priority": "P0"
+    },
+    {
+      "id": "P16",
+      "point": "到达结束时间后自动变为已结束（异步，须有判定时限，PRD 为 1 小时内）",
+      "type": "state"
+    },
+    {
+      "id": "P17",
+      "point": "管理员手动提前结束已发布的券",
+      "type": "state"
+    },
+    {
+      "id": "P19",
+      "point": "待发布可编辑全部字段",
+      "type": "functional"
+    },
+    {
+      "id": "P20",
+      "point": "已发布仅可编辑发放总量且只能调大（调小被拦；编辑其他字段入口不可用）",
+      "type": "permission"
+    },
+    {
+      "id": "P21",
+      "point": "已结束不可编辑",
+      "type": "state"
+    },
+    {
+      "id": "P22",
+      "point": "编辑路径重复校验：创建时的校验规则（名称唯一/面额边界/门槛关系）在编辑路径同样生效（二阶交叉）",
+      "type": "regression"
+    },
+    {
+      "id": "P25",
+      "point": "格式错误提示后其他字段填写状态保留（异常场景）",
+      "type": "exception"
+    },
+    {
+      "id": "P26",
+      "point": "非运营角色（普通管理员）无创建入口/权限（角色边界）",
+      "type": "permission"
+    }
+  ],
+  "known_bugs": [],
+  "executability_focus": [
+    "环境与账号未知 → 导读区应列 TODO 指明向谁索取，而不是不写",
+    "P16 异步用例必须写判定时限（1 小时内，超时判失败）",
+    "具体数据：券名称等字段用具体示例值，不用占位符"
+  ],
+  "out_of_scope_points": {
+    "note": "标注复核(v0 首轮实测后):以下点属于「领取/结算/使用」功能的测试范围,任务目标是优惠券「创建」功能,移出分母;优秀的产出应将其列入待澄清而非硬写",
+    "points": [
+      {
+        "id": "P18",
+        "point": "已结束后用户不可再领取",
+        "type": "state"
+      },
+      {
+        "id": "P23",
+        "point": "FAQ：无门槛券与有门槛券可叠加持有，同一订单只能用一张（至少 1 条用例）",
+        "type": "functional"
+      },
+      {
+        "id": "P24",
+        "point": "非目标验证：跨商户使用被拒 / 转赠入口不存在",
+        "type": "functional"
+      }
+    ]
+  }
+}

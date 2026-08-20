@@ -1,0 +1,29 @@
+{
+  "task_id": "reg-diff-schema",
+  "skill": "regression-testing",
+  "mode": "analysis",
+  "description": "回归范围选择：coupon/service.py 直连 + validator 公共组件（编辑/导入共用）消费方全查 + 手续费新功能隐含新用例建议；显式排除无关模块（发布/领取/调度）",
+  "skill_files_on": [
+    "regression-testing/SKILL.md"
+  ],
+  "expected_output": "回归清单：必须/建议/可选三级 + 每条依据 + 影响不明 + 显式排除",
+  "expected_selections": [
+    {"id": "S1", "bucket": "must", "case": "TC-01-01", "reason": "coupon/service.py:122 直连（code_refs 命中改动文件），且 R1 High 锚点 + 手续费新逻辑影响创建结果", "match_keywords": ["TC-01-01"]},
+    {"id": "S2", "bucket": "must", "case": "TC-01-02", "reason": "common/validator.py:18 code_refs 直连，面额上限 1000→500 使原边界断言失效", "match_keywords": ["TC-01-02"]},
+    {"id": "S3", "bucket": "must", "case": "TC-02-02", "reason": "validator 为公共组件，编辑路径消费方（code_refs 命中 validator），新上限须在编辑路径同样生效", "match_keywords": ["TC-02-02"]},
+    {"id": "S4", "bucket": "must", "case": "TC-03-02", "reason": "validator 公共组件消费方（批量导入路径），新上限须在导入路径同样生效", "match_keywords": ["TC-03-02"]},
+    {"id": "S5", "bucket": "should", "case": "TC-01-03", "reason": "同模块（创建）间接受影响：service.py 改动区域相邻/校验链路", "match_keywords": ["TC-01-03"]},
+    {"id": "S6", "bucket": "should", "case": "TC-03-01", "reason": "导入主流程间接（导入校验链路共用 validator，主流程回归保险）", "match_keywords": ["TC-03-01"]},
+    {"id": "S7", "bucket": "suggest_new", "case": "新增用例建议：手续费档位计算（0.5/2/5 元三档 + 边界 100/101/500/501）", "match_keywords": ["手续费", "档位"]},
+    {"id": "S8", "bucket": "excluded", "case": "TC-04-01/TC-04-02/TC-05-01/TC-02-01", "reason": "发布/领取/调度模块与本次 diff 无 code_refs 或功能关联，显式排除（TC-02-01 仅调发放总量，不涉面额）", "match_keywords": ["排除"]}
+  ],
+  "testable_points": [
+    {"id": "P01", "point": "公共组件 validator 的全部消费方（创建/编辑/导入）都被纳入，无一遗漏", "type": "functional"},
+    {"id": "P02", "point": "每条选择给依据（code_refs 命中 / module / risk_ref）", "type": "functional"},
+    {"id": "P03", "point": "显式排除清单：未受影响用例列明并给排除理由", "type": "functional"},
+    {"id": "P04", "point": "识别出手续费为新增功能、建议新增用例（存量用例未覆盖新逻辑）", "type": "functional"},
+    {"id": "P05", "point": "面额上限 1000→500 导致 TC-01-02 原断言过时：指出需更新用例本身（移交 test-case-writing）", "type": "functional"}
+  ],
+  "known_bugs": [],
+  "executability_focus": []
+}

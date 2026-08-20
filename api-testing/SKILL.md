@@ -1,0 +1,98 @@
+---
+name: api-testing
+description: 接口级测试时使用——从 API 文档（OpenAPI/Swagger）或用例 Schema 中可自动化的接口用例出发，覆盖参数类型、缺失/非法参数、边界值、权限、鉴权、幂等、并发、状态码、错误响应与数据一致性，产出可执行的 API 测试脚本与运行结果。不用于：Web UI 流程测试（automated-e2e-testing）、手动用例编写（test-case-writing）。
+---
+
+# API 测试（api-testing）
+
+接口级测试——E2E 之外的另一条执行路径。
+
+- **输入**：API 文档（OpenAPI/Swagger）、用例 Schema 中 `execution_model` 可自动化的接口用例、被测环境信息（base URL、账号/Token）
+- **输出（落盘）**：API 测试脚本（pytest + requests，或项目既定技术栈）+ 运行结果（报告条目按 `../core/report-template.md` 对齐）
+- **边界**：Web UI 流程 → `automated-e2e-testing`；接口手动用例设计 → `test-case-writing`；性能压测 → 专项工具（k6/locust，见 `test-strategy` 的 handoff）
+
+## When NOT to Use
+
+- Web UI 交互流程（点击 / 页面状态）→ `automated-e2e-testing`
+- 编写接口的手动测试用例 → `test-case-writing`
+- 端到端流水线 → `qa` 编排
+- 接口压测 / 限流摸底 → k6 / locust 专项
+- Mock Server 搭建 → 开发协作事项，不在本 skill 范围
+
+## 脚手架（默认 pytest + requests，可替换为项目既定栈）
+
+```text
+api-tests/
+├── conftest.py            # fixture：base_url、会话/Token、环境配置（读 .env，不硬编码）
+├── common/
+│   └── client.py          # 统一请求封装：日志、超时、鉴权头、断言辅助
+├── test_{模块}_{接口}.py   # 一个接口一个文件，test 名沿用 TC 编号
+└── requirements.txt
+```
+
+```python
+# conftest.py 关键 fixture
+@pytest.fixture(scope="session")
+def client():
+    base_url = os.environ["API_BASE_URL"]          # 环境与账号不硬编码，走环境变量
+    token = login(os.environ["API_USER"], os.environ["API_PASSWORD"])
+    s = requests.Session()
+    s.headers.update({"Authorization": f"Bearer {token}"})
+    s.base_url = base_url
+    return s
+```
+
+> 敏感信息（账号/Token/环境地址）一律环境变量注入，不进代码仓库（与 `automated-e2e-testing` 的 constants 约定一致）。
+
+## 工作流
+
+### 1. 输入解析与范围确认
+
+- 从 OpenAPI 文档提取：接口清单、参数表（必填/类型/范围/默认值）、错误码、鉴权方式
+- 从用例 Schema 过滤：`execution_model: dev-collab` 或 `automation.framework: api` 的用例 → 转换对象（test 名沿用 TC 编号：`test_TC_05_01_写入字段读回一致`）
+- 环境未知 → 向用户索取（base URL、账号、是否可写生产旁路环境），**不确定就问，不猜接口行为**
+
+### 2. 用例设计（此时加载 `../core/testing-principles.md`，方法细节 `../test-case-writing/references/data-driven.md`）
+
+每接口一张参数矩阵，逐参数 × 逐属性；重点覆盖：
+
+| 类别 | 必测点 |
+|------|--------|
+| 参数 | 必填缺失 / 类型错误 / 边界值（空/最值/超大，见 `../test-case-writing/references/boundary.md`） |
+| 鉴权 | 无 Token / 过期 Token / 错误 Token / 越权（他人资源 id） |
+| 幂等 | 同一业务键重复提交 → 不重复创建；重试安全 |
+| 并发 | 并发写同一资源 → 无互相覆盖、无中间态 |
+| 错误响应 | 每个错误码的触发条件 + 响应体结构与文案 |
+| 数据一致性 | 写后读回一致；级联操作后关联数据一致 |
+
+### 3. 脚本编写
+
+- 一个接口一个 test 文件；一条 test 只测一个点，沿用 TC 编号命名
+- 断言三件套：状态码 + 业务码 + 响应体关键字段（不写"只断言 200"的弱断言）
+- 测试数据自建自清理（setup 创建 / teardown 删除），不依赖执行顺序
+- 依赖前序状态的用例显式在前置里造数，不假设库里有数据
+
+### 4. 运行与结果
+
+```bash
+pytest api-tests/ -v --tb=short          # 全量
+pytest api-tests/test_coupon_create.py   # 单文件
+```
+
+- 失败用例先分辨：被测系统 Bug / 环境问题 / 用例自身错误——**不自行假设**，环境问题与预期歧义列出来问用户
+- 发现的 Bug：证据（请求/响应原文、时间戳）按 `../core/report-template.md` §3 记录条目，根因分析移交 `bug-analysis`
+
+### 5. 交付
+
+脚本路径 + 运行统计（通过/失败/跳过）+ Bug 条目 + 遗留问题清单。
+
+## Common Mistakes
+
+| 错误 | 后果 | 正确做法 |
+|------|------|---------|
+| 只断言状态码不断言业务码与响应体 | Bug 漏检（200 但业务失败） | 状态码 + 业务码 + 关键字段三件套 |
+| 硬编码环境地址与账号 | 无法跨环境运行、泄露敏感信息 | 环境变量注入 |
+| 测试间共享可变状态 | 顺序依赖、偶发失败 | 自建数据 + 自清理，每条独立 |
+| 重复提交不测幂等 | 重复创建类 Bug 上线 | 同业务键重复请求必测 |
+| 失败一律记为 Bug | 误报污染报告 | 先归因（系统/环境/用例），歧义问用户 |
+| 无权限/越权只测前端表现 | 后端未拦截的越权漏检 | 直接调接口测鉴权（无 Token/过期/他人 id） |

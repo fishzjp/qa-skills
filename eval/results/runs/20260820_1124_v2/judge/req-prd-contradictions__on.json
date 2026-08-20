@@ -1,0 +1,71 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "Q1",
+      "detected": true
+    },
+    {
+      "id": "Q2",
+      "detected": true
+    },
+    {
+      "id": "Q3",
+      "detected": true
+    },
+    {
+      "id": "Q4",
+      "detected": false
+    },
+    {
+      "id": "Q5",
+      "detected": false
+    },
+    {
+      "id": "Q6",
+      "detected": false
+    },
+    {
+      "id": "Q7",
+      "detected": true
+    },
+    {
+      "id": "Q8",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 4,
+    "specificity": 4,
+    "actionability": 3
+  },
+  "notes": "open_questions 漏检 5 处预设矛盾/模糊中占 3 处（倍率矛盾/抵现叠加/冻结时限/退款负积分），且 roles 中将未裁决的铂金系数当事实写入，违反不硬猜原则。",
+  "ok": true,
+  "n_samples": 3,
+  "usage": {
+    "prompt_tokens": 3013,
+    "completion_tokens": 489,
+    "total_tokens": 3502
+  }
+}

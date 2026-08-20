@@ -1,0 +1,50 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    },
+    {
+      "id": "P06",
+      "covered": true
+    },
+    {
+      "id": "P07",
+      "covered": true
+    },
+    {
+      "id": "P08",
+      "covered": true
+    }
+  ],
+  "detection_results": [],
+  "quality": {
+    "correctness": 5,
+    "specificity": 4,
+    "actionability": 4
+  },
+  "notes": "产出了完整的 PO 封装与 spec 并覆盖所有可测点，但存在多处选择器与接口路径假设，仍需实环境校验后修正。",
+  "ok": true,
+  "n_samples": 3,
+  "usage": {
+    "prompt_tokens": 2747,
+    "completion_tokens": 406,
+    "total_tokens": 3153
+  }
+}

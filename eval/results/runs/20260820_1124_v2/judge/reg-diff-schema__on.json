@@ -1,0 +1,71 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "S1",
+      "detected": true
+    },
+    {
+      "id": "S2",
+      "detected": true
+    },
+    {
+      "id": "S3",
+      "detected": true
+    },
+    {
+      "id": "S4",
+      "detected": true
+    },
+    {
+      "id": "S5",
+      "detected": true
+    },
+    {
+      "id": "S6",
+      "detected": false
+    },
+    {
+      "id": "S7",
+      "detected": true
+    },
+    {
+      "id": "S8",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 4,
+    "specificity": 5,
+    "actionability": 4
+  },
+  "notes": "最大缺陷是分桶不符合标准：TC-03-01 应在 should 却落入可选，TC-04-01/TC-05-01 应在 excluded 却落入可选，导致部分检出项未命中。",
+  "ok": true,
+  "n_samples": 3,
+  "usage": {
+    "prompt_tokens": 2625,
+    "completion_tokens": 667,
+    "total_tokens": 3292
+  }
+}

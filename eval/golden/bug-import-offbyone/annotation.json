@@ -1,0 +1,24 @@
+{
+  "task_id": "bug-import-offbyone",
+  "skill": "bug-analysis",
+  "mode": "analysis",
+  "description": "根因定位：L31 line_num+1 off-by-one（干扰项：L35 通用异常分支用 line_num 不加 1，行为不一致）；考察定位到行 + 影响面（异常分支行号同样错位/不一致）+ 回归建议",
+  "skill_files_on": [
+    "bug-analysis/SKILL.md",
+    "core/evidence.md"
+  ],
+  "expected_output": "Bug 分析条目：现象/复现/Root Cause（含 status 标注）/Evidence/影响范围/修复建议/回归建议",
+  "expected_findings": [
+    {"id": "F1", "point": "根因定位到 L31：reader.line_num 在 DictReader 迭代时已指向当前数据行（含表头计数），再 +1 导致行号大 1", "match_keywords": ["line_num", "+1", "L31", "31"]},
+    {"id": "F2", "point": "指出 L35-37 通用异常分支行号处理不一致（不加 1），同一文件内两分支行为不统一——修复时应一并统一", "match_keywords": ["L35", "不一致", "通用异常", "分支"]},
+    {"id": "F3", "point": "影响范围：所有含校验失败行的导入都会错位提示；含'系统错误'的行行为又不同（错位方向不同），均误导排查", "match_keywords": ["影响", "错位"]},
+    {"id": "F4", "point": "修复建议方向：统一行号口径（以 line_num 为准或统一偏移），不越界写完整补丁", "match_keywords": ["统一", "口径", "修复"]},
+    {"id": "F5", "point": "回归建议：单行失败/多行失败/首数据行失败/系统错误行的行号提示 + 全部成功无提示，至少覆盖", "match_keywords": ["回归", "行号"]}
+  ],
+  "testable_points": [],
+  "known_bugs": [],
+  "executability_focus": [
+    "Root Cause 标注 status（读代码推断为 Inference，或已复现验证为 Verified）",
+    "Evidence 给出文件:行"
+  ]
+}

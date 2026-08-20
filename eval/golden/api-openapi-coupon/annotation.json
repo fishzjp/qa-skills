@@ -1,0 +1,35 @@
+{
+  "task_id": "api-openapi-coupon",
+  "skill": "api-testing",
+  "mode": "code-gen",
+  "description": "API 测试脚本生成：参数矩阵/边界/鉴权/幂等限领/错误码，客观指标 = 语法可编译 + 环境变量注入 + 断言三件套",
+  "skill_files_on": [
+    "api-testing/SKILL.md",
+    "test-case-writing/references/data-driven.md",
+    "test-case-writing/references/boundary.md",
+    "core/testing-principles.md"
+  ],
+  "expected_output": "pytest + requests 脚本（conftest/客户端封装/测试文件），文件名标注清楚",
+  "testable_points": [
+    {"id": "P01", "point": "正常创建优惠券（201 + id + 状态待发布）", "type": "functional"},
+    {"id": "P02", "point": "创建必填缺失：name/amount/threshold/total 逐个缺失 → 400", "type": "exception"},
+    {"id": "P03", "point": "amount 边界：0/1001 → 400；1/1000 → 201", "type": "boundary"},
+    {"id": "P04", "point": "name 超 20 字符 → 400；名称重复 → 400 code=NAME_DUPLICATED", "type": "boundary"},
+    {"id": "P05", "point": "threshold < amount → 400 code=THRESHOLD_INVALID；= amount → 201", "type": "boundary"},
+    {"id": "P06", "point": "total 边界：0/100001 → 400", "type": "boundary"},
+    {"id": "P07", "point": "未携带 Token → 401；无效/过期 Token → 401", "type": "permission"},
+    {"id": "P08", "point": "领取成功（200 + user_coupon_id）", "type": "functional"},
+    {"id": "P09", "point": "领取上限：领 3 张后第 4 次 → 409", "type": "exception"},
+    {"id": "P10", "point": "领取不存在/已结束的券 → 404", "type": "exception"},
+    {"id": "P11", "point": "断言不止状态码：业务码 code / 关键字段（id、user_coupon_id）也断言", "type": "functional"},
+    {"id": "P12", "point": "环境与账号不硬编码：base URL/账号走环境变量", "type": "functional"},
+    {"id": "P13", "point": "测试数据自建自清理（创建的券在 teardown 删除或用独立名称）", "type": "functional"}
+  ],
+  "known_bugs": [],
+  "objective_checks": {
+    "py_compile": "提取 python 代码块逐块 py_compile，全部通过 = 1",
+    "env_no_hardcode": "代码引用 os.environ/API_BASE_URL 等而非硬编码 url+账号",
+    "assert_depth": "断言包含响应体字段（json() 后取 code/id 等），仅断言状态码判为弱断言"
+  },
+  "executability_focus": []
+}

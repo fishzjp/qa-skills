@@ -1,0 +1,67 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": false
+    },
+    {
+      "id": "P02",
+      "covered": false
+    },
+    {
+      "id": "P03",
+      "covered": false
+    },
+    {
+      "id": "P04",
+      "covered": false
+    },
+    {
+      "id": "P05",
+      "covered": false
+    },
+    {
+      "id": "P06",
+      "covered": false
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "RK1",
+      "detected": true
+    },
+    {
+      "id": "RK2",
+      "detected": true
+    },
+    {
+      "id": "RK3",
+      "detected": true
+    },
+    {
+      "id": "RK4",
+      "detected": true
+    },
+    {
+      "id": "RK5",
+      "detected": true
+    },
+    {
+      "id": "RK6",
+      "detected": true
+    }
+  ],
+  "quality": {
+    "correctness": 3,
+    "specificity": 3,
+    "actionability": 3
+  },
+  "notes": "最大缺陷：产出完全缺失置信度/评级依据、scope理由结构、性能安全handoff、automation_plan与regression_plan，且越界写了具体用例，不符合策略文件黄金标准。",
+  "ok": true,
+  "n_samples": 3,
+  "usage": {
+    "prompt_tokens": 2721,
+    "completion_tokens": 681,
+    "total_tokens": 3402
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "point_results": [
+    {
+      "id": "P01",
+      "covered": true
+    },
+    {
+      "id": "P02",
+      "covered": true
+    },
+    {
+      "id": "P03",
+      "covered": true
+    },
+    {
+      "id": "P04",
+      "covered": true
+    },
+    {
+      "id": "P05",
+      "covered": true
+    },
+    {
+      "id": "P06",
+      "covered": true
+    },
+    {
+      "id": "P07",
+      "covered": true
+    },
+    {
+      "id": "P08",
+      "covered": true
+    },
+    {
+      "id": "P09",
+      "covered": true
+    },
+    {
+      "id": "P10",
+      "covered": true
+    },
+    {
+      "id": "P11",
+      "covered": false
+    },
+    {
+      "id": "P12",
+      "covered": false
+    },
+    {
+      "id": "P13",
+      "covered": true
+    },
+    {
+      "id": "P14",
+      "covered": true
+    },
+    {
+      "id": "P15",
+      "covered": true
+    },
+    {
+      "id": "P16",
+      "covered": true
+    },
+    {
+      "id": "P17",
+      "covered": false
+    },
+    {
+      "id": "P18",
+      "covered": false
+    },
+    {
+      "id": "P19",
+      "covered": false
+    },
+    {
+      "id": "P20",
+      "covered": false
+    }
+  ],
+  "detection_results": [
+    {
+      "id": "D01",
+      "detected": false
+    }
+  ],
+  "quality": {
+    "correctness": 4,
+    "specificity": 4,
+    "actionability": 3
+  },
+  "notes": "缺失非法转换、边界值、循环流转与申诉驳回场景，部分预期结果含待澄清项导致可执行性下降。",
+  "ok": true,
+  "n_samples": 3,
+  "usage": {
+    "prompt_tokens": 4072,
+    "completion_tokens": 928,
+    "total_tokens": 5000
+  }
+}
