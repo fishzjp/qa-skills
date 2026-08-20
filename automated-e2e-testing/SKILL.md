@@ -1,13 +1,13 @@
 ---
 name: automated-e2e-testing
-description: 当需要将手动测试用例转为 Playwright E2E 测试、对 Web 应用进行探索性自动化测试、编写 Page Object/Helper，或在自动化测试中记录 Bug 报告时使用。
+description: 当需要将手动测试用例转为 Playwright E2E 测试并执行、在写自动化前对 Web 应用做小规模业务熟悉探索（踩点）、编写 Page Object/Helper，或在自动化执行中收集 Bug 证据并记录测试报告条目时使用。不用于：纯 API 接口测试（api-testing）、以理解系统/发现风险为目的的独立探索会话（exploratory-testing）、已确认 Bug 的根因分析（bug-analysis）。
 ---
 
 # 自动化 E2E 测试
 
 ## Overview
 
-本 skill 覆盖 Web 应用自动化测试的完整工作流：将手动测试用例（Markdown）转化为 Playwright spec → 运行并验证 → 发现 Bug → 输出测试报告。
+本 skill 覆盖 Web 应用自动化测试的完整工作流：将手动测试用例（markmap + Schema）转化为 Playwright spec → 运行并验证 → 发现 Bug → 输出测试报告。
 
 核心原则：
 1. **先熟悉业务再写测试** — 对功能不熟悉时，先用自动化脚本主动探索系统，理解实际行为后再动手写测试代码
@@ -18,17 +18,20 @@ description: 当需要将手动测试用例转为 Playwright E2E 测试、对 We
 
 ## When to Use
 
-- 给定测试用例 Markdown，需要生成 Playwright spec 文件
-- 需要对 Web 应用进行自动化探索性测试
-- 自动化测试中发现 Bug，需要记录测试报告
+- 给定测试用例（markmap / Schema），需要生成 Playwright spec 文件并执行
+- 编写自动化前，需要小规模业务熟悉探索（踩点页面结构、提取选择器）
+- 自动化执行中发现 Bug，需要收集证据并记录测试报告条目
 - 需要编写新的 Page Object 或 Helper 函数
 
 ## When NOT to Use
 
+- 端到端测试整个需求（理解→策略→用例→执行→报告的流水线）→ 用 `qa` skill 编排
 - 编写手动测试用例 → 用 `test-case-writing` skill
-- 纯 API 接口测试 → 用 Python 脚本 + requests
-- 单元测试 → 用 Jest/Vitest
-- 性能压测 → 用专业工具（k6、locust）
+- 纯 API 接口测试（无 Web UI 流程）→ 用 `api-testing` skill
+- 以**理解系统 / 发现风险**为目的的独立探索式测试会话（charter 驱动、产出探索笔记）→ 用 `exploratory-testing` skill；本 skill 的工作流零只做**为写自动化踩点**的小规模探索
+- 已确认 Bug 的根因定位、影响分析、回归建议 → 用 `bug-analysis` skill；本 skill 只负责收集 Bug 证据（截图/API/控制台）并记录报告条目
+- 代码变更后判断回归范围 → 用 `regression-testing` skill
+- 单元测试 → 用 Jest/Vitest；性能压测 → 专业工具（k6、locust）；安全测试 → 安全审计专项（见 `test-strategy` 的 handoff 约定）
 
 ## 提问时机（必须遵守）
 
@@ -94,7 +97,7 @@ playwright/
 │   ├── pages/                 # Page Objects
 │   │   └── xxx.page.ts        # 每个页面一个文件
 │   ├── {序号}-{模块}.spec.ts  # 正式测试用例
-│   └── explore-{功能}.spec.ts # 探索性测试（临时）
+│   └── explore-{功能}.spec.ts # 业务熟悉探索（临时）
 └── test-data/                 # CSV 等测试数据
 ```
 
@@ -121,9 +124,11 @@ export default defineConfig({
 
 ---
 
-## 工作流零：业务熟悉（前置必做）
+## 工作流零：业务熟悉（前置必做，为写自动化踩点的小规模探索）
 
-**何时需要**：从未测试过该功能模块 / 出现不熟悉的页面路由 / 需要编写新的 Page Object / 拿到需求但不知道系统长什么样
+**何时需要**：从未测试过该功能模块 / 出现不熟悉的页面路由 / 需要编写新的 Page Object / 拿到用例但不知道系统长什么样
+
+> 本工作流是**小规模踩点探索**（理解页面结构、提取选择器、落 Page Object），产出服务于工作流一。以理解系统 / 发现风险为目的的**完整探索会话**（charter 驱动、产出探索笔记）用 `exploratory-testing` skill。
 
 ### 步骤
 
@@ -174,6 +179,14 @@ test('业务熟悉：探索{功能名}页面结构', async ({ page }) => {
 ## 工作流一：手动用例 → 自动化代码
 
 > **前提**：已完成工作流零（业务熟悉），对目标功能有充分认知。
+
+### 用例输入与自动化范围判定
+
+输入是 `test-case-writing` 产出的 markmap 用例文件（如含 `测试用例.schema.yaml` 则一并消费）：
+
+- Schema 的 `execution_model: ui` 且 `automation.supported != no` 的用例 → 本工作流的转换对象
+- `execution_model: dev-collab`（无 UI 协作用例）→ 移交 `api-testing` 或保持手动协作执行，不硬造 UI 自动化
+- `automation_plan` 存在时（`test-strategy` 产出）按用户的执行策略裁决执行；策略未定时向用户确认哪些用例转自动化
 
 ### 步骤
 
@@ -319,6 +332,8 @@ export class XxxPage {
 
 在已理解业务逻辑的前提下，系统性验证页面功能，发现 Bug 和不一致。
 
+> 职责边界：本工作流负责**发现 + 证据收集 + 报告条目**。Bug 被**确认**后的根因定位、影响分析、回归建议移交 `bug-analysis` skill（对应报告条目中"根因分析 / 回归建议"两段留 TODO）。
+
 ### Bug 发现策略
 
 | 策略 | 检查方式 | 典型 Bug |
@@ -361,21 +376,23 @@ test('测试中发现 Bug', async ({ page }, testInfo) => {
 
 ### Bug 报告格式
 
-记录在 `{项目名}/测试报告_{来源}.md`：
+记录在 `{项目名}/测试报告_{来源}_{日期}.md`，**字段与 `../core/report-template.md`（测试报告唯一来源模板）的 §3 Bug 清单保持一致**，保证条目可直接拼装进 `qa` 收尾的最终报告：
 
 ```markdown
 ### BUG-{序号}: {简要描述}
 
 - **严重程度**: P0 / P1 / P2
-- **发现方式**: 自动化测试 / 探索性测试
+- **发现方式**: 自动化测试 / 业务熟悉探索 / 手动执行 / 代码审查（Cx 转）
 - **复现步骤**:
   1. 以 {角色} 登录
   2. 进入 {页面} ({URL})
   3. {具体操作}
-- **预期行为**: {根据需求文档/测试用例}
+- **预期行为**: {根据需求文档/测试用例 TC 编号}
 - **实际行为**: {观察到的实际现象}
 - **证据**: 截图 `bug-{序号}-*.png` | API: `{METHOD} {URL} → {状态码}` | 控制台: `{错误}`
 - **环境**: {URL} / {账号角色} / {浏览器}
+- **根因分析**: TODO（Bug 确认后由 `bug-analysis` 填写）
+- **回归建议**: TODO（由 `bug-analysis` 填写）
 ```
 
 ---
@@ -390,7 +407,7 @@ test('测试中发现 Bug', async ({ page }, testInfo) => {
 
 ## Explore 文件生命周期管理
 
-探索性测试文件是**临时产物**，遵循以下生命周期：
+业务熟悉探索文件（explore-xxx.spec.ts）是**临时产物**，遵循以下生命周期：
 
 ```
 创建 explore-xxx.spec.ts → 提取知识到 Page Object → 删除 explore 文件 + 截图
@@ -440,4 +457,7 @@ test('测试中发现 Bug', async ({ page }, testInfo) => {
 
 ## 与其他 skill 配合
 
-本 skill 的输入是**手动测试用例**（markmap Markdown）。当还没有测试用例、需要从需求/设计文档先编写时，使用 `test-case-writing` skill，形成「用例编写 → 自动化执行」的闭环。
+- **上游**：`test-case-writing` 产出手动用例（markmap + Schema）→ 本 skill 把 `execution_model: ui` 且可自动化的用例变成可执行代码；端到端流水线由 `qa` 编排
+- **旁路**：无文档 / 系统陌生的**完整探索会话**用 `exploratory-testing`，其探索笔记可作为本 skill 踩点的输入
+- **下游**：Bug 确认后的根因 / 影响 / 回归分析 → `bug-analysis`；执行报告与 Bug 条目按 `../core/report-template.md` 对齐，供 `qa` 收尾汇总
+- **平级**：纯 API 用例的自动化 → `api-testing`

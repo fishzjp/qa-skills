@@ -1,0 +1,68 @@
+# 统一证据体系（Evidence System）
+
+> 全框架唯一的证据规范，所有 Skill 统一引用本文件，不得各自发明证据语言。
+> 本文件位于 `core/`（纯共享引用目录，无 SKILL.md，不会被独立触发）。
+
+## 1. 证据强度等级
+
+```text
+E0  用户初始陈述    ← 未经核实的用户描述（最低）
+E1  文档证据        ← PRD / 设计文档 / API 文档 / FAQ
+E2  代码证据        ← 文件:行、接口签名、数据结构
+E3  运行/执行证据   ← 实际运行结果、测试执行结果、日志、截图
+E4  交叉验证        ← 多来源互相印证（最高）
+```
+
+## 2. 三类裁决规则
+
+证据等级解决"信什么"，裁决规则解决"冲突时听谁的"：
+
+| 问题类型 | 裁决规则 |
+|---------|---------|
+| **静态问题**（代码是怎么写的） | E2 为王。E1 与 E2 冲突 → 默认以代码为准（测准声明），偏离记入附录并提交澄清 |
+| **动态问题**（系统实际怎么表现） | E3 为王。E2 与 E3 冲突（代码与运行不符）→ 这本身就是发现（死代码 / 路径未覆盖 / 环境差异），转澄清或缺陷记录 |
+| **意图问题**（应该是什么行为） | **用户在澄清环节的明确答复具有最终裁决力**，可推翻任何证据等级。裁决记入产物（澄清记录），后续 Skill 不得再用代码推翻已裁决项 |
+
+> 注意：E0（用户初始陈述）是低证据，但用户**在澄清环节的裁决**不是证据、是决策——两者必须区分。前者可被代码推翻，后者不可。
+
+## 3. 结论的状态标注
+
+所有 Skill 的输出必须区分：
+
+```text
+Fact        事实（有证据支撑的确定结论）
+Inference   推断（由证据合理推出，未直接验证）
+Risk        风险（可能出问题，尚无证据）
+Hypothesis  假设（待验证的猜想）
+Verified    已验证（有 E3 及以上证据）
+```
+
+## 4. 标注格式
+
+```yaml
+finding:
+  title: 删除用户后可能存在数据残留
+  evidence:
+    level: E2                    # E0–E4
+    source: user_service.go:124  # 来源：文件:行 / 文档名+章节 / 截图路径 / 运行日志
+  confidence: medium             # high / medium / low
+  status: needs_verification     # fact / inference / risk / hypothesis / verified
+```
+
+**禁止不加标注直接输出"这里存在 Bug"**——这是证据体系要消灭的幻觉式结论。
+
+## 5. 与各 Skill 产出的对齐约定
+
+不同 Skill 的产出物按各自的自然形态携带上述标注，不要求改变文件结构，只要求字段齐全：
+
+| 产出物 | 标注方式 |
+|--------|---------|
+| `test-case-writing` 附录缺陷记录 Cx | 每条 Cx 含：现象 + `evidence.level`（E0–E4，代码审查发现通常为 E2）+ `evidence.source`（`文件:行`）+ confidence + status（待实测确认 / 已证伪等处置语义映射到 fact / hypothesis / verified） |
+| `test-case-writing` 附录高风险点 Dn | 每条 Dn 按 `core/risk-model.md` 评级，证据字段同上 |
+| `test-strategy` Risk Map | 每条风险（R1、R2…）强制带 evidence（level + source）与 confidence；**没有证据的风险评级视为无效评级** |
+| `bug-analysis` Root Cause | 根因结论标注 status（Inference → 读代码推断；Verified → 已复现验证 E3）；影响范围逐条给来源 |
+| `requirement-analysis` 需求模型 rules | 每条业务规则标注 evidence（文档章节或 `文件:行`）；用户裁决记入 open_questions 的裁决字段 |
+
+## 6. 引用方式
+
+各 SKILL.md 的工作流步骤中标注"此时加载本文件"并给出相对路径，例如：`../core/evidence.md`。遵循渐进披露：用到证据标注时才读，不预加载。
