@@ -1,0 +1,14 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/eval/harness/fixtures/playwright_scaffold"
+    schedule:
+      interval: "monthly"
+    labels:
+      - dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - dependencies

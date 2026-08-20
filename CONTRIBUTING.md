@@ -20,8 +20,8 @@
 ## 提交前自检
 
 - [ ] 未引入任何真实环境地址、账号、密钥、内部系统名
+- [ ] `python3 scripts/validate_skills.py` 通过（与 CI 同一校验：frontmatter / SKILL.md ≤500 行 / When NOT to Use / core 纯引用 / 引用完整 / JSON 合法）
 - [ ] 改动后的 skill 仍符合 [Agent Skill 规范](https://docs.claude.com/en/docs/claude-code/skills)：每个 skill 有 `SKILL.md`，frontmatter 含 `name` 与 `description`
-- [ ] `wc -l <skill>/SKILL.md` ≤ 500；被引用的 references/core 文件存在且路径正确
 - [ ] 改动影响用例产出的，跑一遍 Benchmark（多样本，断点续跑可重试失败项）：
       `python3 eval/harness/run_eval.py generate --samples 3 --tasks <相关任务>` + `score --samples 3`；
       判定标准以 [eval/EXPECTED.md](./eval/EXPECTED.md) 当前生效版本为准（v1.0 已冻结并完成验证轮判定，v1.1 提案见该文件）；**改过标注或 judge 配置的，先删除对应 judge/pairwise 缓存再评分**（缓存不感知上游变更）
