@@ -24,7 +24,7 @@ jobs:
           python3 -m py_compile eval/harness/run_eval.py eval/harness/fixtures/mock_api/server.py
           echo "python syntax OK"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
 
