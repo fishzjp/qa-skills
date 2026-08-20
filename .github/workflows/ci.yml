@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    name: 架构红线与语法校验
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Skills 架构红线校验（frontmatter / ≤500 行 / When NOT to Use / 引用完整性 / JSON）
+        run: python3 scripts/validate_skills.py
+
+      - name: Python 语法检查（harness 与 mock 服务）
+        run: |
+          python3 -m py_compile eval/harness/run_eval.py eval/harness/fixtures/mock_api/server.py
+          echo "python syntax OK"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Node 语法检查（mock 被测应用）
+        run: |
+          node --check eval/harness/fixtures/playwright_scaffold/mock_app/server.js
+          node --check eval/harness/fixtures/playwright_scaffold/tests/helpers.ts

@@ -1,8 +1,10 @@
 # QA Skills
 
+> A full-lifecycle QA skill framework for AI coding agents — methodology, 10 skills, and a reproducible benchmark.（中文项目，文档以中文为准）
+>
 > 让 AI 像资深测试工程师一样工作:一句"帮我测试这个需求",跑完 **需求理解 → 风险分析 → 测试策略 → 用例编写 → 审查 → 自动化执行 → Bug 分析 → 回归 → 测试报告** 的完整流水线。
 
-![License](https://img.shields.io/badge/license-MIT-green) ![Skills](https://img.shields.io/badge/skills-10-blue) ![Benchmark](https://img.shields.io/badge/benchmark-golden%20set%20%2B%20harness-orange)
+![CI](https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml/badge.svg) ![License](https://img.shields.io/badge/license-MIT-green) ![Skills](https://img.shields.io/badge/skills-10-blue) ![Benchmark](https://img.shields.io/badge/benchmark-golden%20set%20%2B%20harness-orange)
 
 面向 [Claude Code 等 Agent](https://docs.claude.com/en/docs/claude-code/skills) 的一套**测试工程 Skill 框架**:不是几个测试 Prompt,而是「方法论 + Skills + Benchmark」三层,且每个数字都实测过。
 
@@ -145,7 +147,14 @@ eval/                  黄金集 + 评测 harness(多样本/统计推断/成对�
 
 ## 贡献
 
-Skill 改动以黄金集为质量门(改完跑 `eval/harness/run_eval.py`,指标回退拦截);架构红线(SKILL.md ≤500 行、Every skill 必须有 When NOT to Use、core/ 不含 SKILL.md)见 [CONTRIBUTING.md](./CONTRIBUTING.md)。
+Skill 改动以黄金集为质量门(改完跑 `eval/harness/run_eval.py`,指标回退拦截);架构红线(SKILL.md ≤500 行、Every skill 必须有 When NOT to Use、core/ 不含 SKILL.md)见 [CONTRIBUTING.md](./CONTRIBUTING.md)——本地一条命令自检:`python3 scripts/validate_skills.py`(与 CI 同一校验)。
+
+## 社区
+
+- 🐛 缺陷 / 💡 功能建议:先看 [Discussions](https://github.com/fishzjp/qa-skills/discussions)(使用问答与经验分享),确定是缺陷或明确诉求再开 [Issue](https://github.com/fishzjp/qa-skills/issues)
+- 🛡️ 安全漏洞:请勿公开讨论,按 [安全策略](./.github/SECURITY.md) 私密报告
+- 📜 行为准则:[CODE_OF_CONDUCT.md](./.github/CODE_OF_CONDUCT.md)
+- 📋 版本历史:[CHANGELOG.md](./CHANGELOG.md)
 
 ## 许可证
 
