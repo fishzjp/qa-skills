@@ -25,6 +25,8 @@ __pycache__/
 *.pyc
 venv/
 .venv/
+.pytest_cache/
+.benchmarks/
 
 # 日志
 *.log
