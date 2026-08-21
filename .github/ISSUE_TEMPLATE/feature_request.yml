@@ -6,23 +6,23 @@ body:
     id: problem
     attributes:
       label: 想解决什么问题
-      description: 现状的痛点:什么场景下现在的 skill/eval 覆盖不了或效果不好
+      description: 现状的痛点：什么场景下现在的 skill / eval 覆盖不了或效果不好
     validations:
       required: true
   - type: textarea
     id: solution
     attributes:
       label: 期望的行为
-      description: 若涉及新方法论,说明它与 core/ 五件套(evidence/risk-model/executability/testing-principles/report-template)的关系
+      description: 若涉及新方法论，请说明它与 core/ 五件套（evidence / risk-model / executability / testing-principles / report-template）的关系
     validations:
       required: true
   - type: textarea
     id: alternatives
     attributes:
-      label: 替代方案(可选)
+      label: 替代方案（可选）
       description: 考虑过的其他做法与取舍
   - type: textarea
     id: context
     attributes:
-      label: 附加上下文(可选)
+      label: 附加上下文（可选）
       description: 同类工具 / 文章 / 自身实践的参考链接

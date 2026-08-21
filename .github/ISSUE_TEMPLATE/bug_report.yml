@@ -20,17 +20,17 @@ body:
     id: desc
     attributes:
       label: 问题描述
-      description: 一句话说清:哪个环节、期望什么、实际什么
+      description: 一句话说清：哪个环节、期望什么、实际什么
     validations:
       required: true
   - type: textarea
     id: repro
     attributes:
       label: 复现步骤
-      description: 触发输入(脱敏后的最小复现材料)、期望产出 vs 实际产出(贴关键片段)
+      description: 触发输入（脱敏后的最小复现材料）、期望产出 vs 实际产出（贴关键片段）
       placeholder: |
         1. 使用的 skill / run_eval.py 的 phase
-        2. 输入材料(脱敏)
+        2. 输入材料（脱敏）
         3. 期望 vs 实际
     validations:
       required: true
@@ -44,5 +44,5 @@ body:
   - type: textarea
     id: extra
     attributes:
-      label: 补充(可选)
+      label: 补充（可选）
       description: 截图 / 日志 / 猜测的方向

@@ -5,6 +5,18 @@
 
 ## [Unreleased]
 
+### 变更
+
+- **文档专业化（对齐主流开源项目规范）**：中英 README / CONTRIBUTING / DESIGN /
+  examples / .github 社区文件 / eval 两级 README 全量风格统一（全角标点、中英文
+  间距、口语化标题改客观表述、统一引号）；README 中英双语同构改写并新增"更多文档
+  导航"；CONTRIBUTING 补开发环境与 PR 流程；修正 DESIGN.md 内指向仓库根文件的
+  相对路径（./ → ../）与 harness README 两处 DESIGN 章节号过期引用。所有数字与
+  口径声明逐字保留，未做任何语义变更
+- **banner 口径勘误**：social-preview 图上"植入 bug 检出率 100% / 4-7 门通过"
+  为旧同源裁判口径，改为与 README 一致的异构裁判口径（75% / 5-8，标注"异构
+  裁判"），banner.html 同步并按既有流程 Playwright 重渲染
+
 ### 新增
 
 - **安装体验**：`install.sh` / `uninstall.sh`（自动检测宿主 skills 目录
