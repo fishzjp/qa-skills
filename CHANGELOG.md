@@ -7,6 +7,32 @@
 
 ### 变更
 
+- **Skill 自包含重构（消除跨 skill 引用）**：被多 skill 消费的方法 / 格式 / 规则
+  全部下沉 `core/`——boundary / data-driven / permission / state-machine 四篇设计
+  方法迁入 `core/methods/`，coverage（覆盖检查表）与 templates（升格更名
+  case-format，用例格式硬约束）迁入 `core/`；test-case-review / api-testing 不再
+  引用兄弟 skill 目录内的文件。新增 core 单一来源文档：schema-extraction.md
+  （Schema 抽取规则，自 test-case-writing SKILL.md 抽出）、clarify-pattern.md
+  （统一澄清 / 确认提问格式，替代三处各自为政的提问模板）、scripts/
+  validate_schema.py（零依赖 Schema 校验器：YAML 转义 / TC 编号一致 / 占位符）
+- **automated-e2e-testing 瘦身**：SKILL.md 473 → 186 行，Playwright 脚手架 / 配置 /
+  场景代码模板 / Page Object 规范下沉新文件 references/playwright-conventions.md，
+  SKILL.md 只保留工作流与决策点；Bug 条目字段表去重，统一引用
+  core/report-template.md §3（唯一来源），report-template 补 Bug 严重度与用例
+  优先级的 P0/P1/P2 双口径说明
+- **description 全量瘦身**：10 个 skill 的 frontmatter description 统一为"正触发
+  话术 + 一句产出 + 反触发指向"，机制细节（代码优先流程、Schema 抽取、增量更
+  新等）移入正文新增的 When to Use 段（8 个 skill 补齐，与 qa / e2e 统一骨架）。
+  常驻上下文合计 1929 → 1677 字符（-13%；前期"约 4300 字符"的读数为字节数口径
+  的误判，实际中文 3 字节/字）；description 瘦身属触发行为变更，合入前需按迭
+  代纪律跑触发评测确认不回退
+- **架构红线新增两条**（validate_skills.py 同步实现并已负向自测）：① 禁止跨
+  skill 引用（skill → 兄弟 skill 目录文件均违规，CI 拦截）；② description ≤300
+  字符上限。core 校验范围扩展到 core/**/*.md（含 methods/ 子目录）
+- **eval 档案同步**：12 个 golden 任务的 skill_files_on 与 run_eval.py
+  PIPELINE_STAGES 注入路径跟随迁移更新，内容外移的文件（schema-extraction /
+  clarify-pattern / playwright-conventions / report-template）按"信息量等价"原则
+  补入对应任务注入集；exploratory-testing 补无浏览器自动化时的降级路径说明
 - **README 视觉重排**：顶部启用 banner 主视觉（hero.png，1600×800 压缩版，中心
   化排版），快速开始前置到首屏，实测效果表拆为"紧凑指标表 + 逐项口径清单"（长
   说明移出表格单元格），流水线 ASCII 图简化重排；中英双语同构

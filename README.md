@@ -168,9 +168,11 @@ PRD / 代码
 ```text
 skills/                  产品本体（10 个 skill + core 共享知识库）
   qa/                    编排入口（薄，无领域知识）
-  core/                  共享知识库：evidence / risk-model / executability /
-                         testing-principles / report-template（无 SKILL.md，不参与触发）
-  requirement-analysis/  test-strategy/  test-case-writing/（references 含 6 篇方法）
+  core/                  共享知识库（无 SKILL.md，不参与触发）：evidence / risk-model /
+                         executability / testing-principles / report-template / case-format /
+                         coverage / schema-extraction / clarify-pattern + methods/（4 篇设计
+                         方法细则）+ scripts/（Schema 校验器）——被多 skill 消费的内容统一在此
+  requirement-analysis/  test-strategy/  test-case-writing/
   test-case-review/      automated-e2e-testing/  api-testing/
   exploratory-testing/   bug-analysis/  regression-testing/
 eval/                    黄金集 + 评测 harness（多样本 / 统计推断 / 成对评审 / 真实执行）

@@ -318,11 +318,17 @@ qa-skills/
 │   └── SKILL.md                 # 报告模板等共享资源引用 core/，不在本目录重复存放
 │
 ├── core/                        # 共享知识库（无 SKILL.md，不是 Skill，不会被独立触发）
-│   ├── testing-principles.md    # 测试原则、测试设计方法选择
+│   ├── testing-principles.md    # 测试原则、测试设计方法选择（方法索引 → methods/）
+│   ├── methods/                 # 设计方法细则：boundary / data-driven / permission / state-machine
 │   ├── risk-model.md            # 统一风险模型（第 4 章）
 │   ├── evidence.md              # 统一证据体系（第 3 章）
 │   ├── executability.md         # 用例可执行性标准（7.6，供所有产用例的 Skill 引用）
-│   └── report-template.md       # 测试报告模板（唯一来源，qa 收尾引用）
+│   ├── report-template.md       # 测试报告模板（唯一来源，qa 收尾引用）
+│   ├── case-format.md           # 用例格式硬约束（产用例 / 修订用例的 Skill 统一遵守）
+│   ├── coverage.md              # 覆盖度检查表（19 维 + 代码审查发现模式清单）
+│   ├── schema-extraction.md     # Test Case Schema 抽取规则（唯一来源）
+│   ├── clarify-pattern.md       # 统一澄清 / 确认提问格式与裁决落盘规则
+│   └── scripts/                 # validate_schema.py（Schema 校验器，零第三方依赖）
 │
 ├── requirement-analysis/
 │   └── SKILL.md
@@ -332,15 +338,8 @@ qa-skills/
 │
 ├── test-case-writing/
 │   ├── SKILL.md
-│   ├── references/
-│   │   ├── coverage.md
-│   │   ├── boundary.md
-│   │   ├── state-machine.md
-│   │   ├── permission.md
-│   │   ├── data-driven.md
-│   │   └── templates.md
 │   └── templates/
-│       └── markmap_template.md
+│       └── markmap_template.md  # 用例文件拼装起点模板（含详细格式范例）
 │
 ├── test-case-review/
 │   └── SKILL.md
@@ -348,7 +347,8 @@ qa-skills/
 ├── automated-e2e-testing/
 │   ├── SKILL.md
 │   └── references/
-│       └── helpers_reference.md
+│       ├── playwright-conventions.md   # 脚手架 / 配置 / 场景代码模板 / Page Object 规范
+│       └── helpers_reference.md        # 通用 Helper 脱敏参考实现
 │
 ├── api-testing/
 │   └── SKILL.md
@@ -565,7 +565,7 @@ API                 → Parameter Matrix
 历史 Bug 较多       → Regression-focused Testing
 ```
 
-**架构拆分**（Phase 1 正式动作，见第 13 章）：现 SKILL.md 436 行已逼近 500 行红线（第 10 章），且混装了方法知识与工作流。拆分动作：方法知识外移 references（清单见 6.1 目录树），SKILL.md 收敛为"触发边界 + 工作流 + 硬约束引用"。拆分红线：硬约束（正文零代码内部、导读四件套、判定时限等）外移后必须在工作流步骤中被显式引用执行，**不得**降级为可选参考。
+**架构拆分**（Phase 1 正式动作，见第 13 章；**2026-08-21 已随"skill 自包含重构"落地**）：原 SKILL.md 436 行逼近 500 行红线（第 10 章）且混装方法知识与工作流。拆分动作：方法知识外移共享目录（`core/methods/` 四篇设计方法 + `core/` 格式 / 覆盖 / 抽取规则，清单见 6.1 目录树），SKILL.md 收敛为"触发边界 + 工作流 + 硬约束引用"。拆分红线：硬约束（正文零代码内部、导读四件套、判定时限等）外移后必须在工作流步骤中被显式引用执行，**不得**降级为可选参考。
 
 ### 8.5 `test-case-review`
 
@@ -659,7 +659,7 @@ L3 — references/   ：方法 / 规则 / Checklist / 模板 / 框架知识（�
 
 1. **SKILL.md ≤ 500 行（红线，触线即拆）**：外部实践（Red Hat ACE 团队，2026-07）明确指出 L2 指令超过 500 行后性能开始退化——这不是风格建议，是性能阈值
 2. **每次触发都需要的才进 SKILL.md**：只在特定分支需要的内容一律外移按需加载（gate everything）——不受控的 L3 引用是最大的 token 消耗项
-3. **外移红线**：硬约束外移后仍必须在 SKILL.md 的工作流步骤中被显式引用（"此步执行 references/coverage.md 全部检查项"），不得降级为"可选参考"
+3. **外移红线**：硬约束外移后仍必须在 SKILL.md 的工作流步骤中被显式引用（"此步执行 `../core/coverage.md` 全部检查项"），不得降级为"可选参考"
 4. **宁窄而深，不做全能**："试图覆盖整个领域的全能型 Skill 往往使性能退化"——单 Skill 职责收窄，跨阶段协作交给编排层（第 5 章），而不是把整个流程塞进一个 Skill
 5. 原则：**不要为了完整而把所有知识加载进 Agent——需要什么，再加载什么**
 
