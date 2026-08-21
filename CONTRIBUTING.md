@@ -5,7 +5,7 @@
 ## 如何贡献
 
 - **报告问题**：在 Issue 中描述复现场景与预期行为。
-- **改进方法论**：各 skill 的工作流、检查表、模板都欢迎补充。改动请保持核心原则：一条用例只测一个点、代码优先（测准声明）、先澄清再动手、用例必须可执行（`core/executability.md`）、证据标注（`core/evidence.md`）。
+- **改进方法论**：各 skill 的工作流、检查表、模板都欢迎补充（skill 目录统一在 `skills/` 下）。改动请保持核心原则：一条用例只测一个点、代码优先（测准声明）、先澄清再动手、用例必须可执行（`skills/core/executability.md`）、证据标注（`skills/core/evidence.md`）。
 - **补充代码模板**：新增的 Page Object / Helper 模板请保持通用、不绑定具体业务，且不包含任何真实账号、URL 或内部信息。
 - **扩充黄金集**：`eval/golden/` 下新增任务（task.md + annotation.json，可测点/检出项须材料可推导、不依赖 skill 知识）。**新增或修改标注后必须跑独立审计**：`python3 eval/harness/run_eval.py audit-annotations`，flagged 项人工逐条复核后将修改与理由记入 annotation 的 `audit` 字段——标注者不得既写标注又独立复核同一批内容。
 
@@ -15,7 +15,7 @@
 2. **每个 skill 必须有 When NOT to Use**，且指明"交给谁"；触发措辞保持现状约定——`qa` 独占"端到端 / 帮我测试"意图词，其余 skill 的 description 均含正向触发词与反触发（"不用于…→ 对应 skill"），新增/修改 skill 时对照既有 description 的写法
 3. **`core/` 不含 SKILL.md**：纯共享引用目录，加入新文件需确认至少两个 skill 消费
 4. **风险等级（Critical/High/Medium/Low）与用例优先级（P0/P1/P2）是两套体系**，不得混用命名
-5. **产出落盘**：skill 的阶段产物必须落盘为文件（落盘清单见各 SKILL.md 的「落盘产物」行与 `qa/SKILL.md` 的流水线表），Skill 间只通过文件衔接
+5. **产出落盘**：skill 的阶段产物必须落盘为文件（落盘清单见各 SKILL.md 的「落盘产物」行与 `skills/qa/SKILL.md` 的流水线表），Skill 间只通过文件衔接
 
 ## 提交前自检
 

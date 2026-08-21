@@ -34,6 +34,11 @@
 
 ### 变更
 
+- **仓库布局重构**：11 个 skill 目录（10 skill + core）从仓库根迁入 `skills/`，
+  产品本体与工程目录（eval/docs/examples/scripts/tests）一眼可分；安装后的
+  宿主布局不变。install/uninstall、CI 校验、评测 harness、黄金集标注的路径
+  已同步。**已用 `--link` 安装的用户 git pull 后需重跑 `install.sh`**（旧软链
+  指向根目录已失效）；拷贝安装不受影响
 - CI 拆为 validate + label 两个 job（PR 自动打领域标签）
 - **README 实测数字换异构裁判口径**：可执行性改"规格符合度"并勘误旧称
   （Off 0.77→0.26 计 0 同口径）、检出 100%→75%（异构）、质量 Δ+6.1pp、API

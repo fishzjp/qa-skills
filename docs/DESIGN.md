@@ -1,6 +1,6 @@
 # 设计文档（DESIGN）
 
-> 为什么 qa-skills 长这样。本文是公开版设计说明书：记录设计动机与关键决策,**规范性内容以仓库内文件为准**——共享规范在 `core/`,工作流在各 `SKILL.md`,评测契约在 `eval/EXPECTED.md`。
+> 为什么 qa-skills 长这样。本文是公开版设计说明书：记录设计动机与关键决策,**规范性内容以仓库内文件为准**——共享规范在 `skills/core/`,工作流在各 `SKILL.md`,评测契约在 `eval/EXPECTED.md`。
 >
 > 配套阅读:[README](./README.md)(它是什么/怎么用)、[CONTRIBUTING](./CONTRIBUTING.md)(架构红线)。
 

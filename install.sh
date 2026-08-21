@@ -19,11 +19,13 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # 框架的全部安装单元：10 个 skill + core/（共享知识库，各 skill 相对引用，必须一起装）
+# 源路径统一在 skills/ 下
 SKILL_DIRS=(
   qa core
   requirement-analysis test-strategy test-case-writing test-case-review
   automated-e2e-testing api-testing exploratory-testing bug-analysis regression-testing
 )
+SRC_ROOT="$REPO_ROOT/skills"
 
 # 检测候选目录（存在才算）
 detect_candidates() {
@@ -90,7 +92,7 @@ echo "安装目标：${TARGET}（方式：${METHOD}）"
 echo ""
 
 for d in "${SKILL_DIRS[@]}"; do
-  src="$REPO_ROOT/$d" dst="$TARGET/$d"
+  src="$SRC_ROOT/$d" dst="$TARGET/$d"
   [ -d "$src" ] || { echo "❌ 仓库缺少 ${d}（仓库不完整？）" >&2; exit 1; }
   if [ -e "$dst" ] || [ -L "$dst" ]; then
     rm -rf "$dst"   # 重装 = 覆盖旧版本

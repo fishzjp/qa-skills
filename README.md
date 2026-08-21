@@ -35,7 +35,7 @@
   - 预期结果: 到期后 1 小时内状态自动变为「已结束」,超过 1 小时未变判失败
 ```
 
-具体数据、明确入口、可判定的预期、异步行为带时限——这背后是 `core/executability.md` 的 8 条硬标准,评测里它是一票否决项:**不可执行的用例,覆盖再全也计零分**。同一份 PRD 的完整 before/after 产出对照见 [examples/](./examples/)。
+具体数据、明确入口、可判定的预期、异步行为带时限——这背后是 `skills/core/executability.md` 的 8 条硬标准,评测里它是一票否决项:**不可执行的用例,覆盖再全也计零分**。同一份 PRD 的完整 before/after 产出对照见 [examples/](./examples/)。
 
 ### 坑二:指令堆得越多,AI 反而越弱
 
@@ -78,7 +78,7 @@ cd qa-skills
 "帮我测试这个需求:{需求描述 + 仓库地址}"
 ```
 
-卸载:`./uninstall.sh`。手动安装也可以:`cp -r qa core requirement-analysis test-strategy test-case-writing test-case-review automated-e2e-testing api-testing exploratory-testing bug-analysis regression-testing <你的 skills 目录>/`(**core/ 必须一起**,各 skill 相对引用它)。
+卸载:`./uninstall.sh`。手动安装也可以:`cp -r skills/* <你的 skills 目录>/`(**core/ 必须一起**,各 skill 相对引用它)。
 
 单阶段任务(写用例/审查/转自动化/回归范围)直接描述即可触发对应 skill,不需要走全流水线。
 
@@ -163,13 +163,15 @@ PRD / 代码
 ## 目录
 
 ```text
-qa/                    编排入口(薄,无领域知识)
-core/                  共享知识库:evidence / risk-model / executability /
-                       testing-principles / report-template(无 SKILL.md,不被触发)
-requirement-analysis/  test-strategy/  test-case-writing/(references 6 篇方法)
-test-case-review/      automated-e2e-testing/  api-testing/
-exploratory-testing/   bug-analysis/  regression-testing/
-eval/                  黄金集 + 评测 harness(多样本/统计推断/成对评审/真实执行)
+skills/                  产品本体(10 个 skill + core 共享知识库)
+  qa/                    编排入口(薄,无领域知识)
+  core/                  共享知识库:evidence / risk-model / executability /
+                         testing-principles / report-template(无 SKILL.md,不被触发)
+  requirement-analysis/  test-strategy/  test-case-writing/(references 6 篇方法)
+  test-case-review/      automated-e2e-testing/  api-testing/
+  exploratory-testing/   bug-analysis/  regression-testing/
+eval/                    黄金集 + 评测 harness(多样本/统计推断/成对评审/真实执行)
+docs/                    设计文档(DESIGN / v2 规划);examples/ 产出对照;tests/ 单测
 ```
 
 ## 贡献

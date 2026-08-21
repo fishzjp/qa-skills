@@ -12,6 +12,7 @@ SKILL_DIRS=(
   requirement-analysis test-strategy test-case-writing test-case-review
   automated-e2e-testing api-testing exploratory-testing bug-analysis regression-testing
 )
+SRC_ROOT="$REPO_ROOT/skills"
 
 usage() { sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
 
@@ -45,7 +46,7 @@ for d in "${SKILL_DIRS[@]}"; do
   [ -e "$TARGET/$d" ] || [ -L "$TARGET/$d" ] || continue
   # 防误删：确认是我们装的（软链指向本仓库，或目录里有 SKILL.md/为 core）
   if [ -L "$TARGET/$d" ]; then
-    [ "$(readlink "$TARGET/$d")" = "$REPO_ROOT/$d" ] || { echo "  跳过 ${d}（软链不指向本仓库）"; continue; }
+    [ "$(readlink "$TARGET/$d")" = "$SRC_ROOT/$d" ] || { echo "  跳过 ${d}（软链不指向本仓库）"; continue; }
   elif [ "$d" = "core" ]; then
     :
   elif [ ! -f "$TARGET/$d/SKILL.md" ]; then

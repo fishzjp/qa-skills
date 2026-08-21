@@ -8,7 +8,7 @@
   4. core/ 不含 SKILL.md（纯共享引用目录）
   5. SKILL.md 与 core/*.md 中反引号引用的仓库内相对路径必须存在
      （识别 `../`、`references/`、`templates/`、`core/` 前缀；兼容 core 文件的
-     仓库根相对写法；中文产物名与代码块内示例不在校验范围）
+     skills 根相对写法；中文产物名与代码块内示例不在校验范围）
   6. eval/harness/*.json 与 eval/golden/*/annotation.json 必须是合法 JSON
 
 用法：python3 scripts/validate_skills.py （仓库根或任意目录均可）
@@ -20,15 +20,15 @@ import sys
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
+SKILLS_ROOT = REPO / "skills"   # 产品本体（10 个 skill + core/ 共享库）统一在此
 MAX_LINES = 500
 REF_PATTERN = re.compile(r"`((?:\.\./|references/|templates/|core/)[\w./-]+\.(?:md|json|py|ts|tsx|ya?ml))`")
 FRONTMATTER = re.compile(r"\A---\n(.*?)\n---\n", re.S)
 
 
 def skill_dirs():
-    return sorted(d for d in REPO.iterdir()
-                  if d.is_dir() and (d / "SKILL.md").exists()
-                  and d.name not in {".git", ".claude", "docs", "eval", "scripts", ".github"})
+    return sorted(d for d in SKILLS_ROOT.iterdir()
+                  if d.is_dir() and (d / "SKILL.md").exists())
 
 
 def check_frontmatter(text, dirname, errors):
@@ -54,7 +54,7 @@ def check_references(md_path, errors):
         ref = m.group(1)
         if (md_path.parent / ref).resolve().exists():
             continue
-        if (REPO / ref).resolve().exists():  # core 文件内的仓库根相对写法（core/xxx.md）
+        if (SKILLS_ROOT / ref).resolve().exists():  # core 文件内的 skills 根相对写法（core/xxx.md）
             continue
         errors.append(f"{md_path.relative_to(REPO)}: 引用的文件不存在 `{ref}`")
 
@@ -63,8 +63,8 @@ def main():
     errors = []
 
     # 红线 4：core/ 不含 SKILL.md
-    if (REPO / "core" / "SKILL.md").exists():
-        errors.append("core/SKILL.md 存在——core/ 必须是纯共享引用目录，不得含 SKILL.md")
+    if (SKILLS_ROOT / "core" / "SKILL.md").exists():
+        errors.append("skills/core/SKILL.md 存在——core/ 必须是纯共享引用目录，不得含 SKILL.md")
 
     for d in skill_dirs():
         sk = d / "SKILL.md"
@@ -81,7 +81,7 @@ def main():
         check_references(sk, errors)
 
     # 红线 5：core/*.md 的引用
-    for md in sorted((REPO / "core").glob("*.md")):
+    for md in sorted((SKILLS_ROOT / "core").glob("*.md")):
         check_references(md, errors)
 
     # JSON 合法性（harness 配置 + golden 标注；归档运行结果不在此范围）
@@ -93,7 +93,7 @@ def main():
                 errors.append(f"{f.relative_to(REPO)}: 非法 JSON（{e}）")
 
     skills = skill_dirs()
-    print(f"校验 {len(skills)} 个 skill + core/ {len(list((REPO / 'core').glob('*.md')))} 个共享文档")
+    print(f"校验 {len(skills)} 个 skill + core/ {len(list((SKILLS_ROOT / 'core').glob('*.md')))} 个共享文档")
     if errors:
         print(f"\n❌ {len(errors)} 处违规：")
         for e in errors:

@@ -2,10 +2,10 @@
 "skill:方法论":
   - changed-files:
       - any-glob-to-any-file:
-          - "*/SKILL.md"
-          - "core/**"
-          - "*/references/**"
-          - "*/templates/**"
+          - "skills/*/SKILL.md"
+          - "skills/core/**"
+          - "skills/*/references/**"
+          - "skills/*/templates/**"
 
 "skill:eval-harness":
   - changed-files:
