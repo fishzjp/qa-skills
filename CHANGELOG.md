@@ -21,10 +21,32 @@
   检查/确定性），CI 接入
 - Issue 模板升级为 YAML issue forms；PR 按路径自动打标（labeler）
 - README "500 行红线"补 Red Hat ACE 实践出处链接
+- **评测研究论文**（eval/reports/2026-08-21-benchmark-study，md/pdf/html 三格式）：
+  预注册基准评测与增益归因（§5 消融、§6 机制发现），配套单文件对照实验报告
+- **评测新相位与新任务族**：routing（触发路由，35/35）与 pipeline（五阶段产物链
+  交叉引用）两个观察型相位；golden 新增 req-clarify-ambiguity（澄清质量）与
+  schema-extract-markmap（Schema 抽取，On-only）两任务；CONTAMINATION.md 污染
+  检查机制设计；in-situ 探针 #1（n=1 无衰减）
+- **AGENTS.md** 项目指令与 **docs/qa-skills-v2.md** v2 规划基线；DESIGN.md 归位
+  docs/（与 v2 文档汇合）
+- 运行归档补全：异构复评 / G7 泛化 / 强裁判成对 / 单文件消融 / s3 新任务族 /
+  澄清复验共 8 个 run 目录登记入册（eval/results/README.md）
 
 ### 变更
 
 - CI 拆为 validate + label 两个 job（PR 自动打领域标签）
+- **README 实测数字换异构裁判口径**：可执行性改"规格符合度"并勘误旧称
+  （Off 0.77→0.26 计 0 同口径）、检出 100%→75%（异构）、质量 Δ+6.1pp、API
+  反向结果收窄 74% vs 52%；新增"口径边界"声明（预注入上界 + in-situ 探针 +
+  成对胜率作废）
+- **澄清反向结果修复闭环**：requirement-analysis 增补八类歧义强制扫描表，
+  test-case-writing 增 YAML 转义纪律；复验轮（clafix）澄清任务 On 检出 100%
+  vs Off 85.2%，反向结果消除
+- harness：X5 pass³ / X6 成对区分度守卫（平局率>80% 作废胜率）/ X7 judge 引文
+  grounding 三个观察指标；G4 环境错误不入分母；skill 卡片 frontmatter 解析与
+  YAML schema 校验；CI 依赖补 pyyaml；单测扩至 ~57 项（含冻结阈值防误改）
+- EXPECTED.md：G4 勘误、异构复评结论（同源宽容偏差证实、G1a 转显著）、G7
+  方向性通过、成对机制结论、v1.2 门提案、已知限制 #8/#9
 
 ## [0.4.0] - 2026-08-20
 

@@ -57,22 +57,24 @@ Skills are plain Markdown (frontmatter + relative-path references), so any agent
 - **Files are the pipeline state** — every stage persists its output to disk; stages consume files, not session memory. Interrupted runs resume from files in a fresh session.
 - **Evidence & risk models** — every finding carries an evidence level (E0–E4 user statement → docs → code → runtime → cross-validated); risk ratings without evidence are invalid. Chain: evidence → risk → strategy → cases, traceable end to end.
 - **Talking checkpoints** — end-to-end ≠ zero human input. Clarifications, execution strategy, and bug triage are *your* decisions; the agent proposes, never decides. Once recorded, later stages can't overturn them.
-- Full design rationale (why 10 narrow skills instead of 1 big one, why markmap is the single human-maintained source, why evaluation precedes feature growth): [DESIGN.md](./DESIGN.md) (Chinese).
+- Full design rationale (why 10 narrow skills instead of 1 big one, why markmap is the single human-maintained source, why evaluation precedes feature growth): [DESIGN.md](./docs/DESIGN.md) (Chinese).
 
 ## Measured results (Skill On / Off)
 
-Golden set of 12 tasks, same model, same harness; the only difference is whether this framework is injected. Honest numbers — including the ones that hurt:
+Golden set of 12 tasks, same model, same harness; the only difference is whether this framework is injected. Numbers from the heterogeneous-judge re-evaluation (judge from a different model family than the generator); full study in the [📄 benchmark paper (PDF)](./eval/reports/2026-08-21-benchmark-study.pdf) — honest numbers, including the ones that hurt:
 
 | Metric | Without | With | Notes |
 |--------|:---:|:---:|-------|
-| E2E real-execution pass rate | 0% | **78%** | Real browser + real app, no LLM judge |
-| Planted-bug detection | — | **100%** | Code-review tasks |
-| Quality (LLM judge) | 0.87 | **0.92** | Paired bootstrap 95%CI significant |
-| Case executability | 0.77 | **0.98** | Objective regex scan; metric includes skill-template adherence (construct favors On — see eval docs) |
-| API real-execution pass rate | **87%** | 52% | Disclosed adverse result: skill-enforced strict assertions fail more visibly |
-| Token cost | 1× | 3.3× | Better but more expensive |
+| E2E real execution (single task × 3 samples) | 0/3 runnable | 1 full + 2×(2/3) | Real browser + real app, no judge; on the On side the same failing test reproduces stably across two samples; Off mixes no-code and failing-code outcomes (full granularity in paper §5.1) |
+| Case-conformance score (formerly "executability") | 0.26 | **0.98** | Format × content-rubric composite, no judge; the gap is primarily format adoption — both arms near ceiling on content red lines (decomposition in paper §5.1); zero-caliber (earlier 0.77 was pre-fix caliber — see eval errata); replicated across two generator models (0.20→0.99) |
+| Planted-bug detection | — | **75%** | Heterogeneous judge (100% under same-family judge) |
+| Quality (LLM judge) | 0.70 | **0.76** | Heterogeneous judge; Δ +6.1pp (95%CI includes zero; significant under same-family judging) |
+| API real-execution pass rate | **74%** | 52% | Disclosed adverse result: skill-enforced strict assertions fail more visibly (full 3-sample caliber; earlier 87% was a 2-sample mean) |
+| Token cost | 1× | 3.3× | Better but more expensive; a single-file ablation shows the gains cannot be obtained by taking just the core standards document (paper §5.3) |
 
-Coverage gains: +3.8pp on case-writing tasks (CI [0.5, 7.1], significant); +5.2pp all tasks (CI includes 0). Gate verdicts: **4/7 passed, recorded as-is under pre-registration discipline** — including the finding that an early +29pp single-sample estimate was later shown to be noise. See [eval/EXPECTED.md](./eval/EXPECTED.md) and [eval/results/LATEST.md](./eval/results/LATEST.md).
+Pre-registered gates: 4/7 under the same-family judge, 5/8 under the heterogeneous judge (different compositions incl. a sign flip — full table in paper Table 6). Coverage gains (heterogeneous judge): **+8.7pp** on case-writing tasks (CI [0.5, 15.4]), **+13.2pp** all tasks (CI [2.8, 26.3]), **+9.7pp** defect detection (CI [3.3, 16.4]) — all significant; the same-family figure was +3.8pp (quantified judge leniency toward the baseline and errata in [eval/EXPECTED.md](./eval/EXPECTED.md)). An early +29pp single-sample estimate was later shown to be noise.
+
+> **Validity boundary**: the On mode of the eval pre-injects all skill instruction files (real hosts load them on demand), so On-side numbers are an upper bound — an in-situ probe (n=1) observed no decay; pairwise judging exceeded tie limits under all three judges tested (win rate voided — a mechanism issue, see paper §6).
 
 ## Community
 
