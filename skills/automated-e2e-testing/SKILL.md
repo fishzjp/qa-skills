@@ -1,6 +1,6 @@
 ---
 name: automated-e2e-testing
-description: 当需要将手动测试用例转为 Playwright E2E 测试并执行、在写自动化前对 Web 应用做小规模业务熟悉探索（踩点）、编写 Page Object/Helper，或在自动化执行中收集 Bug 证据并记录测试报告条目时使用。不用于：纯 API 接口测试（api-testing）、以理解系统/发现风险为目的的独立探索会话（exploratory-testing）、已确认 Bug 的根因分析（bug-analysis）。
+description: 将手动测试用例转为 Playwright E2E 测试并执行时使用；含写自动化前的业务熟悉踩点、Page Object/Helper 编写、执行中的 Bug 证据收集与报告条目记录。不用于：纯 API 接口测试（api-testing）、以理解系统为目的的独立探索会话（exploratory-testing）、已确认 Bug 的根因分析（bug-analysis）。
 ---
 
 # 自动化 E2E 测试
@@ -15,6 +15,8 @@ description: 当需要将手动测试用例转为 Playwright E2E 测试并执行
 3. **每条自动化用例对应一条手动用例，每条 test 只测一个点**
 4. **每个 test 独立**（自建数据 + 自清理）
 5. **必须使用 Page Object** — 正式测试中禁止裸写定位器，所有页面交互封装在 Page Object 中
+
+工程约定（脚手架、配置、场景代码模板、Page Object 规范）统一在 `references/playwright-conventions.md`——写代码时加载；通用 Helper（登录、多会话、证据收集）的参考实现在 `references/helpers_reference.md`。
 
 ## When to Use
 
@@ -35,7 +37,7 @@ description: 当需要将手动测试用例转为 Playwright E2E 测试并执行
 
 ## 提问时机（必须遵守）
 
-**核心规则：不确定就问，宁可多问不要瞎猜。**
+**核心规则：不确定就问，宁可多问不要瞎猜。** 格式与裁决规则统一按 `../core/clarify-pattern.md`（场景用「执行确认」）。
 
 | 场景 | 应提问的内容 | 不要自行假设 |
 |------|-------------|-------------|
@@ -44,94 +46,6 @@ description: 当需要将手动测试用例转为 Playwright E2E 测试并执行
 | 预期行为有歧义 | "预期{结果A}，实际{结果B}，应以哪个为准？" | 不要选择性地相信其中一个 |
 | 业务规则不清楚 | "规则{X}的具体边界是什么？" | 不要用常见默认值代替 |
 | 探索中发现异常 | "发现{异常行为}，这是预期行为还是 Bug？" | 不要自行判定是 Bug 还是特性 |
-
-**提问格式**：
-```
-🔍 遇到问题需要确认：
-**问题**: {具体描述}
-**背景**: {在做什么、发现了什么}
-**影响**: {影响哪些测试用例}
-**选项**: A) ... B) ...（如有）
-```
-
-## 项目环境
-
-### 运行命令
-
-```bash
-cd playwright
-
-npm test                          # 全量运行
-npm run test:headed               # 有头模式（可视观察）
-npx playwright test tests/{文件名}.spec.ts  # 运行单个文件
-npm run show-report               # 查看报告
-```
-
-> 以上命令依赖 package.json 的 scripts 定义（新项目需配置）：
-> ```json
-> "scripts": {
->   "test": "playwright test",
->   "test:headed": "playwright test --headed",
->   "show-report": "playwright show-report"
-> }
-> ```
-
-### 环境与账号配置
-
-**本 skill 不硬编码任何环境地址或账号。** 所有 URL、账号、角色映射请集中配置在项目的 `tests/constants.ts`（或 `.env`）中，代码通过常量引用。建议结构：
-
-```typescript
-// tests/constants.ts
-export const BASE_URL = process.env.TEST_BASE_URL ?? '<你的测试环境地址>';
-
-// 角色账号映射：key 为角色名，供 LoginPage.loginAs(role) 使用
-export const ACCOUNTS = {
-  admin: { username: '<管理员账号>', password: '<密码>' },
-  user:  { username: '<普通用户账号>', password: '<密码>' },
-  // 按你的系统角色继续扩展
-} as const;
-```
-
-> 账号、密码、真实用户 ID 等敏感信息不要提交到代码仓库，建议通过 `.env` + `dotenv` 注入，或在 CI 密钥中提供；`constants.ts` 只读取环境变量并提供默认占位。
-
-### 代码架构
-
-```
-playwright/
-├── playwright.config.ts      # 配置
-├── package.json               # 脚本入口
-├── tests/
-│   ├── constants.ts           # 常量（账号、URL、状态枚举）
-│   ├── helpers.ts             # 通用函数（登录、多用户会话、Bug 证据收集）
-│   ├── pages/                 # Page Objects
-│   │   └── xxx.page.ts        # 每个页面一个文件
-│   ├── {序号}-{模块}.spec.ts  # 正式测试用例
-│   └── explore-{功能}.spec.ts # 业务熟悉探索（临时）
-└── test-data/                 # CSV 等测试数据
-```
-
-### Playwright 配置
-
-```typescript
-// playwright.config.ts
-import { defineConfig } from '@playwright/test';
-
-export default defineConfig({
-  testDir: './tests',
-  fullyParallel: false,       // 串行执行，避免状态冲突
-  timeout: 60_000,            // 单个测试超时 60s
-  use: {
-    actionTimeout: 10_000,      // 单个操作超时 10s
-    screenshot: 'only-on-failure',
-    trace: 'retain-on-failure',
-    baseURL: process.env.TEST_BASE_URL ?? '<你的测试环境地址>',
-  },
-});
-```
-
-> 注意：`actionTimeout` / `screenshot` / `trace` / `baseURL` 必须放在 `use` 内——写在配置顶层会被 Playwright 静默忽略，导致失败时无截图、无 trace。
-
----
 
 ## 工作流零：业务熟悉（前置必做，为写自动化踩点的小规模探索）
 
@@ -145,6 +59,8 @@ export default defineConfig({
 2. **体验核心流程**：按测试用例步骤走一遍完整流程，每步截图，记录 API 调用
 3. **记录发现**：页面导航路径、关键元素选择器、API 接口、隐藏行为、**编写或更新 Page Object**
 
+探索代码模板见 `references/playwright-conventions.md` 第 4 节（explore-*.spec.ts）。
+
 ### 完成标准
 
 - [ ] 每个涉及的页面都有截图
@@ -153,35 +69,6 @@ export default defineConfig({
 - [ ] 记录了实际的 API 请求
 - [ ] 发现了隐藏行为（隐藏字段、默认值、前置条件）
 - [ ] 已编写或更新了对应的 Page Object
-
-### 探索测试代码模板
-
-```typescript
-// explore-{功能}.spec.ts — 临时文件，知识提取后删除
-import { test } from '@playwright/test';
-import { LoginPage, setupApiLogging } from './helpers';
-
-test('业务熟悉：探索{功能名}页面结构', async ({ page }) => {
-  const apiLog = setupApiLogging(page);
-
-  await new LoginPage(page).loginAs('admin');
-  await page.goto('/<你的页面路由>');
-  await page.waitForLoadState('networkidle');
-
-  // 全页截图
-  await page.screenshot({ path: 'debug-{功能}-landing.png', fullPage: true });
-
-  // 枚举可交互元素
-  const buttons = await page.getByRole('button').allTextContents();
-  const tabs = await page.getByRole('tab').allTextContents();
-  console.log('按钮:', buttons);
-  console.log('Tab:', tabs);
-  console.log('当前 URL:', page.url());
-
-  // 按测试用例步骤操作，每步截图
-  // ...
-});
-```
 
 ---
 
@@ -204,137 +91,7 @@ test('业务熟悉：探索{功能名}页面结构', async ({ page }) => {
 3. **编写 spec**：使用 Page Object 封装所有页面交互
 4. **运行验证**：`npx playwright test tests/{文件名}.spec.ts`
 
-### 场景类型与代码模板
-
-#### CRUD 操作
-
-```typescript
-test.describe('{模块名}', () => {
-  let createdName: string;
-  let xxxPage: XxxPage; // afterEach 清理要用，在 beforeEach 中初始化
-
-  test.beforeEach(async ({ page }) => {
-    // 登录 + 进入页面
-    xxxPage = new XxxPage(page);
-  });
-
-  test.afterEach(async () => {
-    // beforeEach 可能登录失败导致 xxxPage 未初始化，同步判空防清理噪音
-    if (createdName && xxxPage) {
-      await xxxPage.deleteXxx(createdName).catch(() => {});
-    }
-  });
-
-  test('TC-01-01: {用例描述}', async () => {
-    createdName = `{前缀}-${Date.now()}`;
-    await xxxPage.createXxx(createdName);
-
-    const row = await xxxPage.getXxxByName(createdName);
-    expect(row).not.toBeNull();
-    await expect(row!).toBeVisible();
-  });
-});
-```
-
-#### 表单提交
-
-```typescript
-test('TC-01-02: {用例描述}', async ({ page }) => {
-  // 1. 先注册响应等待（必须在操作之前；勿用固定 waitForTimeout，见 Common Mistakes）
-  const responsePromise = page.waitForResponse(
-    resp => resp.url().includes('/api/target') && resp.request().method() === 'POST',
-  );
-
-  // 2. 填充表单（fill 优先；受控组件校验不触发/值不生效时改用 keyboard.type，详见速查表）
-  await page.locator('#field').fill('值');
-
-  // 3. 提交
-  await page.getByRole('button', { name: '提交' }).click();
-
-  // 4. 验证 API 调用 + 持久化
-  const response = await responsePromise;
-  expect(response.ok()).toBeTruthy();
-  await page.reload();
-  await expect(page.getByText('值')).toBeVisible();
-});
-```
-
-#### 状态流转
-
-```typescript
-test('TC-01-03: {用例描述}', async ({ page }) => {
-  // 前置：用对应 Page Object 创建一条可操作的业务数据
-  const { resourceName } = await createResourceWithData(page, 'TC-STATUS');
-  await xxxPage.performAction();
-  await expect(page.getByText('<目标状态文案>')).toBeVisible();
-});
-```
-
-#### 多用户并发
-
-```typescript
-test('TC-01-04: {用例描述}', async ({ browser }) => {
-  // 创建两个独立会话（各自登录不同角色），见 references/helpers_reference.md
-  const { pageA, pageB, contextA, contextB } =
-    await createDualSession(browser, 'admin', 'user');
-  try {
-    await pageA.getByRole('button', { name: '<动作A>' }).click();
-    await pageB.getByRole('button', { name: '<动作B>' }).click();
-    await expect(pageA.getByText('<预期文案>')).toBeVisible();
-  } finally {
-    await closeContexts(contextA, contextB);
-  }
-});
-```
-
-### Page Object 编写规范
-
-**复用优先**：检查 `tests/pages/` 下是否已有对应页面的 Page Object。
-
-```typescript
-// pages/xxx.page.ts
-import { Page, Locator, expect } from '@playwright/test';
-import { BASE_URL } from '../constants';
-
-export class XxxPage {
-  readonly page: Page;
-
-  constructor(page: Page) {
-    this.page = page;
-  }
-
-  async goto() {
-    await this.page.goto(`${BASE_URL}/xxx/list`);
-    await this.page.waitForLoadState('networkidle');
-  }
-
-  async createXxx(name: string) {
-    // fill 优先；受控组件校验不触发/值不生效时改用 keyboard.type
-    await this.page.getByRole('textbox', { name: /名称/ }).click();
-    await this.page.keyboard.type(name, { delay: 30 });
-  }
-
-  async deleteXxx(name: string) {
-    const row = await this.getXxxByName(name);
-    if (!row) return;
-    await row.locator('[aria-label="delete"]').first().click();
-    await this.page.getByRole('button', { name: /确\s*定/ }).click();
-  }
-}
-```
-
-### 测试数据管理
-
-- **常量数据**：放 `constants.ts`（账号、URL、状态枚举）
-- **CSV 数据**：放 `test-data/` 目录
-- **动态数据**：在测试中用 `Date.now()` 生成唯一名称
-
-### spec 文件命名
-
-| 类型 | 命名 | 示例 |
-|------|------|------|
-| 正式测试 | `{序号}-{模块}.spec.ts` | `01-resource-creation.spec.ts` |
-| 探索测试 | `explore-{功能}.spec.ts` | `explore-config.spec.ts`（**临时文件**） |
+脚手架、场景代码模板（CRUD / 表单提交 / 状态流转 / 多用户并发）、Page Object 规范与 spec 命名**此时加载 `references/playwright-conventions.md`**（第 5–7 节）。
 
 ---
 
@@ -361,57 +118,13 @@ export class XxxPage {
 Bug 发现 → 截图操作前 → 操作触发异常 → 截图操作后 → 收集 API/控制台日志 → 写入报告
 ```
 
-```typescript
-test('测试中发现 Bug', async ({ page }, testInfo) => {
-  const tracker = setupBugTracking(page);
-  await new LoginPage(page).loginAs('admin');
-
-  // 截图 1：操作前
-  await page.screenshot({ path: 'bug-001-01-操作前.png', fullPage: true });
-
-  // 触发异常的操作（先注册响应等待，再点击；勿用固定 waitForTimeout）
-  const saveResponse = page.waitForResponse(resp => resp.url().includes('/api/save'));
-  await page.getByRole('button', { name: '保存' }).click();
-  await saveResponse;
-
-  // 截图 2：异常现象
-  await page.screenshot({ path: 'bug-001-02-异常.png', fullPage: true });
-
-  // 收集完整证据（截图 + API + 控制台）
-  const evidence = await tracker.collect(testInfo, 'BUG-001', '保存失败无提示');
-});
-```
+证据收集代码（`setupBugTracking` / `tracker.collect`）见 `references/playwright-conventions.md` 第 8 节；通用 Helper 落地时**加载 `references/helpers_reference.md`**。
 
 截图命名统一小写 `bug-{序号}-*` 前缀：手动截图记录过程两态（`bug-001-01-操作前.png`、`bug-001-02-异常.png`）；`tracker.collect()` 自动补一张整页汇总截图（`bug-001-汇总.png`）并 attach 到 HTML 报告。Bug 报告标题中的 `BUG-{序号}` 仅为显示格式。
 
 ### Bug 报告格式
 
-记录在 `{项目名}/测试报告_{来源}_{日期}.md`，**字段与 `../core/report-template.md`（测试报告唯一来源模板）的 §3 Bug 清单保持一致**，保证条目可直接拼装进 `qa` 收尾的最终报告。执行分报告还需包含 §2 执行统计（P0/P1/P2 × 用例数/通过/失败/阻塞/未执行表，同样按 report-template）：
-
-```markdown
-### BUG-{序号}: {简要描述}
-
-- **严重程度**: P0 / P1 / P2
-- **发现方式**: 自动化测试 / 探索性测试 / 业务熟悉探索 / 手动执行 / 代码审查（Cx 转）
-- **复现步骤**:
-  1. 以 {角色} 登录
-  2. 进入 {页面} ({URL})
-  3. {具体操作}
-- **预期行为**: {根据需求文档/测试用例 TC 编号}
-- **实际行为**: {观察到的实际现象}
-- **证据**: 截图 `bug-{序号}-*.png` | API: `{METHOD} {URL} → {状态码}` | 控制台: `{错误}`
-- **环境**: {URL} / {账号角色} / {浏览器}
-- **根因分析**: TODO（Bug 确认后由 `bug-analysis` 填写）
-- **回归建议**: TODO（由 `bug-analysis` 填写）
-```
-
----
-
-## 通用 Helper 参考实现
-
-工作流中反复使用的通用工具函数（登录、多用户会话、API/控制台监听、Bug 证据收集、服务端崩溃检测）建议集中放在 `tests/helpers.ts`。落地时**加载本 skill 的 `references/helpers_reference.md`**：其中的脱敏参考实现可直接作为起点，按你的系统调整选择器、登录后跳转规则和 token 存储位置。
-
-> 业务专有的"造数"函数（如创建某类业务实体并灌入测试数据）请基于你的 Page Object 自行实现，不要塞进通用 helpers。
+记录在 `{项目名}/测试报告_{来源}_{日期}.md`，**条目字段与 `../core/report-template.md` §3（测试报告唯一来源模板，此时加载）保持一致**，保证条目可直接拼装进 `qa` 收尾的最终报告；本 skill 的发现方式含「业务熟悉探索」。执行分报告还需包含 §2 执行统计（P0/P1/P2 × 用例数/通过/失败/阻塞/未执行表，同样按 report-template）；条目中"根因分析 / 回归建议"两段留 TODO，由 `bug-analysis` 填写。
 
 ---
 

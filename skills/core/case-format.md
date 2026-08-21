@@ -1,6 +1,6 @@
-# 格式规范细则（templates）
+# 用例格式规范（case-format）
 
-> `test-case-writing` 用例文件的格式硬约束全集。阶段三编写、阶段五定稿自检时**逐条执行本文件**，不是可选参考。拼装起点模板见 `../templates/markmap_template.md`（与本 references/ 目录平级的 templates/ 目录）。
+> 框架级用例格式硬约束全集（`test-case-writing` 编写、`test-case-review` 修订、`bug-analysis` 建议新增用例时统一遵守），编写与定稿自检时**逐条执行本文件**，不是可选参考。从零拼装用例文件的起点模板（含详细格式范例）由 test-case-writing skill 的 templates 目录提供。
 
 ## 1. 文件头部导读区（硬性产出，任何模式）
 
@@ -100,7 +100,7 @@
 
 ## 9. 附录区规范（代码模式必含，与正文 `---` 物理隔离）
 
-代码模式的用例文件，除功能用例外，必须含以下产出——**全部放在文件末尾的附录区**，附录顶部标注"开发技术核查清单（非测试执行项）"。Cx/Dn 记录的 evidence 字段格式见 `../../core/evidence.md`，Dn 评级见 `../../core/risk-model.md`：
+代码模式的用例文件，除功能用例外，必须含以下产出——**全部放在文件末尾的附录区**，附录顶部标注"开发技术核查清单（非测试执行项）"。Cx/Dn 记录的 evidence 字段格式见 `core/evidence.md`，Dn 评级见 `core/risk-model.md`：
 
 - **附录：缺陷记录 Cx**：编号（C1、C2…）+ 现象描述 + `文件:行` 证据 + 证据等级（E0–E4）+ 置信度 + 处置（主线验证 / 专项验证 / 待实测确认 / 已证伪 / 后端范围）
 - **附录：高风险点 D1-Dn**：编号 + 风险描述 + 等级（Critical/High/Medium/Low，Impact × Likelihood 评分）+ `文件:行` 证据 + 覆盖用例编号 + 通过判据

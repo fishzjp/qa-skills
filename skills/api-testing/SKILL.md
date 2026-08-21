@@ -1,6 +1,6 @@
 ---
 name: api-testing
-description: 接口级测试时使用——从 API 文档（OpenAPI/Swagger）或用例 Schema 中可自动化的接口用例出发，覆盖参数类型、缺失/非法参数、边界值、权限、鉴权、幂等、并发、状态码、错误响应与数据一致性，产出可执行的 API 测试脚本与运行结果。不用于：Web UI 流程测试（automated-e2e-testing）、手动用例编写（test-case-writing）。
+description: 接口级测试时使用——从 OpenAPI/Swagger 文档或用例 Schema 中可自动化的接口用例出发，覆盖参数、边界、鉴权、幂等、并发、错误响应与数据一致性，产出可执行的 API 测试脚本与运行结果。不用于：Web UI 流程（automated-e2e-testing）、手动用例编写（test-case-writing）。
 ---
 
 # API 测试（api-testing）
@@ -10,6 +10,12 @@ description: 接口级测试时使用——从 API 文档（OpenAPI/Swagger）�
 - **输入**：API 文档（OpenAPI/Swagger）、用例 Schema 中 `execution_model` 可自动化的接口用例、被测环境信息（base URL、账号/Token）
 - **输出（落盘）**：API 测试脚本（pytest + requests，或项目既定技术栈）+ 运行结果（报告条目按 `../core/report-template.md` 对齐）
 - **边界**：Web UI 流程 → `automated-e2e-testing`；接口手动用例设计 → `test-case-writing`；性能压测 → 专项工具（k6/locust，见 `test-strategy` 的 handoff）
+
+## When to Use
+
+- 给定 OpenAPI/Swagger 文档，需要产出并运行接口自动化测试
+- 从用例 Schema 中筛出接口级可自动化用例，转换为 API 脚本执行
+- 需要覆盖鉴权/越权、幂等、并发写、错误响应等接口层专项
 
 ## When NOT to Use
 
@@ -71,13 +77,13 @@ def client():
 - 从用例 Schema 过滤：`execution_model: dev-collab` 或 `automation.framework: api` 的用例 → 转换对象（test 名沿用 TC 编号：`test_TC_05_01_写入字段读回一致`）
 - 环境未知 → 向用户索取（base URL、账号、是否可写生产旁路环境），**不确定就问，不猜接口行为**
 
-### 2. 用例设计（此时加载 `../core/testing-principles.md`，方法细节 `../test-case-writing/references/data-driven.md`）
+### 2. 用例设计（此时加载 `../core/testing-principles.md`，方法细节 `../core/methods/data-driven.md`）
 
 每接口一张参数矩阵，逐参数 × 逐属性；重点覆盖：
 
 | 类别 | 必测点 |
 |------|--------|
-| 参数 | 必填缺失 / 类型错误 / 边界值（空/最值/超大，见 `../test-case-writing/references/boundary.md`） |
+| 参数 | 必填缺失 / 类型错误 / 边界值（空/最值/超大，见 `../core/methods/boundary.md`） |
 | 鉴权 | 无 Token / 过期 Token / 错误 Token / 越权（他人资源 id） |
 | 幂等 | 同一业务键重复提交 → 不重复创建；重试安全 |
 | 并发 | 并发写同一资源 → 无互相覆盖、无中间态 |

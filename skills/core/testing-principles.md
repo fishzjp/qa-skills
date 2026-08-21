@@ -1,6 +1,6 @@
 # 测试原则与设计方法选择
 
-> 跨 Skill 共享的测试方法论。`test-strategy` 用它决定测什么类型 / 多深；`test-case-writing` 用它选设计方法与组织结构。方法级落地细节在各 Skill 自己的 references/ 中。
+> 跨 Skill 共享的测试方法论。`test-strategy` 用它决定测什么类型 / 多深；`test-case-writing` 用它选设计方法与组织结构。方法级落地细节在 `core/methods/`，覆盖度检查表在 `core/coverage.md`。
 
 ## 1. 测试原则
 
@@ -25,6 +25,8 @@
 | 数据转换 | Input → Transform → Output | 典型输入 / 畸形输入 / 空输入 → 逐类核对输出；转换保真（读回一致） |
 | 历史 Bug 较多 | Regression-focused | 每个历史 Bug 一条回归用例；聚类找系统性薄弱区加防 |
 
+各方法的落地细则（按需加载）：边界 / 等价类 → `core/methods/boundary.md`；参数矩阵 / 导入 / 数据转换 → `core/methods/data-driven.md`；权限矩阵 → `core/methods/permission.md`；状态机组织 → `core/methods/state-machine.md`。
+
 ## 3. 二阶交叉覆盖（一阶枚举的补漏公式）
 
 一阶枚举（每条规则 / 每条状态边一个用例）做得再全，漏的通常是三类交叉：
@@ -35,7 +37,7 @@
 
 ## 4. 覆盖维度索引
 
-覆盖度检查的完整维度清单（19 维 + 横切可执行性）由 `test-case-writing/references/coverage.md` 维护，`test-case-review` 独立审查时同样引用该清单（`test-strategy` 的范围决策走 `core/risk-model.md` 的风险维度，不直接消费该清单）。
+覆盖度检查的完整维度清单（19 维 + 横切可执行性）由 `core/coverage.md` 维护，`test-case-review` 独立审查时同样引用该清单（`test-strategy` 的范围决策走 `core/risk-model.md` 的风险维度，不直接消费该清单）。
 
 ## 5. 引用方式
 

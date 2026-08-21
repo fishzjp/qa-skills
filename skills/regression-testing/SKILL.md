@@ -1,6 +1,6 @@
 ---
 name: regression-testing
-description: 代码变更（diff/Bug 修复/需求变更）后自动判断应该回归哪些测试时使用——沿"改动文件 → 改动函数 → 受影响功能 → 受影响用例 → 回归范围"分析链，基于用例 Schema 的追溯映射产出分级回归清单。不用于：用例文件本身的增量修改（test-case-writing）、回归策略的长期制定（test-strategy）。
+description: 代码变更（diff/Bug 修复/需求变更）后判断应回归哪些测试时使用——沿"改动文件 → 改动函数 → 受影响功能 → 受影响用例"分析链，基于用例 Schema 的追溯映射产出分级回归清单。不用于：用例文件本身的增量修改（test-case-writing）、长期回归策略（test-strategy）。
 ---
 
 # 回归测试（regression-testing）
@@ -15,6 +15,12 @@ description: 代码变更（diff/Bug 修复/需求变更）后自动判断应该
   3. **per-run 增量**：改动文件映射附录（针对本次 diff 生成）
 
 > 没有这个数据结构，影响面分析就只是"让模型读一遍 diff 猜"——Schema 缺失时先提示：可由 `test-case-writing` 对存量 markmap 抽取（不需要人工重写）。
+
+## When to Use
+
+- 代码变更（feature/Bug 修复/重构）合入后，需要选择回归范围
+- Bug 修复后需要确定"修复验证 + 关联回归"的用例集
+- 需要一份逐条给依据、可裁剪的分级回归清单
 
 ## When NOT to Use
 

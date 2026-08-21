@@ -1,6 +1,6 @@
 ---
 name: test-strategy
-description: 回答"这个功能应该怎么测"时使用——基于需求模型与代码识别风险（Risk Map：Impact × Likelihood，评级强制挂证据），把风险翻译成测试范围、类型、深度与优先级的策略，含自动化计划提案与回归策略。不用于：已有策略直接写用例（test-case-writing）、需求建模（requirement-analysis）、端到端流水线（qa）。
+description: 回答"这个功能应该怎么测"时使用——基于需求与代码识别风险（Risk Map：Impact × Likelihood，评级强制挂证据），把风险翻译成测试范围、深度与优先级的策略，含自动化计划提案与回归策略。不用于：已有策略直接写用例（test-case-writing）、需求建模（requirement-analysis）、端到端流水线（qa）。
 ---
 
 # 测试策略（test-strategy）
@@ -10,6 +10,12 @@ description: 回答"这个功能应该怎么测"时使用——基于需求模�
 - **输入**：需求模型（`需求模型.md`；没有则内联轻量研读需求源）、代码仓库、系统架构、历史 Bug
 - **输出（落盘）**：`{项目}/测试策略.md`——按下方 Schema 组织，含 Risk Map
 - **边界**：不写具体用例（→ `test-case-writing`）；不代替用户做执行策略最终裁决（提案 + 等确认）
+
+## When to Use
+
+- "这个功能应该怎么测"——需要范围/类型/深度/优先级的策略决策与理由
+- 需要识别风险并评级（Risk Map），作为用例优先级与回归锚点的依据
+- 需要制定自动化计划提案（哪些用例自动化、用什么框架）与长期回归策略
 
 ## When NOT to Use
 
