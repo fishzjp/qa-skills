@@ -1,18 +1,55 @@
 **English** | [简体中文](./README.md)
 
-# QA Skills
+<p align="center">
+  <img src="./assets/hero.png" alt="QA Skills — a full-lifecycle QA engineering skill framework for AI coding agents" width="800">
+</p>
 
-> A full-lifecycle QA engineering skill framework for AI coding agents: methodology, 10 skills, and a reproducible benchmark.
->
-> Make AI work like a senior QA engineer — one sentence, *"test this feature for me"*, runs the complete pipeline: **requirement understanding → risk analysis → test strategy → test-case writing → review → automated execution → bug analysis → regression → test report**.
+<p align="center">
+  <em>Make AI work like a senior QA engineer — one sentence, "test this feature for me", runs the complete pipeline from requirement understanding to test report.</em>
+</p>
 
-![CI](https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml/badge.svg) ![License](https://img.shields.io/badge/license-MIT-green) ![Skills](https://img.shields.io/badge/skills-10-blue) ![Benchmark](https://img.shields.io/badge/benchmark-golden%20set%20%2B%20harness-orange)
+<p align="center">
+  <a href="https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml"><img src="https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/fishzjp/qa-skills/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
+  <a href="./skills/"><img src="https://img.shields.io/badge/skills-10-blue" alt="Skills"></a>
+  <a href="./eval/"><img src="https://img.shields.io/badge/benchmark-golden%20set%20%2B%20harness-orange" alt="Benchmark"></a>
+</p>
 
-Not a handful of test prompts — a **QA engineering skill framework** for AI coding agents (Claude Code and others), built as three layers: **methodology + 10 skills + a reproducible benchmark**. Every number published here was actually measured. The project is Chinese-first; this README summarizes it in English.
+A **QA engineering skill framework** for AI coding agents (Claude Code and others). Not a handful of test prompts — a three-layer system of **methodology + 10 skills + a reproducible benchmark**, with every number published here actually measured. The project is Chinese-first; this README summarizes it in English.
 
 ---
 
-## Why this project exists
+## Quick start
+
+```bash
+git clone https://github.com/fishzjp/qa-skills.git
+cd qa-skills
+
+./install.sh        # interactive: auto-detects agent skills directories (~/.agents/skills, ~/.claude/skills, ...)
+# then tell your agent:
+# "Test this requirement: {description + repo URL}"
+```
+
+- Uninstall: `./uninstall.sh`
+- Manual install: `cp -r skills/* <your skills directory>/` (**core/ must be copied along** — every skill references it by relative path)
+- Single-stage tasks (write cases / review / convert to automation / regression scope) trigger the corresponding skill directly, no full pipeline needed
+
+Skills are plain Markdown (frontmatter + relative-path references) with no host-specific dependencies, so any agent host supporting the Agent Skills convention works. See the [compatibility table](./README.md#宿主兼容性) in the Chinese README for details.
+
+## What it does
+
+| You say | The framework does | Output |
+|---------|--------------------|--------|
+| "Test this requirement" | `qa` orchestrates the 9-stage pipeline with human checkpoints (clarifications, execution strategy, bug triage) | Full QA assets + test report |
+| "Write test cases from this PRD" | Code-first: requests the repo, reads the implementation, finds latent bugs, then writes | Dual-track cases: markmap (human) + schema.yaml (machine) |
+| "How should we test this?" | Risk Map (Impact × Likelihood, ratings require evidence) → scope / depth / rationale | `测试策略.md` (test strategy) |
+| "Review these existing cases" | Independent review: testable-point denominator + coverage + executability | Revised case file + review record |
+| "Convert cases to automation" | Page Object conventions, listeners-before-actions, self-built data & cleanup | Runnable Playwright / pytest code |
+| "Root-cause this bug" | Reproduce → read code to the line → 3-dimension impact analysis → regression advice | Bug entry (root cause / evidence / regression) |
+
+Also usable standalone: `exploratory-testing` (charter-driven), `api-testing` (API-level), `bug-analysis`, `regression-testing` (diff → regression scope).
+
+## The problems it solves
 
 ### Problem 1: AI-written test cases look professional but cannot be executed
 
@@ -23,7 +60,7 @@ Not a handful of test prompts — a **QA engineering skill framework** for AI co
 - Open the campaign page and verify the claim logic               ← which page? which entry?
 ```
 
-A polished coverage matrix, professional terminology — and the test engineer stalls on the very first step. The framework's single output standard: **a person who has never read the requirements, with no walkthrough, can start working from the file alone.** In the benchmark this is a veto metric — a non-executable case scores zero no matter how broad its coverage.
+The framework's single output standard: **a person who has never read the requirements, with no walkthrough, can start working from the file alone.** In the benchmark this is a veto metric — a non-executable case scores zero no matter how broad its coverage. Full before/after comparison in [examples/](./examples/).
 
 ### Problem 2: More instructions make the agent weaker, not stronger
 
@@ -35,34 +72,7 @@ L2  SKILL.md body      Workflow: the backbone every invocation walks (≤500-lin
 L3  references/ + core/  Methods/rules/templates: loaded on demand, explicitly referenced by workflow steps
 ```
 
-Each SKILL.md keeps only the workflow; state-machine methods, boundary-value formulas, permission matrices, and format constraints are pushed down and loaded on demand — the agent faces only the instructions it needs at each step.
-
-## What it does
-
-| You say | The framework does | Output |
-|---------|--------------------|--------|
-| "Test this requirement" | `qa` orchestrates the 9-stage pipeline with human checkpoints (clarifications, execution strategy, bug triage) | Full QA assets + test report |
-| "Write test cases from this PRD" | Code-first: requests the repo, reads the implementation, finds latent bugs, then writes | markmap test cases (human) + Test Case Schema (machine) |
-| "How should we test this?" | Risk Map (Impact × Likelihood, ratings require evidence) → scope/depth/rationale | `测试策略.md` (test strategy) |
-| "Review these existing cases" | Independent review: testable-point denominator + coverage + executability | Revised case file + review record |
-| "Convert cases to automation" | Page Object conventions, listeners-before-actions, self-built data & cleanup | Runnable Playwright / pytest code |
-| "Root-cause this bug" | Reproduce → read code to the line → 3-dimension impact analysis → regression advice | Bug entry (root cause / evidence / regression) |
-
-Also usable standalone: `exploratory-testing` (charter-driven), `api-testing` (API-level), `bug-analysis`, `regression-testing` (diff → regression scope).
-
-## Quick start
-
-```bash
-git clone https://github.com/fishzjp/qa-skills.git
-cd qa-skills
-./install.sh        # interactive: auto-detects agent skills directories (~/.agents/skills, ~/.claude/skills, ...)
-# then tell your agent:
-# "Test this requirement: {description + repo URL}"
-```
-
-Uninstall: `./uninstall.sh`. Manual install works too: `cp -r skills/* <your skills directory>/` (**core/ must be copied along** — every skill references it by relative path). Single-stage tasks (write cases / review / convert to automation / regression scope) trigger the corresponding skill directly, no full pipeline needed.
-
-Skills are plain Markdown (frontmatter + relative-path references) with no host-specific dependencies, so any agent host supporting the Agent Skills convention works. See the [compatibility table](./README.md#宿主兼容性) in the Chinese README for details.
+Each SKILL.md keeps only the workflow; methods, formulas, and format constraints are pushed down and loaded on demand — the agent faces only the instructions it needs at each step.
 
 ## How it works
 
@@ -75,14 +85,23 @@ Skills are plain Markdown (frontmatter + relative-path references) with no host-
 
 Golden set of 12 tasks, same model, same harness; the only difference is whether this framework is injected. Numbers from the heterogeneous-judge re-evaluation (judge from a different model family than the generator); full study in the [📄 benchmark paper (PDF)](./eval/reports/2026-08-21-benchmark-study.pdf). All numbers are reported as measured — including the adverse ones:
 
-| Metric | Without | With | Notes |
-|--------|:---:|:---:|-------|
-| Case-conformance score (formerly "executability") | 0.26 | **0.98** | Format × content-rubric composite, no judge; the gap is primarily format adoption — both arms near ceiling on content red lines (decomposition in paper §5.1); zero-caliber (earlier 0.77 was pre-fix caliber — see eval errata); replicated across two generator models (0.20→0.99) |
-| E2E real execution (single task × 3 samples) | 0/3 runnable | 1 full + 2×(2/3) | Real browser + real app, no judge; on the On side the same failing test reproduces stably across two samples; Off mixes no-code and failing-code outcomes (full granularity in paper §5.1) |
-| Planted-bug detection | — | **75%** | Heterogeneous judge (100% under same-family judge) |
-| Quality (LLM judge) | 0.70 | **0.76** | Heterogeneous judge; Δ +6.1pp (95%CI includes zero; significant under same-family judging) |
-| API real-execution pass rate | **74%** | 52% | Disclosed adverse result: skill-enforced strict assertions fail more visibly (full 3-sample caliber; earlier 87% was a 2-sample mean) |
-| Token cost | 1× | 3.3× | Better but more expensive; a single-file ablation shows the gains cannot be obtained by taking just the core standards document (paper §5.3) |
+| Metric | Without | With |
+|--------|:---:|:---:|
+| Case-conformance score | 0.26 | **0.98** |
+| E2E real execution (single task × 3 samples) | 0/3 runnable | 1 full + 2×(2/3) |
+| Planted-bug detection | — | **75%** |
+| Quality (LLM judge) | 0.70 | **0.76** |
+| API real-execution pass rate † | **74%** | 52% |
+| Token cost | 1× | 3.3× |
+
+**Per-metric calibers**:
+
+- **Case-conformance score** (formerly "executability"): format × content-rubric composite, no judge. The gap is primarily format adoption — both arms near ceiling on content red lines (paper §5.1); zero-caliber (earlier 0.77 was pre-fix caliber — see eval errata); replicated across two generator models (0.20→0.99).
+- **E2E real execution**: real browser + real app, no judge; on the On side the same failing test reproduces stably across two samples; Off mixes no-code and failing-code outcomes (paper §5.1).
+- **Planted-bug detection**: code-review tasks; heterogeneous-judge caliber (100% under same-family judge).
+- **Quality**: heterogeneous judge; Δ +6.1pp (95%CI includes zero; significant under same-family judging).
+- **API real-execution pass rate †**: disclosed adverse result — skill-enforced strict assertions fail more visibly while weak assertions pass easily; full 3-sample caliber (earlier 87% was a 2-sample mean), diagnosis in [eval/EXPECTED.md](./eval/EXPECTED.md).
+- **Token cost**: better but more expensive; a single-file ablation shows the gains cannot be obtained by taking just the core standards document (paper §5.3).
 
 Pre-registered gates: 4/7 under the same-family judge, 5/8 under the heterogeneous judge (different compositions incl. a sign flip — full table in paper Table 6). Coverage gains (heterogeneous judge): **+8.7pp** on case-writing tasks (CI [0.5, 15.4]), **+13.2pp** all tasks (CI [2.8, 26.3]), **+9.7pp** defect detection (CI [3.3, 16.4]) — all significant; the same-family figure was +3.8pp (quantified judge leniency toward the baseline and errata in [eval/EXPECTED.md](./eval/EXPECTED.md)). An early +29pp single-sample estimate was later shown to be noise.
 
@@ -98,9 +117,10 @@ Pre-registered gates: 4/7 under the same-family judge, 5/8 under the heterogeneo
 
 ## Community
 
+- 🤝 [Contributing guide](./CONTRIBUTING.md) — architecture red lines and local checks (`python3 scripts/validate_skills.py`)
 - 💬 [Discussions](https://github.com/fishzjp/qa-skills/discussions) for Q&A and experience sharing; [Issues](https://github.com/fishzjp/qa-skills/issues) for confirmed bugs and concrete feature requests
 - 🛡️ Security: private reporting per [SECURITY.md](./.github/SECURITY.md)
-- 📜 [Code of Conduct](./.github/CODE_OF_CONDUCT.md) · 📋 [CHANGELOG](./CHANGELOG.md) · 🤝 [Contributing](./CONTRIBUTING.md)
+- 📜 [Code of Conduct](./.github/CODE_OF_CONDUCT.md) · 📋 [CHANGELOG](./CHANGELOG.md)
 
 ## License
 
