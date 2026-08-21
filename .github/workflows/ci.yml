@@ -20,7 +20,7 @@ jobs:
         run: python3 scripts/validate_skills.py
 
       - name: 安装 harness 单测依赖
-        run: python3 -m pip install --quiet requests pytest
+        run: python3 -m pip install --quiet requests pytest pyyaml
 
       - name: Harness 纯函数单测（统计/judge 校验/代码块解析/可执行性检查）
         run: python3 -m pytest tests/ -q
