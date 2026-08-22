@@ -39,3 +39,6 @@ eval/results/probes/
 eval/results/contamination/
 eval/results/calibration/
 eval/results/LATEST.md
+eval/
+tests/
+.github/workflows/benchmark.yml

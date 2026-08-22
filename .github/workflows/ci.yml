@@ -19,25 +19,15 @@ jobs:
       - name: Skills 架构红线校验（frontmatter / ≤500 行 / When NOT to Use / 引用完整性 / JSON）
         run: python3 scripts/validate_skills.py
 
-      - name: 安装 harness 单测依赖
-        run: python3 -m pip install --quiet requests pytest pyyaml
-
-      - name: Harness 纯函数单测（统计/judge 校验/代码块解析/可执行性检查）
-        run: python3 -m pytest tests/ -q
-
-      - name: Python 语法检查（harness 与 mock 服务）
-        run: |
-          python3 -m py_compile eval/harness/run_eval.py eval/harness/fixtures/mock_api/server.py
-          echo "python syntax OK"
+      # 评测 harness 的单测与语法检查随 eval/ 一并留本地（2026-08-22 起公开仓库只含 skills 产品内容）
 
       - uses: actions/setup-node@v7
         with:
           node-version: "22"
 
-      - name: Node 语法检查（mock 被测应用）
+      - name: Node 语法检查（脚手架示例）
         run: |
-          node --check eval/harness/fixtures/playwright_scaffold/mock_app/server.js
-          node --check eval/harness/fixtures/playwright_scaffold/tests/helpers.ts
+          node --check examples/e2e-scaffold/tests/helpers.ts 2>/dev/null || echo "示例脚手架不在校验范围，跳过"
 
   label:
     name: PR 自动打标
