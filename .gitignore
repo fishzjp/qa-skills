@@ -30,3 +30,12 @@ venv/
 
 # 日志
 *.log
+
+# 实验记录不进公开仓库（2026-08-22 决定：GitHub 只放 skills 相关内容，
+# 评测产物/运行归档/分析报告/校准标注等敏感记录只留本地）
+eval/results/runs/
+eval/results/analyses/
+eval/results/probes/
+eval/results/contamination/
+eval/results/calibration/
+eval/results/LATEST.md
