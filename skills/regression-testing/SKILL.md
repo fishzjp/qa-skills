@@ -1,5 +1,8 @@
 ---
 name: regression-testing
+slug: regression-testing
+displayName: 回归测试
+version: 0.5.0
 description: 代码变更（diff/Bug 修复/需求变更）后判断应回归哪些测试时使用——沿"改动文件 → 改动函数 → 受影响功能 → 受影响用例"分析链，基于用例 Schema 的追溯映射产出分级回归清单。不用于：用例文件本身的增量修改（test-case-writing）、长期回归策略（test-strategy）。
 ---
 

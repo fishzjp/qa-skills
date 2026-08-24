@@ -1,5 +1,8 @@
 ---
 name: api-testing
+slug: api-testing
+displayName: API 接口测试
+version: 0.5.0
 description: 接口级测试时使用——从 OpenAPI/Swagger 文档或用例 Schema 中可自动化的接口用例出发，覆盖参数、边界、鉴权、幂等、并发、错误响应与数据一致性，产出可执行的 API 测试脚本与运行结果。不用于：Web UI 流程（automated-e2e-testing）、手动用例编写（test-case-writing）。
 ---
 

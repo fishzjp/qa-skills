@@ -1,5 +1,8 @@
 ---
 name: automated-e2e-testing
+slug: automated-e2e-testing
+displayName: E2E 自动化测试
+version: 0.5.0
 description: 将手动测试用例转为 Playwright E2E 测试并执行时使用；含写自动化前的业务熟悉踩点、Page Object/Helper 编写、执行中的 Bug 证据收集与报告条目记录。不用于：纯 API 接口测试（api-testing）、以理解系统为目的的独立探索会话（exploratory-testing）、已确认 Bug 的根因分析（bug-analysis）。
 ---
 

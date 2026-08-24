@@ -1,5 +1,8 @@
 ---
 name: test-case-writing
+slug: test-case-writing
+displayName: 测试用例设计
+version: 0.5.0
 description: 从需求文档、API 文档、Bug 报告或代码仓库产出可执行的手动测试用例（markmap）时使用——代码优先：索取仓库、先代码审查找潜在 bug 再写用例，并抽取机器可读 Schema。不用于：需求建模（requirement-analysis）、测试策略（test-strategy）、独立审查（test-case-review）、自动化脚本（automated-e2e-testing / api-testing）。
 ---
 

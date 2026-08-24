@@ -1,5 +1,8 @@
 ---
 name: bug-analysis
+slug: bug-analysis
+displayName: 缺陷分析
+version: 0.5.0
 description: 对已确认的 Bug 做根因定位、影响分析、回归建议时使用——复现 → 读代码定位根因 → 影响三面分析 → 回归建议，条目（根因/影响/Severity 依据/修复建议）追加进测试报告。不用于：仅收集 Bug 证据（automated-e2e-testing / api-testing）、疑似未定性缺陷（test-case-writing 的 Cx 记录）。
 ---
 

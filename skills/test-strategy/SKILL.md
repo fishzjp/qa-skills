@@ -1,5 +1,8 @@
 ---
 name: test-strategy
+slug: test-strategy
+displayName: 测试策略
+version: 0.5.0
 description: 回答"这个功能应该怎么测"时使用——风险评级挂证据（Risk Map），翻译成功能域+类型域两域范围与深度：类型域十轴全轴必答（脚本扫描信号+预填修订），include挂信号、exclude挂理由、full有预算上限。不用于：已有策略直接写用例（test-case-writing）、需求建模（requirement-analysis）、端到端流水线（qa）。
 ---
 
