@@ -5,6 +5,13 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-24
+
+决策层 Phase A + skills 自包含架构 + 仓库收敛为产品本体（v0.4.0 后 19 提交，60 文件）。
+本版 Release 附跨模型增益矩阵快照（核心指标 + 决策层 flash/glm-5.2 两段位矩阵）与
+飞轮迭代记录（R1 格式锤闭环）；发布前污染三件套全过（cutoff 核对 / n-gram 扫描 /
+canary，见本地评测链路存档）。
+
 ### 变更
 
 - **公开仓库收敛为 skills 产品内容**（2026-08-22 决定，本次落地）：eval/（黄金集 /
@@ -210,7 +217,8 @@ v2 改造：从两个 skill 升级为全生命周期 QA Agent Skills 框架。
 - 双轨产物：markmap（人执行）+ Test Case Schema（机器消费）
 - 早期迭代：test-case-writing 代码驱动增强、两层审查架构、二阶交叉覆盖
 
-[Unreleased]: https://github.com/fishzjp/qa-skills/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/fishzjp/qa-skills/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/fishzjp/qa-skills/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/fishzjp/qa-skills/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/fishzjp/qa-skills/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/fishzjp/qa-skills/compare/v0.1.0...v0.2.0
