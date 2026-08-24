@@ -398,7 +398,7 @@
 <!-- ============ Hero ============ -->
 <header class="hero" id="top">
   <div class="container">
-    <div class="hero-badge reveal">开源 · MIT 许可 · 兼容 <b>Claude Code</b> 等 AI 编程助手</div>
+    <div class="hero-badge reveal">开源 · MIT 许可 · 兼容 <b>Claude Code</b>、<b>DeepSeek Harness</b> 等 AI 编程助手</div>
     <h1 class="reveal d1">让 AI 像资深测试工程师<br>一样工作</h1>
     <p class="sub reveal d2">
       一套面向 AI Agent 的<b>测试工程 Skill 框架</b>。<br>
@@ -510,7 +510,7 @@
         <p>
           它由 <b style="color:#f5f5f7">10 个领域 Skill</b> 和一个共享知识库（core/）组成，
           全部是 Markdown 指令文件。
-          装进 Claude Code、Codex 这类编程助手，放对目录就能生效。
+          装进 <span class="nb">Claude Code</span>、<span class="nb">DeepSeek Harness</span> 这类编程助手，放对目录就能生效。
         </p>
         <p>
           装上之后，AI 助手就有了<b style="color:#f5f5f7">资深工程师的工作纪律</b>：
@@ -712,6 +712,11 @@
           <pre><span class="dollar">$</span> git clone https://github.com/fishzjp/qa-skills.git
 <span class="dollar">$</span> cd qa-skills <span class="">&amp;&amp;</span> ./install.sh
 <span class="cm"># 选择装到哪个助手，或 ./install.sh --auto 全自动</span></pre>
+        </div>
+        <p style="margin-top:22px">用 <span class="nb">DeepSeek Harness</span>（dsh）？插件已上架 npm，一条命令装好：</p>
+        <div class="terminal">
+          <div class="terminal-bar"><i></i><i></i><i></i></div>
+          <pre><span class="dollar">$</span> dsh plugin --profile web add dsh-qa-skills</pre>
         </div>
       </div>
       <div class="install-card reveal d1">
