@@ -7,6 +7,15 @@
 
 ### 变更
 
+- **撞顶续写协议（本地评测链路测量修复）**：finish_reason 全链路透传 + `call_model_cont`
+  撞 max_tokens 续写一轮（On/Off 对称、usage 跨轮累加如实计成本、接缝重叠剥离），
+  meta 落档 finish_reason/continued，truncation 统计进 metrics 与报告。依据（本地
+  评测链路存档，2026-08-24 撞顶与成本构成诊断）：撞顶是系统性测量缺陷且几乎只打
+  On 臂——flash 段位 R3 前 32%、v4-pro hardened 任务 3/6 撞顶，残缺产物此前被当
+  完整品计分，On 臂分数被系统性压低；mimo 30720 撞顶样本可见产物仅 5.8KB
+  （~29K token 为推理开销）。skills 本轮不动（绑定约束在推理侧，证据不支持顺序
+  倒置等可见输出侧改动）；受影响段位（flash / v4-pro hardened）的历史增益数字
+  修复复跑前慎引。另加裁判同族披露（同族自评虚高 ~10pp，Wataoka 2024）。
 - **测试数据守约束纪律**（test-case-writing 输出预算纪律新增一条 + api-testing 数据自建条目扩展）：
   生成的测试数据/唯一名模板须先核对材料声明的字段约束（maxLength/枚举/格式）并预留余量（模板总长
   ≤ 约束上限 −2）。依据：api-openapi-coupon 任务执行侧取证（2026-08-24）——唯一名模板 22 字符
