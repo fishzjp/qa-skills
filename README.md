@@ -38,10 +38,10 @@ cd qa-skills
 npx skills add fishzjp/qa-skills            # 交互式勾选，全装用 --skill '*'
 ```
 
-**DeepSeek Harness（dsh）用户**：本仓库已打包为 dsh 插件，一条命令安装——
+**DeepSeek Harness（dsh）用户**：本仓库已打包为 dsh 插件（npm 包 [`dsh-qa-skills`](https://www.npmjs.com/package/dsh-qa-skills)），一条命令安装——
 
 ```bash
-dsh plugin --profile web add github:fishzjp/qa-skills   # 或 npm 发布后的 dsh-qa-skills
+dsh plugin --profile web add dsh-qa-skills
 ```
 
 也可以走文件路径：dsh 原生兼容本仓库格式，装到 `~/.agents/skills/`（`./install.sh --target ~/.agents/skills`）或 `~/.dsh/skills/`，重启 dsh 生效。已在 dsh 0.1.0-rc.8 + deepseek-v4-flash 上完成双路径端到端验证。
