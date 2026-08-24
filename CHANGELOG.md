@@ -7,6 +7,15 @@
 
 ### 变更
 
+- **分发渠道接入 skills.sh（`npx skills`，Vercel Labs 开放技能生态，50+ Agent 宿主）**：
+  `npx skills add fishzjp/qa-skills` 即装（全装 `--skill '*'`）。上架适配：`core/` 新增
+  非触发型 SKILL.md（声明仅被引用、不独立执行任务），使其成为安装器可识别的依赖单元——
+  此前安装器只复制含 SKILL.md 的目录，core 会被丢弃导致全部 `../core/` 引用断裂。
+  架构红线同步：红线 4 由"core 禁含 SKILL.md"演进为内容检查（必须声明不独立触发）；
+  红线 6 将 core 排除出跨 skill 引用判定（skill → core 合法不变）。隔离环境双源验证
+  （本地路径 + GitHub 源）：11 个单元全部落地，core/scripts 完整，引用路径有效。
+  skills.sh 排行榜为安装驱动（无提交入口），用户真实安装即自动上榜。
+
 - **测试数据守约束扩展到跨字段业务规则**（test-case-writing + api-testing 各一条分句）：
   参数矩阵逐参数独立变化时，每格组合回检材料声明的跨字段规则（如"使用门槛不能低于面额"），
   违反规则的组合改取合法值或拆为显式负向用例。依据：glm-5.2 干净复验 On 臂 155 个测试中
