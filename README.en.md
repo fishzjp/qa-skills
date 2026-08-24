@@ -11,7 +11,7 @@
 
 <p align="center"><strong>Make AI work like a senior QA engineer.</strong></p>
 
-<p align="center">Knowledge × tools × decisions — a QA engineering skill framework for Claude Code and other AI agents.<br>Every number, measured.</p>
+<p align="center">Knowledge × tools × decisions — a QA engineering skill framework for Claude Code and other AI agents.<br>Every number comes from measurement.</p>
 
 <p align="center">
   <a href="https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml"><img src="https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
@@ -135,7 +135,7 @@ Execution artifacts + bug evidence → bug-analysis → regression-testing
 
 - **Evidence & risk models** — every finding carries an evidence level (E0–E4) and status; risk ratings without evidence are invalid. The chain evidence → risk → strategy → cases is traceable end to end.
 - **Test-type decision matrix** — ten axes, every one answered; include/exclude decisions leave an auditable trace with a budget cap; greppable signals are scanned into a prefill so weak models revise instead of generating from blank.
-- **Human-in-the-loop checkpoints** — clarifications, execution strategy, bug triage, and full-depth budget calls are *your* decisions; the agent proposes, never decides. Once recorded, later stages cannot overturn them.
+- **Human-in-the-loop checkpoints** — clarifications, execution strategy, bug triage, and budget calls are *your* decisions; the agent proposes, never decides. Once recorded, later stages cannot overturn them.
 
 > Design rationale (why 10 narrow skills, why markmap is the single human-maintained source, why evaluation precedes feature growth): [DESIGN.md](./docs/DESIGN.md) (Chinese).
 
@@ -170,7 +170,7 @@ Golden set of 12 tasks, same model, same harness; the only difference is whether
 
 Pre-registered gates: 4/7 under the same-family judge, 5/8 under the heterogeneous judge (different compositions incl. a sign flip). Coverage gains (heterogeneous judge): **+8.7pp** case-writing tasks (CI [0.5, 15.4]), **+13.2pp** all tasks (CI [2.8, 26.3]), **+9.7pp** defect detection (CI [3.3, 16.4]) — all significant; same-family figure +3.8pp (judge leniency quantified and corrected — see the [CHANGELOG](./CHANGELOG.md)). An early +29pp single-sample estimate was shown to be noise.
 
-**Validity boundary**: the On mode pre-injects all skill instruction files (real hosts load on demand), so On-side numbers are an upper bound — an in-situ probe (n=1) observed no decay; pairwise judging exceeded tie limits under all three judges (win rate voided — mechanism issue).
+**Validity boundary**: the with-skill evaluation mode pre-injects all skill instruction files (real hosts load on demand), so with-skill numbers are an upper bound — an in-situ probe (n=1) observed no decay; pairwise judging exceeded tie limits under all three judges (win rate voided — mechanism issue).
 </details>
 
 ## Documentation
