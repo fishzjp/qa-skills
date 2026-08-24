@@ -4,39 +4,50 @@
 <meta charset="utf-8">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  /* ——— 画布：1280×640，纯黑背景 + 顶部极淡品牌绿辉光（Apple Intelligence 页手法） ——— */
+  /* ——— 画布：1280×640，深空黑 + 双侧环境光（左蓝右紫，Apple Intelligence 暗色页手法） ——— */
   body { width: 1280px; height: 640px; overflow: hidden;
          font-family: -apple-system, "SF Pro Display", "SF Pro Text", "PingFang SC", "Hiragino Sans GB", sans-serif;
-         background-color: #000000;
-         background-image: radial-gradient(1000px 520px at 50% -12%, rgba(48,209,88,0.13), transparent 68%);
+         background:
+           radial-gradient(1000px 620px at 14% 6%,  rgba(10, 132, 255, 0.16), transparent 62%),
+           radial-gradient(1000px 620px at 86% 94%, rgba(191, 90, 242, 0.13), transparent 62%),
+           linear-gradient(180deg, #050507 0%, #08080c 60%, #000 100%);
          color: #f5f5f7;
          display: flex; flex-direction: column; align-items: center; }
 
-  /* ——— 眉标：短词 + 系统绿（暗色变体） ——— */
-  .eyebrow { margin-top: 164px; font-size: 22px; font-weight: 600;
-             color: #30d158; letter-spacing: 0.3px; }
+  /* ——— 眉标：亮蓝引导词 ——— */
+  .eyebrow { margin-top: 186px; font-size: 21px; font-weight: 600;
+             color: #409cff; letter-spacing: 0.4px; }
 
-  /* ——— 主标题：超大 Semibold + 紧字距 ——— */
-  .wordmark { margin-top: 18px; font-size: 128px; font-weight: 600;
-              letter-spacing: -3px; line-height: 1.04; color: #f5f5f7; }
+  /* ——— 主标题：青→蓝→紫渐变文字，黑底上如霓虹（Apple Intelligence 标志性视觉） ——— */
+  .wordmark { margin-top: 16px; font-size: 116px; font-weight: 600;
+              letter-spacing: -3px; line-height: 1.04;
+              background: linear-gradient(115deg, #7dd3fc 0%, #38bdf8 30%, #60a5fa 58%, #a78bfa 88%, #e879f9 110%);
+              -webkit-background-clip: text; background-clip: text;
+              -webkit-text-fill-color: transparent;
+              filter: drop-shadow(0 6px 34px rgba(96, 165, 250, 0.25)); }
 
-  /* ——— 副标：浅灰常规字重，句号收尾 ——— */
-  .subhead { margin-top: 18px; font-size: 30px; font-weight: 400;
+  /* ——— 副标：浅灰常规字重 ——— */
+  .subhead { margin-top: 26px; font-size: 28px; font-weight: 400;
              color: #a1a1a6; letter-spacing: 0.1px; }
 
-  /* ——— 链接行：苹果暗色链接蓝 + chevron ——— */
-  .links { margin-top: 42px; display: flex; gap: 44px; }
-  .links span { font-size: 21px; color: #2997ff; }
-  .links span::after { content: " ›"; }
+  /* ——— 三支柱：发丝线描边标签，决策蓝强调 ——— */
+  .chips { margin-top: 44px; display: flex; gap: 14px; }
+  .chip { font-size: 15px; font-weight: 500; padding: 9px 24px;
+          border-radius: 980px; border: 1px solid #3a3a3e; color: #c7c7cc;
+          letter-spacing: 0.3px;
+              background: rgba(255, 255, 255, 0.04); }
+  .chip.hot { border-color: rgba(64, 156, 255, 0.50); color: #409cff;
+              background: rgba(64, 156, 255, 0.08); }
 </style>
 </head>
 <body>
   <div class="eyebrow">面向 AI Agent</div>
   <div class="wordmark">QA Skills</div>
-  <div class="subhead">让 AI 像资深测试工程师一样工作。</div>
-  <div class="links">
-    <span>进一步了解</span>
-    <span>GitHub</span>
+  <div class="subhead">让 AI 像资深测试工程师一样工作</div>
+  <div class="chips">
+    <span class="chip">知识</span>
+    <span class="chip">工具</span>
+    <span class="chip hot">决策</span>
   </div>
 </body>
 </html>
