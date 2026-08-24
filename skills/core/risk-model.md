@@ -44,7 +44,7 @@ Low        1–3
 risk:
   id: R1
   feature: 用户删除
-  dimension: 数据一致性          # 维度如：权限 / 数据一致性 / 边界 / 状态流转 / 并发 / 兼容性
+  dimension: 数据一致性          # 功能域维度：权限/数据一致性/边界/状态流转/资损；类型域用矩阵轴名（并发/可靠/安全/性能/兼容/迁移/契约…），见 core/test-type-matrix.md
   impact: 5                      # 删除后残留导致隐私与合规问题
   likelihood: 3                  # user_service.go:124 删除事务未覆盖关联表
   level: High                    # 15 = 5 × 3
@@ -52,7 +52,7 @@ risk:
     level: E2
     source: user_service.go:124
   confidence: medium
-  status: needs_verification     # 见 core/evidence.md 第 3 节状态标注
+  status: hypothesis             # 见 core/evidence.md 第 3 节状态标注（待实测确认=hypothesis）
   anchors: [TC-07-02]            # 覆盖此风险的用例编号（派生索引，主从规则见下）
 ```
 

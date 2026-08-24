@@ -1,19 +1,19 @@
 name: 💡 功能建议
-description: 新 skill、方法论增强、golden 任务扩充、评测能力
+description: 新 skill、方法论增强、core 知识库、工具脚本、文档
 labels: [enhancement]
 body:
   - type: textarea
     id: problem
     attributes:
       label: 想解决什么问题
-      description: 现状的痛点：什么场景下现在的 skill / eval 覆盖不了或效果不好
+      description: 现状的痛点：什么场景下现在的 skill 覆盖不了或效果不好
     validations:
       required: true
   - type: textarea
     id: solution
     attributes:
       label: 期望的行为
-      description: 若涉及新方法论，请说明它与 core/ 五件套（evidence / risk-model / executability / testing-principles / report-template）的关系
+      description: 若涉及新方法论，请说明它与 core/ 共享知识库（evidence / risk-model / executability / testing-principles / report-template / case-format / coverage / schema-extraction / clarify-pattern / test-type-matrix + methods/ + scripts/）的关系
     validations:
       required: true
   - type: textarea

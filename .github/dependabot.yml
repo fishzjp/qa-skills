@@ -1,11 +1,6 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
-    directory: "/eval/harness/fixtures/playwright_scaffold"
-    schedule:
-      interval: "monthly"
-    labels:
-      - dependencies
+  # npm 生态随 eval/harness 本地维护，公开仓库无 package.json——不配置
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

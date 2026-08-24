@@ -1,5 +1,5 @@
 name: 🐛 Bug 报告
-description: 某个 skill 或 eval harness 的行为不符合预期
+description: 某个 skill 的行为不符合预期
 labels: [bug]
 body:
   - type: dropdown
@@ -12,7 +12,7 @@ body:
         - test-strategy / requirement-analysis（策略与需求）
         - automated-e2e-testing / api-testing（执行）
         - bug-analysis / regression-testing / exploratory-testing（其他 skill）
-        - eval（golden 集 / harness / fixtures）
+        - 安装 / CI / 工程链路
         - 其他
     validations:
       required: true
@@ -29,7 +29,7 @@ body:
       label: 复现步骤
       description: 触发输入（脱敏后的最小复现材料）、期望产出 vs 实际产出（贴关键片段）
       placeholder: |
-        1. 使用的 skill / run_eval.py 的 phase
+        1. 使用的 skill 与触发话术
         2. 输入材料（脱敏）
         3. 期望 vs 实际
     validations:

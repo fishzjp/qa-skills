@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   validate:
     name: 架构红线与语法校验
@@ -20,14 +23,6 @@ jobs:
         run: python3 scripts/validate_skills.py
 
       # 评测 harness 的单测与语法检查随 eval/ 一并留本地（2026-08-22 起公开仓库只含 skills 产品内容）
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-
-      - name: Node 语法检查（脚手架示例）
-        run: |
-          node --check examples/e2e-scaffold/tests/helpers.ts 2>/dev/null || echo "示例脚手架不在校验范围，跳过"
 
   label:
     name: PR 自动打标

@@ -46,7 +46,7 @@ finding:
     level: E2                    # E0–E4
     source: user_service.go:124  # 来源：文件:行 / 文档名+章节 / 截图路径 / 运行日志
   confidence: medium             # high / medium / low
-  status: needs_verification     # fact / inference / risk / hypothesis / verified
+  status: hypothesis             # fact / inference / risk / hypothesis / verified（待实测确认=hypothesis）
 ```
 
 **禁止不加标注直接输出"这里存在 Bug"**——这是证据体系要消灭的幻觉式结论。
@@ -63,6 +63,14 @@ finding:
 | `bug-analysis` Root Cause | 根因结论标注 status（Inference → 读代码推断；Verified → 已复现验证 E3）；影响范围逐条给来源 |
 | `requirement-analysis` 需求模型 rules | 每条业务规则标注 evidence（文档章节或 `文件:行`）；用户裁决记入 open_questions 的裁决字段 |
 
-## 6. 引用方式
+## 6. 引用方式（双形态，2026-08-23 R4）
 
-各 SKILL.md 的工作流步骤中标注"此时加载本文件"并给出相对路径，例如：`../core/evidence.md`。遵循渐进披露：用到证据标注时才读，不预加载。
+各 SKILL.md 的工作流步骤中标注"此时加载本文件"并给出相对路径，例如：`../core/evidence.md`。
+该标注按部署形态有双重语义：
+
+- **真实宿主（按需加载形态）**：渐进披露——用到时才读，不预加载；
+- **注入式形态（评测/预注入部署）**：全部文件已在指令中，"此时加载"仅指示**执行时机**
+  （该步骤开始执行本文件的规则），不触发任何读取动作，也不要因"文件已全文在场"而提前执行后续阶段的规则。
+
+> 适配声明：skill 集的设计假设（qa 的上下文隔离、活跃指令 ≤1-2 个 skill）只对真实宿主成立；
+> 注入形态下全部规则同时在场，**靠阶段顺序而非加载机制防串扰**——执行时只服从当前所处阶段的指令。

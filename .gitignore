@@ -20,6 +20,9 @@ explore-*.png
 .DS_Store
 Thumbs.db
 
+# Agent 会话工具产物（ZCode 计划/会话目录）
+.zcode/
+
 # Python（若配合测试数据脚本使用）
 __pycache__/
 *.pyc
@@ -41,4 +44,11 @@ eval/results/calibration/
 eval/results/LATEST.md
 eval/
 tests/
+# docs/ 默认本地（新文档防误提交），三个产品级设计文档显式例外跟踪
+docs/*
+!docs/DESIGN.md
+!docs/qa-skills-v2.md
+!docs/decision-layer-design.md
 .github/workflows/benchmark.yml
+*.bak
+*.bak2

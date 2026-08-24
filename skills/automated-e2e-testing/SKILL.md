@@ -3,7 +3,7 @@ name: automated-e2e-testing
 description: 将手动测试用例转为 Playwright E2E 测试并执行时使用；含写自动化前的业务熟悉踩点、Page Object/Helper 编写、执行中的 Bug 证据收集与报告条目记录。不用于：纯 API 接口测试（api-testing）、以理解系统为目的的独立探索会话（exploratory-testing）、已确认 Bug 的根因分析（bug-analysis）。
 ---
 
-# 自动化 E2E 测试
+# 自动化 E2E 测试（automated-e2e-testing）
 
 ## Overview
 
@@ -99,7 +99,7 @@ description: 将手动测试用例转为 Playwright E2E 测试并执行时使用
 
 在已理解业务逻辑的前提下，系统性验证页面功能，发现 Bug 和不一致。
 
-> 职责边界：本工作流负责**发现 + 证据收集 + 报告条目**。Bug 被**确认**后的根因定位、影响分析、回归建议移交 `bug-analysis` skill（对应报告条目中"根因分析 / 回归建议"两段留 TODO）。
+> 职责边界：本工作流负责**发现 + 证据收集 + 报告条目**。Bug 被**确认**后的根因定位、影响分析、回归建议移交 `bug-analysis` skill（对应报告条目中根因分析等五个扩展字段留 TODO）。
 
 ### Bug 发现策略
 
@@ -124,7 +124,7 @@ Bug 发现 → 截图操作前 → 操作触发异常 → 截图操作后 → �
 
 ### Bug 报告格式
 
-记录在 `{项目名}/测试报告_{来源}_{日期}.md`，**条目字段与 `../core/report-template.md` §3（测试报告唯一来源模板，此时加载）保持一致**，保证条目可直接拼装进 `qa` 收尾的最终报告；本 skill 的发现方式含「业务熟悉探索」。执行分报告还需包含 §2 执行统计（P0/P1/P2 × 用例数/通过/失败/阻塞/未执行表，同样按 report-template）；条目中"根因分析 / 回归建议"两段留 TODO，由 `bug-analysis` 填写。
+记录在 `{项目名}/测试报告_{来源}_{日期}.md`，**条目字段与 `../core/report-template.md` §3（测试报告唯一来源模板，此时加载）保持一致**，保证条目可直接拼装进 `qa` 收尾的最终报告；本 skill 的发现方式含「业务熟悉探索」。执行分报告还需包含 §2 执行统计（P0/P1/P2 × 用例数/通过/失败/阻塞/未执行表，同样按 report-template）；条目中根因分析等五个扩展字段留 TODO，由 `bug-analysis` 填写。
 
 ---
 
@@ -146,6 +146,8 @@ Bug 发现 → 截图操作前 → 操作触发异常 → 截图操作后 → �
 ---
 
 ## 关键技巧速查表
+
+> 下表方法名（`createDualSession` / `tracker.collect` / `setupBugTracking` / `isServerCrash` 等）为本 skill **脚手架内置 helper 的示例**（定义在 `references/`），不是 Playwright 通用 API——换项目时按 `references/helpers_reference.md` 适配实际脚手架，勿假定这些函数存在。
 
 | 场景 | 方法 | 备注 |
 |------|------|------|

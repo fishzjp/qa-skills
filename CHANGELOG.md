@@ -7,6 +7,41 @@
 
 ### 变更
 
+- **公开仓库收敛为 skills 产品内容**（2026-08-22 决定，本次落地）：eval/（黄金集 /
+  harness / 运行归档 / 研究报告）、tests/（harness 单测）与 benchmark workflow
+  移出公开仓库、转为本地维护（.gitignore 防误提交）；公开面收敛为 skills 产品
+  本体 + 设计文档（DESIGN / 决策层设计 / v2 规划）+ examples + 安装与 CI 链路。
+  公开证据链改为：每版 Release 附跨模型增益矩阵快照。README / CONTRIBUTING /
+  .github 模板同步清理指向本地目录的死链，仓库结构说明同步更新。**本节涉及
+  eval/ / tests/ 的既有条目描述的是本地评测链路的变更，不随仓库分发**
+- **决策层（精准测试）Phase A 落地**：测试策略升级为**功能域 + 类型域两域决策**——
+  类型域十轴（性能 / 业务安全 / 可靠 / 并发 / 兼容 / 无障碍 / 视觉 / 国际化 /
+  迁移 / 契约）全轴必答，include 必须挂信号、exclude 必须挂 G+S 双清单理由、
+  full 档有预算上限（两域合并 ≤3，冲突时 R6 > R1 并触发预算裁决检查点）。
+  设计全文见 `docs/decision-layer-design.md`（取代 v2 §6.3"性能/安全不自研"决策，
+  升级为"方法论与决策自研，执行层对接专业工具"）。新增 / 改造：
+  - 新增 `core/test-type-matrix.md`（十轴决策矩阵唯一真相源：信号 / 默认档 /
+    档位语义 / 消费方式，按轴成节支持分组加载）
+  - 新增 `core/scripts/scan_signals.py`（G 级代码信号扫描 + 决策预填表，零依赖、
+    确定性输出；S 级语义信号由 agent 照单复核，exclude 永不预填防橡皮图章）
+  - `validate_schema.py` 新增策略校验模式 V1–V5（全轴必答 / include 挂证据 /
+    exclude 挂双清单 / full 挂风险且 ≤3 / 移交不断链），type 枚举扩
+    reliability / concurrency / security / compatibility 四值
+  - `test-strategy` SKILL.md 重写：分轴组推进 + 受限选择 + 预填修订（弱模型
+    增益四机制）；功能域新增 state / data_consistency 两轴；handoff 协议做实
+    （专项移交包 + 报告专项结果回收表）
+  - 同步改写：coverage 类型性维度上收注记、risk-model 维度对齐、
+    schema-extraction / case-format 枚举与标签、report-template 新增 §7 专项
+    结果、qa 新增第四类人工检查点（预算裁决）、test-case-writing 增消费方式
+    映射（用例型 / 脚本型 / 审查型；无障碍轴任意档位产 axe 扫描任务）；
+    markmap 模板模块 20 改写为并发一致性（type: concurrency + [并发] 标签，
+    性能轴按脚本型不再设手动用例模块），模块 11/18/19/21 补类型标签注
+  - **R1 格式锤**（2026-08-23 首轮实测修复）：47% 弱模型样本把 type_scope 轴
+    写成多行块式 YAML 致机械校验解析失败（决策内容无恙，纯格式损耗）——
+    SKILL.md 增补"每轴单行 flow、禁止拆多行、写前照抄上一行形状"硬约束；
+    复验轮格式失败归零、类型查全率 0.53 → 0.88（最弱模型，n=3，类别性判读）。
+    配套修复：scan_signals.py 中文关键词 `\b` 词边界失效（Python re Unicode
+    下中文属 \w，永不命中）
 - **Skill 自包含重构（消除跨 skill 引用）**：被多 skill 消费的方法 / 格式 / 规则
   全部下沉 `core/`——boundary / data-driven / permission / state-machine 四篇设计
   方法迁入 `core/methods/`，coverage（覆盖检查表）与 templates（升格更名
@@ -15,20 +50,38 @@
   （Schema 抽取规则，自 test-case-writing SKILL.md 抽出）、clarify-pattern.md
   （统一澄清 / 确认提问格式，替代三处各自为政的提问模板）、scripts/
   validate_schema.py（零依赖 Schema 校验器：YAML 转义 / TC 编号一致 / 占位符）
-- **automated-e2e-testing 瘦身**：SKILL.md 473 → 186 行，Playwright 脚手架 / 配置 /
+- **automated-e2e-testing 瘦身**：SKILL.md 473 → 188 行，Playwright 脚手架 / 配置 /
   场景代码模板 / Page Object 规范下沉新文件 references/playwright-conventions.md，
   SKILL.md 只保留工作流与决策点；Bug 条目字段表去重，统一引用
-  core/report-template.md §3（唯一来源），report-template 补 Bug 严重度与用例
-  优先级的 P0/P1/P2 双口径说明
+  core/report-template.md §3（唯一来源；严重度口径后经 S 系消歧升级，见下）
+- **Bug 严重程度 S 系消歧（2026-08-23）**：Bug 严重程度从 P0/P1/P2 改为
+  **S0/S1/S2**（bug-analysis 定级规则与 report-template §3 同步），与用例优先级
+  P 系、风险等级 Critical 系词汇彻底分离；report-template 补 S 一词多义注
+  （严重度 S 系 ≠ 类型矩阵「S 级语义信号」）
+- **test-case-writing 弱模型行为修复群（2026-08-23 评测轮闭环）**：新增「逐模块
+  推进与交付核对」硬约束（多模块输入只完成首模块 = 最严重交付缺陷）；阶段三增
+  「维度核对」三条（主流程不可省 / 时间类规则双侧边界 / 状态机型负向底数——
+  依据：评测轮两任务主流程用例丢 2/2、边界维度零增益的"维度坍缩"）；新增输出
+  预算纪律（用例数封顶 min(可测点×1.5, 80)、附录仅代码模式产出、导读压缩——
+  依据：实测 32K 截断事故与澄清仪式开销同源）；阶段四全检降级为轻量抽查
+  （逐文档溯源 / coverage 19 维全检 / 多角色四视角全检废除，执行点迁至阶段三
+  交付核对，coverage.md 自查表口径同步）；澄清"无需澄清"输出并入导读不单列
+  章节；api-testing 参数矩阵明确为分析过程、不落盘中间文件
+- **部署双形态适配（2026-08-23）**：evidence §6 声明「此时加载」在真实宿主
+  （按需加载）与注入式形态（全部在场，靠阶段顺序防串扰）下的双重语义，qa 增
+  注入式例外声明；boundary 降格为方法参考（强制边界纪律内联 test-case-writing
+  阶段三维度核对——知识文件注入不改变弱模型行为，约束须在生成路径内联）；
+  evidence / risk-model 的 status 示例 needs_verification → hypothesis 对齐枚举
 - **description 全量瘦身**：10 个 skill 的 frontmatter description 统一为"正触发
   话术 + 一句产出 + 反触发指向"，机制细节（代码优先流程、Schema 抽取、增量更
   新等）移入正文新增的 When to Use 段（8 个 skill 补齐，与 qa / e2e 统一骨架）。
-  常驻上下文合计 1929 → 1677 字符（-13%；前期"约 4300 字符"的读数为字节数口径
+  常驻上下文合计 1929 → 1683 字符（-13%；前期"约 4300 字符"的读数为字节数口径
   的误判，实际中文 3 字节/字）；description 瘦身属触发行为变更，合入前需按迭
   代纪律跑触发评测确认不回退
-- **架构红线新增两条**（validate_skills.py 同步实现并已负向自测）：① 禁止跨
+- **架构红线新增三条**（validate_skills.py 同步实现并已负向自测）：① 禁止跨
   skill 引用（skill → 兄弟 skill 目录文件均违规，CI 拦截）；② description ≤300
-  字符上限。core 校验范围扩展到 core/**/*.md（含 methods/ 子目录）
+  字符上限；③ 产品自包含——skills/ 内禁止引用 eval/ 等本地评测链路路径
+  （公开收敛配套）。core 校验范围扩展到 core/**/*.md（含 methods/ 子目录）
 - **eval 档案同步**：12 个 golden 任务的 skill_files_on 与 run_eval.py
   PIPELINE_STAGES 注入路径跟随迁移更新，内容外移的文件（schema-extraction /
   clarify-pattern / playwright-conventions / report-template）按"信息量等价"原则
@@ -49,6 +102,28 @@
 - **banner 口径勘误**：social-preview 图上"植入 bug 检出率 100% / 4-7 门通过"
   为旧同源裁判口径，改为与 README 一致的异构裁判口径（75% / 5-8，标注"异构
   裁判"），banner.html 同步并按既有流程 Playwright 重渲染
+- **README 暗色模式与资产压缩**：hero 主视觉支持 prefers-color-scheme: dark
+  自动切换（新增 hero-dark.png / banner-dark.html 同源暗色版）；hero.png 与
+  social-preview.png 压缩重渲染（645KB→42KB、1.0MB→581KB，暂存产物实测值）
+- **仓库布局重构**：11 个 skill 目录（10 skill + core）从仓库根迁入 `skills/`，
+  产品本体与工程目录（eval/docs/examples/scripts/tests）一眼可分；安装后的
+  宿主布局不变。install/uninstall、CI 校验、评测 harness、黄金集标注的路径
+  已同步。**已用 `--link` 安装的用户 git pull 后需重跑 `install.sh`**（旧软链
+  指向根目录已失效）；拷贝安装不受影响
+- CI 拆为 validate + label 两个 job（PR 自动打领域标签）
+- **README 实测数字换异构裁判口径**：可执行性改"规格符合度"并勘误旧称
+  （Off 0.77→0.26 计 0 同口径）、检出 100%→75%（异构）、质量 Δ+6.1pp、API
+  反向结果收窄 74% vs 52%；新增"口径边界"声明（预注入上界 + in-situ 探针 +
+  成对胜率作废）
+- **澄清反向结果修复闭环**：requirement-analysis 增补八类歧义强制扫描表
+  （后经 2026-08-23 收敛迁至 core/clarify-pattern.md 单一权威源，两消费方改引用），
+  test-case-writing 增 YAML 转义纪律；复验轮（clafix）澄清任务 On 检出 100%
+  vs Off 85.2%，反向结果消除
+- harness：X5 pass³ / X6 成对区分度守卫（平局率>80% 作废胜率）/ X7 judge 引文
+  grounding 三个观察指标；G4 环境错误不入分母；skill 卡片 frontmatter 解析与
+  YAML schema 校验；CI 依赖补 pyyaml；单测扩至 ~57 项（含冻结阈值防误改）
+- EXPECTED.md：G4 勘误、异构复评结论（同源宽容偏差证实、G1a 转显著）、G7
+  方向性通过、成对机制结论、v1.2 门提案、已知限制 #8/#9
 
 ### 新增
 
@@ -60,14 +135,14 @@
 - **examples/**：同一 PRD 的 Skill On/Off 完整产出对照（取自验证轮真实产物）
 - **README.en.md** 英文版，中英双语切换
 - **assets/**：社交预览图及其 HTML 源（regenerate：改 banner.html 后 Playwright 截图）
-- **Benchmark 手动工作流**（workflow_dispatch）：CI 上跑黄金集质量门，
-  产物上传 artifact；token 成本原因不随 push 触发
+- **Benchmark 手动工作流**（workflow_dispatch，本地维护、不入公开仓库）：CI 上
+  跑黄金集质量门，产物上传 artifact；token 成本原因不随 push 触发
 - **tests/**：harness 纯函数单测 20 项（统计/judge 校验/代码块解析/可执行性
-  检查/确定性），CI 接入
+  检查/确定性）——随 eval 本地维护，公开 CI 不跑
 - Issue 模板升级为 YAML issue forms；PR 按路径自动打标（labeler）
 - README "500 行红线"补 Red Hat ACE 实践出处链接
-- **评测研究论文**（eval/reports/2026-08-21-benchmark-study，md/pdf/html 三格式）：
-  预注册基准评测与增益归因（§5 消融、§6 机制发现），配套单文件对照实验报告
+- **评测研究论文**（eval/reports/2026-08-21-benchmark-study，md/pdf/html 三格式，
+  本地维护）：预注册基准评测与增益归因（§5 消融、§6 机制发现），配套单文件对照实验报告
 - **评测新相位与新任务族**：routing（触发路由，35/35）与 pipeline（五阶段产物链
   交叉引用）两个观察型相位；golden 新增 req-clarify-ambiguity（澄清质量）与
   schema-extract-markmap（Schema 抽取，On-only）两任务；CONTAMINATION.md 污染
@@ -75,28 +150,7 @@
 - **AGENTS.md** 项目指令与 **docs/qa-skills-v2.md** v2 规划基线；DESIGN.md 归位
   docs/（与 v2 文档汇合）
 - 运行归档补全：异构复评 / G7 泛化 / 强裁判成对 / 单文件消融 / s3 新任务族 /
-  澄清复验共 8 个 run 目录登记入册（eval/results/README.md）
-
-### 变更
-
-- **仓库布局重构**：11 个 skill 目录（10 skill + core）从仓库根迁入 `skills/`，
-  产品本体与工程目录（eval/docs/examples/scripts/tests）一眼可分；安装后的
-  宿主布局不变。install/uninstall、CI 校验、评测 harness、黄金集标注的路径
-  已同步。**已用 `--link` 安装的用户 git pull 后需重跑 `install.sh`**（旧软链
-  指向根目录已失效）；拷贝安装不受影响
-- CI 拆为 validate + label 两个 job（PR 自动打领域标签）
-- **README 实测数字换异构裁判口径**：可执行性改"规格符合度"并勘误旧称
-  （Off 0.77→0.26 计 0 同口径）、检出 100%→75%（异构）、质量 Δ+6.1pp、API
-  反向结果收窄 74% vs 52%；新增"口径边界"声明（预注入上界 + in-situ 探针 +
-  成对胜率作废）
-- **澄清反向结果修复闭环**：requirement-analysis 增补八类歧义强制扫描表，
-  test-case-writing 增 YAML 转义纪律；复验轮（clafix）澄清任务 On 检出 100%
-  vs Off 85.2%，反向结果消除
-- harness：X5 pass³ / X6 成对区分度守卫（平局率>80% 作废胜率）/ X7 judge 引文
-  grounding 三个观察指标；G4 环境错误不入分母；skill 卡片 frontmatter 解析与
-  YAML schema 校验；CI 依赖补 pyyaml；单测扩至 ~57 项（含冻结阈值防误改）
-- EXPECTED.md：G4 勘误、异构复评结论（同源宽容偏差证实、G1a 转显著）、G7
-  方向性通过、成对机制结论、v1.2 门提案、已知限制 #8/#9
+  澄清复验共 8 个 run 目录登记入册（eval/results/，本地维护）
 
 ## [0.4.0] - 2026-08-20
 

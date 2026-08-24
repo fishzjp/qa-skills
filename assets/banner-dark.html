@@ -4,27 +4,29 @@
 <meta charset="utf-8">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  /* ——— 画布：1280×640，纯白背景，苹果产品页 hero 的标志性留白 ——— */
+  /* ——— 画布：1280×640，纯黑背景 + 顶部极淡品牌绿辉光（Apple Intelligence 页手法） ——— */
   body { width: 1280px; height: 640px; overflow: hidden;
          font-family: -apple-system, "SF Pro Display", "SF Pro Text", "PingFang SC", "Hiragino Sans GB", sans-serif;
-         background: #ffffff; color: #1d1d1f;
+         background-color: #000000;
+         background-image: radial-gradient(1000px 520px at 50% -12%, rgba(48,209,88,0.13), transparent 68%);
+         color: #f5f5f7;
          display: flex; flex-direction: column; align-items: center; }
 
-  /* ——— 眉标：短词 + 品牌绿，苹果 hero 的经典开场（如"全新"） ——— */
+  /* ——— 眉标：短词 + 系统绿（暗色变体） ——— */
   .eyebrow { margin-top: 164px; font-size: 22px; font-weight: 600;
-             color: #248a3d; letter-spacing: 0.3px; }
+             color: #30d158; letter-spacing: 0.3px; }
 
-  /* ——— 主标题：超大 Semibold + 紧字距，苹果大标题的核心手感 ——— */
+  /* ——— 主标题：超大 Semibold + 紧字距 ——— */
   .wordmark { margin-top: 18px; font-size: 128px; font-weight: 600;
-              letter-spacing: -3px; line-height: 1.04; color: #1d1d1f; }
+              letter-spacing: -3px; line-height: 1.04; color: #f5f5f7; }
 
-  /* ——— 副标：中灰常规字重，句号收尾（苹果中文文案的节奏） ——— */
+  /* ——— 副标：浅灰常规字重，句号收尾 ——— */
   .subhead { margin-top: 18px; font-size: 30px; font-weight: 400;
-             color: #6e6e73; letter-spacing: 0.1px; }
+             color: #a1a1a6; letter-spacing: 0.1px; }
 
-  /* ——— 链接行：苹果标志性蓝色 chevron 链接 ——— */
+  /* ——— 链接行：苹果暗色链接蓝 + chevron ——— */
   .links { margin-top: 42px; display: flex; gap: 44px; }
-  .links span { font-size: 21px; color: #0066cc; }
+  .links span { font-size: 21px; color: #2997ff; }
   .links span::after { content: " ›"; }
 </style>
 </head>

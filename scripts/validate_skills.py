@@ -12,6 +12,7 @@
   6. 禁止跨 skill 引用：任何 skill 的文件不得引用兄弟 skill 目录内的文件——
      被多 skill 消费的方法/格式/规则一律下沉 core/（skill 自包含红线）
   7. eval/harness/*.json 与 eval/golden/*/annotation.json 必须是合法 JSON
+  8. 产品自包含：skills/ 内不得引用 eval/ 等本地评测链路路径（公开分发面 = skills 产品本体）
 
 用法：python3 scripts/validate_skills.py （仓库根或任意目录均可）
 退出码：0 通过 / 1 有违规
@@ -112,6 +113,14 @@ def main():
     for md in core_mds:
         check_references(md, errors)
 
+    # 红线 8：产品自包含——skills/ 内不得引用 eval/ 等本地评测链路路径
+    #（\b 收紧：evaluation / retrieval / medieval 等词不触发）
+    for md in sorted(SKILLS_ROOT.rglob("*.md")):
+        for i, line in enumerate(md.read_text().splitlines(), 1):
+            if re.search(r"\beval/", line):
+                errors.append(f"{md.relative_to(REPO)}:{i}: 引用本地评测链路路径 eval/"
+                               "（skills 必须自包含，评测依赖不得进产品）")
+
     # JSON 合法性（harness 配置 + golden 标注；归档运行结果不在此范围）
     for pattern in ("eval/harness/*.json", "eval/golden/*/annotation.json"):
         for f in REPO.glob(pattern):
@@ -127,7 +136,7 @@ def main():
         for e in errors:
             print(f"  - {e}")
         return 1
-    print("✅ 架构红线全部通过（frontmatter / ≤500 行 / When NOT to Use / core 纯引用 / 引用完整 / 无跨 skill 引用 / JSON 合法）")
+    print("✅ 架构红线全部通过（frontmatter / ≤500 行 / When NOT to Use / core 纯引用 / 引用完整 / 无跨 skill 引用 / JSON 合法 / 无 eval 越界引用）")
     return 0
 
 

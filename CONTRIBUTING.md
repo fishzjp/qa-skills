@@ -16,13 +16,12 @@
 - **报告问题**：先在 [Discussions](https://github.com/fishzjp/qa-skills/discussions) 确认非已知问题，再在 Issue 中描述复现场景与预期行为。
 - **改进方法论**：各 skill 的工作流、检查表、模板均欢迎补充（skill 目录统一在 `skills/` 下）。改动请保持核心原则：一条用例只测一个点、代码优先（测准声明）、先澄清再动手、用例必须可执行（`skills/core/executability.md`）、证据标注（`skills/core/evidence.md`）。
 - **补充代码模板**：新增的 Page Object / Helper 模板请保持通用、不绑定具体业务，且不包含任何真实账号、URL 或内部信息。
-- **扩充黄金集**：`eval/golden/` 下新增任务（task.md + annotation.json，可测点 / 检出项须能从任务材料推导、不依赖 skill 知识）。**新增或修改标注后必须跑独立审计**：`python3 eval/harness/run_eval.py audit-annotations`，flagged 项人工逐条复核后将修改与理由记入 annotation 的 `audit` 字段——标注者不得既写标注又独立复核同一批内容。
+- **评测任务建议**：黄金集与评测 harness 在维护者本地链路中维护（不随公开仓库分发）；对评测任务、指标口径有想法欢迎在 [Discussions](https://github.com/fishzjp/qa-skills/discussions) 讨论。
 
 ## 开发环境
 
-- Python 3（运行校验脚本、单测与评测 harness）
-- Node.js（仅 E2E 真实执行环境需要；`python3 eval/harness/run_eval.py setup-e2e` 一次性安装 chromium 与依赖）
-- 本地校验与 CI 使用同一入口：`python3 scripts/validate_skills.py`；单测：`python3 -m pytest tests/`
+- Python 3（运行校验脚本）
+- 本地校验与 CI 使用同一入口：`python3 scripts/validate_skills.py`（评测 harness 与单测在维护者本地环境，不在公开仓库）
 
 ## 架构红线（改 skill 前必读）
 
@@ -31,17 +30,15 @@
 3. **`core/` 不含 SKILL.md**：纯共享引用目录，加入新文件需确认至少两个 skill 消费
 4. **skill 自包含，禁止跨 skill 引用**：任何 skill 的文件不得引用兄弟 skill 目录内的文件（含另一 skill 的 SKILL.md / references / scripts）；被多 skill 消费的方法 / 格式 / 规则一律下沉 `core/`（设计方法细则放 `core/methods/`，工具脚本放 `core/scripts/`）
 5. **description ≤ 300 字符**：description 常驻宿主每个会话的上下文，只装正触发话术 + 一句产出 + 反触发指向；机制细节写进 SKILL.md 正文（When to Use / Overview）
-6. **风险等级（Critical / High / Medium / Low）与用例优先级（P0 / P1 / P2）是两套体系**，不得混用命名；Bug 严重度的 P0/P1/P2 指缺陷影响等级（口径说明见 `skills/core/report-template.md` §3）
+6. **风险等级（Critical / High / Medium / Low）与用例优先级（P0 / P1 / P2）是两套体系**，不得混用命名；Bug 严重程度用 **S0/S1/S2**（缺陷影响等级，口径说明见 `skills/core/report-template.md` §3），与用例优先级的 P 系词汇分离
 7. **产出落盘**：skill 的阶段产物必须落盘为文件（落盘清单见各 SKILL.md 的「落盘产物」行与 `skills/qa/SKILL.md` 的流水线表），Skill 间只通过文件衔接
 
 ## 提交前自检
 
 - [ ] 未引入任何真实环境地址、账号、密钥、内部系统名
-- [ ] `python3 scripts/validate_skills.py` 通过（与 CI 同一校验：frontmatter / description ≤300 字符 / SKILL.md ≤500 行 / When NOT to Use / core 纯引用 / 引用完整 / 无跨 skill 引用 / JSON 合法）
+- [ ] `python3 scripts/validate_skills.py` 通过（与 CI 同一校验：frontmatter / description ≤300 字符 / SKILL.md ≤500 行 / When NOT to Use / core 纯引用 / 引用完整 / 无跨 skill 引用 / JSON 合法 / 无 eval 越界引用）
 - [ ] 改动后的 skill 仍符合 [Agent Skill 规范](https://docs.claude.com/en/docs/claude-code/skills)：每个 skill 有 `SKILL.md`，frontmatter 含 `name` 与 `description`
-- [ ] 改动影响用例产出的，跑一遍 Benchmark（多样本，断点续跑可重试失败项）：
-      `python3 eval/harness/run_eval.py generate --samples 3 --tasks <相关任务>` + `score --samples 3`；
-      判定标准以 [eval/EXPECTED.md](./eval/EXPECTED.md) 当前生效版本为准（v1.0 已冻结并完成验证轮判定，v1.1 提案见该文件）；**改过标注或 judge 配置的，先删除对应 judge/pairwise 缓存再评分**（缓存不感知上游变更）
+- [ ] 改动影响用例产出的，在 PR 中说明预期影响（正式 Benchmark 复验由维护者在本地黄金集执行，判定标准以冻结的 EXPECTED 门为准；外部贡献者无需自行运行）
 - [ ] 客观指标（可执行性 / 编译 / 真实执行 / 植入 Bug 检出）不依赖 LLM judge，回退即拦截；judge 类指标回退需先排除同源宽容偏差（成对评审大量平局是信号）
 - [ ] 代码示例可独立运行，或已用占位符（如 `<你的测试环境地址>`）标注需替换处
 
@@ -50,8 +47,8 @@
 1. 从 `main` 拉出特性分支（如 `docs/clarify-trigger`、`skill/api-assertions`）
 2. 一个 PR 聚焦一个主题；跨领域混改会拖慢评审
 3. 提交信息：标题一行说清"改了什么"，正文列出关键变更与理由（可参考仓库既有提交的风格）
-4. 按 [PR 模板](./.github/PULL_REQUEST_TEMPLATE.md) 勾选自检清单；涉及 `eval/` 的必填评测结果一节，指标回退需说明原因
-5. PR 需通过 CI（validate + label）；Skill 改动以黄金集指标不回退为合入前提
+4. 按 [PR 模板](./.github/PULL_REQUEST_TEMPLATE.md) 勾选自检清单；涉及 skill 方法论、影响用例产出的，在评测结果一节说明预期影响
+5. PR 需通过 CI（validate + label）；Skill 改动以黄金集指标不回退为合入前提（复验由维护者执行）
 
 ## 许可证
 

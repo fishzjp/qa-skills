@@ -368,6 +368,8 @@ qa-skills/
     └── results/                 # 评测结果归档
 ```
 
+> **布局注记（2026-08-22 收敛后）**：本树为 v2 规划时的仓库布局；公开仓库现已收敛为 skills 产品内容，`eval/` 与 `tests/` 转为维护者本地目录，公开侧证据链改为每版 Release 附增益矩阵快照。
+
 关于 `core/` 的两条硬规则：
 
 1. **`core/` 不含 SKILL.md**——含 SKILL.md 的目录就是一个可被独立触发的 Skill，会让 `core` 加入触发竞争。`core/` 是纯共享引用目录
@@ -391,6 +393,8 @@ qa-skills/
 > 本表同时约束 **description 措辞**：各 Skill 的 SKILL.md description 撰写必须按本表划界——`qa` 独占"端到端 / 全流程 / 帮我测试"意图词，阶段 Skill 的 description 只描述本阶段意图，必要时写明"不要用于 X"（L1 负向约束）。否则触发层的语义竞争会让本表形同虚设。
 
 ### 6.3 性能与安全：不自研，作为集成点
+
+> **取代注记（2026-08-23）**：本章决策已由 `docs/decision-layer-design.md` 升级为「**方法论与决策自研，执行层对接专业工具**」——性能 / 安全成为类型域正式轴（`core/test-type-matrix.md`），handoff 协议做实（移交包 + 回收格式 + V5 校验）。本章保留下文作历史决策记录。
 
 性能测试与安全测试**不在本框架自研 Skill 清单内**。理由：两者已有成熟专业工具与生态，自研 Skill 只会稀释焦点。落地方式：
 
@@ -452,6 +456,8 @@ test_strategy:
 ```
 
 > 策略粒度是 **范围 + 深度 + 理由**（为什么测 / 测多深 / 为什么不测），不是布尔开关；每项纳入理由应能追溯到 Risk Map 中的风险编号。
+
+> **扩展注记（2026-08-23）**：scope 已由决策层设计升级为 functional_scope + type_scope（类型域十轴全轴必答，G 级脚本扫描 + S 级复核）+ depth_budget（full ≤3 预算），性能 / 安全从 handoff 占位升级为正式轴——现行结构见 test-strategy 的 SKILL.md 与 `core/test-type-matrix.md`。
 
 ### 7.4 Test Case Schema（双轨制）
 

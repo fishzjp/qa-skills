@@ -34,7 +34,10 @@ detect_candidates() {
   [ -d "$HOME/.claude/skills" ] && cands+=("$HOME/.claude/skills")
   [ -d "$HOME/.codex/skills" ] && cands+=("$HOME/.codex/skills")
   [ -d "$REPO_ROOT/.claude/skills" ] && cands+=("$REPO_ROOT/.claude/skills")
-  printf '%s\n' "${cands[@]}"
+  # 空数组直接展开在 bash 4.4+ 会输出空行、bash 3.2 + set -u 会报 unbound——先判长度
+  if [ "${#cands[@]}" -gt 0 ]; then
+    printf '%s\n' "${cands[@]}"
+  fi
 }
 
 usage() {
@@ -69,7 +72,7 @@ else
   while IFS= read -r line; do cands+=("$line"); done < <(detect_candidates)
   if [ "${#cands[@]}" -eq 0 ]; then
     echo "未检测到任何宿主 skills 目录。"
-    read -r -p "创建并安装到 ~/.agents/skills（跨宿主共享，推荐）? [Y/n] " ans
+    read -r -p "创建并安装到 ~/.agents/skills（跨宿主共享，推荐）? [Y/n] " ans || ans=""
     [ "${ans:-Y}" = "Y" ] || [ "${ans:-Y}" = "y" ] || exit 0
     mkdir -p "$HOME/.agents/skills"
     TARGET="$HOME/.agents/skills"
@@ -80,13 +83,24 @@ else
     echo "检测到多个宿主目录，选择一个："
     i=1
     for c in "${cands[@]}"; do echo "  $i) $c"; i=$((i + 1)); done
-    read -r -p "序号 [1]: " idx
+    read -r -p "序号 [1]: " idx || idx=""
     idx="${idx:-1}"
+    case "$idx" in ''|*[!0-9]*) echo "无效序号: $idx" >&2; exit 1 ;; esac
+    if [ "$idx" -lt 1 ] || [ "$idx" -gt "${#cands[@]}" ]; then
+      echo "序号超出范围: ${idx}（可选 1-${#cands[@]}）" >&2; exit 1
+    fi
     TARGET="${cands[$((idx - 1))]}"
   fi
 fi
 
 mkdir -p "$TARGET"
+# 防自毁：目标等于或位于本仓库 skills/ 源目录内时拒绝（src==dst 会先删源文件，随后复制失败）
+TARGET_ABS="$(cd "$TARGET" && pwd)"
+case "$TARGET_ABS" in
+  "$SRC_ROOT"|"$SRC_ROOT"/*)
+    echo "❌ 拒绝安装：目标目录位于本仓库的 skills/ 源目录内，会破坏源文件。请换一个安装目标。" >&2
+    exit 1 ;;
+esac
 METHOD="拷贝"; $LINK && METHOD="软链"
 echo "安装目标：${TARGET}（方式：${METHOD}）"
 echo ""

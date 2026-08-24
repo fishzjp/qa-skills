@@ -7,27 +7,11 @@
           - "skills/*/references/**"
           - "skills/*/templates/**"
 
-"skill:eval-harness":
-  - changed-files:
-      - any-glob-to-any-file:
-          - "eval/harness/**"
-          - "scripts/**"
-          - "tests/**"
-
-"golden:标注":
-  - changed-files:
-      - any-glob-to-any-file: "eval/golden/**"
-
 documentation:
   - changed-files:
       - any-glob-to-any-file:
           - "*.md"
+          - "docs/**"
           - "examples/**"
+          - "assets/**"
           - ".github/**"
-
-dependencies:
-  - changed-files:
-      - any-glob-to-any-file:
-          - "**/package.json"
-          - "**/package-lock.json"
-          - "**/requirements.txt"

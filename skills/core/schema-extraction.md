@@ -14,8 +14,8 @@ test_case:
   title:                        # ← 名称行去编号与优先级
   module:                       # ← 所属一级模块标题（状态机节点/子模块）
   priority: P0 | P1 | P2        # ← 名称行 [Px] 标注，缺省 P1
-  type: functional | boundary | exception | permission | regression | state | data
-                                # ← 按模块/子模块类别与用例内容判定
+  type: functional | boundary | exception | permission | regression | state | data | reliability | concurrency | security | compatibility
+                                # ← 按模块/子模块类别与用例内容判定；类型域四值（reliability/concurrency/security/compatibility）仅用于测试策略 type_scope 用例型轴产出的用例（映射见 core/test-type-matrix.md 第 12 节）
   execution_model: ui | dev-collab  # ← 执行模型判定结果（协作五段式 → dev-collab）
   smoke: SMOKE-1                # ← 名称后（SMOKE-n），非冒烟省略
   preconditions: []             # ← 该条「前置条件」行（共享前置在模块级，不重复）
@@ -38,13 +38,13 @@ title / steps / expected 等字段值含引号或冒号时必须转义——双�
 
 ## 抽取后校验（强烈建议）
 
-抽取/修订重抽后运行 `core/scripts/validate_schema.py`（无第三方依赖）：
+抽取/修订重抽后运行 `../core/scripts/validate_schema.py`（无第三方依赖，路径相对消费本文件的 SKILL.md 所在目录）：
 
 ```bash
-python3 <skills目录>/core/scripts/validate_schema.py 测试用例_markmap.md 测试用例.schema.yaml
+python3 ../core/scripts/validate_schema.py 测试用例_markmap.md 测试用例.schema.yaml
 ```
 
-校验：YAML 可解析（转义纪律）、Schema 的 TC 编号与 markmap 一致（无孤儿/遗漏）、字段值无 `{xxx}` 占位符。零依赖环境下 YAML 解析降级为基础 lint（引号配对 / 缩进 / 裸冒号）。
+校验：YAML 可解析（转义纪律）、Schema 的 TC 编号与 markmap 一致（无孤儿/遗漏）、字段值无 `{xxx}` 占位符。零依赖环境下 YAML 解析降级为基础 lint（引号配对 / 裸引号）。
 
 ## 存量迁移
 
