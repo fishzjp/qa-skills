@@ -1,0 +1,45 @@
+# 宣传落地页部署：index.html 变更合入 main 后自动发布到 GitHub Pages
+# 产物只打包 index.html 单文件，不携带仓库其余内容
+name: pages
+
+on:
+  push:
+    branches: [main]
+    paths: ['index.html', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
+      - name: Stage single page
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
