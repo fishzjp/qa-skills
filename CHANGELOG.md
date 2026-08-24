@@ -15,6 +15,13 @@
   红线 6 将 core 排除出跨 skill 引用判定（skill → core 合法不变）。隔离环境双源验证
   （本地路径 + GitHub 源）：11 个单元全部落地，core/scripts 完整，引用路径有效。
   skills.sh 排行榜为安装驱动（无提交入口），用户真实安装即自动上榜。
+- **国内渠道上架腾讯 SkillHub（skillhub.cn，skillId 172576 起 11 个单元）**：v0.5.0
+  全量发布，进入三线审核（内容合规 / 科恩漏洞扫描 / 云鼎 AI 安全评估）。发布元数据
+  （slug / displayName / version）以开放规范扩展字段写入各 SKILL.md frontmatter，
+  不影响 skills.sh 渠道（dry-run 预检与 npx skills 复测均通过）。附带确认：npx skills
+  原生支持 Trae / Trae CN 宿主（`-a trae-cn` 实测落地 `~/.trae-cn/skills/`），
+  skills.sh 上架已自动覆盖字节 Trae 生态；SkillsMP（skillsmp.com）为自动抓取，
+  GitHub push 后自行收录。
 
 - **测试数据守约束扩展到跨字段业务规则**（test-case-writing + api-testing 各一条分句）：
   参数矩阵逐参数独立变化时，每格组合回检材料声明的跨字段规则（如"使用门槛不能低于面额"），
