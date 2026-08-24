@@ -5,7 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>qa-skills — 让 AI 像资深测试工程师一样工作</title>
 <meta name="description" content="qa-skills 是面向 AI Agent 的测试工程 Skill 框架。装进 Claude Code 等 AI 编程助手，AI 就能按资深测试工程师的方式工作：理解需求、排风险、写用例、跑自动化、定位缺陷、出报告。">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='24' fill='%230071e3'/><path d='M28 52 L44 68 L73 34' stroke='%23fff' stroke-width='11' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="qa-skills">
+<meta property="og:title" content="qa-skills — 让 AI 像资深测试工程师一样工作">
+<meta property="og:description" content="面向 AI Agent 的测试工程 Skill 框架。装进 Claude Code 等 AI 编程助手，AI 就能按资深测试工程师的方式工作：理解需求、排风险、写用例、跑自动化、定位缺陷、出报告。">
+<meta property="og:url" content="https://fishzjp.github.io/qa-skills/">
+<meta property="og:image" content="https://fishzjp.github.io/qa-skills/og.jpg">
+<meta property="og:image:alt" content="qa-skills — Testing skills for AI coding agents">
+<meta property="og:locale" content="zh_CN">
+<meta name="twitter:card" content="summary_large_image">
 <style>
   /* ============ 基础与变量（Apple 设计语言） ============ */
   :root {
@@ -71,7 +81,8 @@
       radial-gradient(800px 400px at 85% 0%, rgba(255,159,10,.07), transparent 60%);
   }
   .hero-badge {
-    display: inline-flex; align-items: center; gap: 8px;
+    display: inline-flex; flex-wrap: wrap; justify-content: center;
+    align-items: center; gap: 8px;
     font-size: 13px; color: var(--text-2);
     border: 1px solid rgba(0,0,0,.10); border-radius: 980px;
     padding: 7px 16px; margin-bottom: 28px;
@@ -96,7 +107,6 @@
     color: var(--text-2); font-weight: 500;
     text-wrap: balance;
   }
-  .hero .sub b { color: var(--text); font-weight: 600; }
   .hero-cta { margin-top: 38px; display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
   .btn {
     display: inline-block; padding: 14px 32px; border-radius: 980px;
@@ -114,6 +124,13 @@
   }
   /* 大图预放大 12%，为滚动视差的位移留出边缘余量（transform 由 JS 每帧改写） */
   .hero-figure img { width: 100%; aspect-ratio: 16/9; object-fit: cover; transform: scale(1.12); will-change: transform; }
+  /* 流程宽幅配图：比 hero 大图低一档的投影层级，页面中部不需要 hero 级重投影 */
+  .figure-wide {
+    margin: 0 auto; max-width: 960px;
+    border-radius: var(--radius); overflow: hidden;
+    box-shadow: 0 28px 64px -24px rgba(0,0,0,.18), 0 6px 18px rgba(0,0,0,.06);
+  }
+  .figure-wide img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
 
   /* ============ 通用区块 ============ */
   .section { padding: 130px 0; }
@@ -145,7 +162,8 @@
   .duo-text h3 { font-size: clamp(26px, 3.6vw, 40px); font-weight: 700; letter-spacing: -.02em; line-height: 1.15; }
   .duo-text p { margin-top: 18px; font-size: 18px; line-height: 1.7; color: var(--text-2); text-wrap: pretty; }
   .duo-text p + p { margin-top: 14px; }
-  .duo-text b { color: var(--text); }
+  /* 深色区正文灰阶提亮一档，保证黑底对比度 */
+  .section-dark .duo-text p { color: #a1a1a6; }
   .duo-media img {
     width: 100%; border-radius: var(--radius);
     box-shadow: 0 24px 60px -18px rgba(0,0,0,.18);
@@ -180,7 +198,7 @@
     margin-top: 18px; padding: 18px 20px; border-radius: 16px;
     font-size: 15px; line-height: 1.7; text-align: left;
   }
-  .quote-bad { background: rgba(255,59,48,.06); border: 1px dashed rgba(255,59,48,.3); color: #8e8e93; }
+  .quote-bad { background: rgba(255,59,48,.06); border: 1px dashed rgba(255,59,48,.3); color: #6e6e73; }
   .quote-good { background: rgba(52,199,89,.08); border: 1px solid rgba(52,199,89,.25); color: var(--text); }
   .quote-box em { font-style: normal; font-weight: 600; }
   .quote-bad em { color: #d9382e; }
@@ -199,6 +217,47 @@
   .compare-note.in span { background-size: 100% 36%; }
   /* 术语与产品名禁止跨行断开（中文排版允许断字，但 qa-skills / 全任务 这类词断开影响识别） */
   .nb { white-space: nowrap; }
+  /* ============ 正文重点词的三种强调笔触 ============ */
+  /* .hl 荧光笔横扫（长句）/ .wv 手绘波浪线（短词）/ .cir 手绘圈注（最关键词） */
+  b.hl, b.wv, b.cir { color: var(--blue); font-weight: 600; }
+  /* 荧光笔：淡色高亮随入场从左到右扫开 */
+  b.hl {
+    background-image: linear-gradient(rgba(0,113,227,.13), rgba(0,113,227,.13));
+    background-repeat: no-repeat; background-position: 0 64%;
+    background-size: 0% 38%;
+    transition: background-size 1s cubic-bezier(.22,1,.36,1) .6s;
+  }
+  .reveal.in b.hl { background-size: 100% 38%; }
+  /* 波浪线：短词专用（inline-block 保证笔迹不断行），从左往右像笔划一样拉出 */
+  b.wv { display: inline-block; position: relative; padding-bottom: 3px; }
+  b.wv::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 7px;
+    background-color: var(--blue);
+    -webkit-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 7' preserveAspectRatio='none'><path d='M0 3.5 Q2 0.5 4 3.5 T8 3.5 T12 3.5 T16 3.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/></svg>") repeat-x 0 0 / 16px 7px;
+    mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 7' preserveAspectRatio='none'><path d='M0 3.5 Q2 0.5 4 3.5 T8 3.5 T12 3.5 T16 3.5' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'/></svg>") repeat-x 0 0 / 16px 7px;
+    transform: scaleX(0); transform-origin: left center;
+    transition: transform .9s cubic-bezier(.22,1,.36,1) .8s;
+  }
+  .reveal.in b.wv::after { transform: scaleX(1); }
+  /* 圈注：短词专用，椭圆带着轻微旋转从中心放大落定，像用笔把词圈起来。
+     isolation 隔离层叠 + z-index:-1 让笔迹画在文字笔画后面：交叠处被笔画遮住，
+     视觉上是笔迹绕到字背后，而不是压在字上挡住文字 */
+  b.cir { display: inline-block; position: relative; isolation: isolate; padding: 0 5px; }
+  b.cir::before {
+    content: ''; position: absolute; inset: -4px -8px; z-index: -1;
+    background-color: var(--blue);
+    -webkit-mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 72' preserveAspectRatio='none'><path d='M98 20 C74 6 24 7 11 25 C2 45 32 66 70 63 C103 61 119 42 104 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'/></svg>") no-repeat center / 100% 100%;
+    mask: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 72' preserveAspectRatio='none'><path d='M98 20 C74 6 24 7 11 25 C2 45 32 66 70 63 C103 61 119 42 104 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'/></svg>") no-repeat center / 100% 100%;
+    transform: scale(.6) rotate(-7deg); opacity: 0;
+    transition: transform .85s cubic-bezier(.22,1,.36,1) .65s, opacity .4s ease .65s;
+  }
+  .reveal.in b.cir::before { transform: scale(1) rotate(-2deg); opacity: 1; }
+  /* 深色区：文字与笔触统一换亮蓝 */
+  .section-dark b.hl, .section-dark b.wv, .section-dark b.cir { color: #6e9bff; }
+  .section-dark b.hl {
+    background-image: linear-gradient(rgba(110,155,255,.18), rgba(110,155,255,.18));
+  }
+  .section-dark b.wv::after, .section-dark b.cir::before { background-color: #6e9bff; }
 
   /* ============ 黑色区：大脑升级包 ============ */
   .feature-points {
@@ -230,11 +289,11 @@
   .step .dot {
     width: 40px; height: 40px; margin: 0 auto; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, #0071e3, #42a5f5); color: #fff;
+    background: var(--blue); color: #fff;
     font-weight: 700; font-size: 16px;
   }
   .step p { margin-top: 12px; font-size: 14.5px; font-weight: 600; }
-  .step small { display: block; margin-top: 4px; font-size: 12.5px; color: var(--text-2); font-weight: 400; }
+  .step small { display: block; margin-top: 4px; font-size: 13.5px; color: var(--text-2); font-weight: 400; }
 
   /* ============ 六大能力卡片 ============ */
   .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
@@ -246,7 +305,7 @@
     box-shadow: 0 18px 44px -20px rgba(0,0,0,.10);
     transition: transform .3s ease, box-shadow .3s ease;
   }
-  .card:hover { transform: translateY(-8px); box-shadow: 0 32px 70px -24px rgba(0,0,0,.20); }
+  .card:hover { transform: translateY(-6px); box-shadow: 0 32px 70px -24px rgba(0,0,0,.20); }
   .card img { width: 100%; aspect-ratio: 16/11; object-fit: cover; }
   .card .card-body { padding: 26px 28px 30px; }
   .card .card-kicker {
@@ -265,7 +324,7 @@
     border-radius: 24px; padding: 40px 28px; text-align: center;
     transition: transform .3s ease, background .3s ease;
   }
-  .stat:hover { transform: translateY(-5px); background: rgba(255,255,255,.08); }
+  .stat:hover { transform: translateY(-4px); background: rgba(255,255,255,.08); }
   .stat .num {
     font-size: clamp(44px, 5.4vw, 62px); font-weight: 700; letter-spacing: -.03em;
     background: linear-gradient(180deg, #ffffff 40%, #6e9bff);
@@ -297,7 +356,6 @@
   .human-in-loop img { border-radius: 20px; aspect-ratio: 4/3; object-fit: cover; width: 100%; }
   .human-in-loop h4 { font-size: clamp(22px, 3vw, 30px); font-weight: 700; letter-spacing: -.02em; color: #f5f5f7; text-wrap: balance; }
   .human-in-loop p { margin-top: 16px; font-size: 16.5px; line-height: 1.75; color: #a1a1a6; text-wrap: pretty; }
-  .human-in-loop p b { color: #f5f5f7; }
 
   /* ============ 安装区 ============ */
   .install-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
@@ -369,6 +427,9 @@
     .reveal { opacity: 1; transform: none; transition: none; }
     .reveal:not(.hero-figure) > img { transition: none; }
     .compare-note span { transition: none; background-size: 100% 36%; }
+    b.hl { transition: none; background-size: 100% 38%; }
+    b.wv::after { transition: none; transform: none; }
+    b.cir::before { transition: none; transform: scale(1) rotate(-2deg); opacity: 1; }
     html { scroll-behavior: auto; }
   }
 </style>
@@ -401,7 +462,7 @@
     <div class="hero-badge reveal">开源 · MIT 许可 · 兼容 <b>Claude Code</b>、<b>DeepSeek Harness</b> 等 AI 编程助手</div>
     <h1 class="reveal d1">让 AI 像资深测试工程师<br>一样工作</h1>
     <p class="sub reveal d2">
-      一套面向 AI Agent 的<b>测试工程 Skill 框架</b>。<br>
+      一套面向 AI Agent 的<b class="hl">测试工程 Skill 框架</b>。<br>
       装进编程助手，AI 就能按资深工程师的方式做测试：<br>
       读需求、排风险、写用例、跑自动化、出报告。
     </p>
@@ -417,6 +478,7 @@
   </div>
 </header>
 
+<main>
 <!-- ============ 第一章：软件测试是干嘛的 ============ -->
 <section class="section section-alt" id="why">
   <div class="container">
@@ -434,10 +496,10 @@
           并发下单会不会超卖？优惠券到期会不会自动失效？接口异常时数据会不会错乱？
         </p>
         <p>
-          干这件事的，是<b>软件测试工程师</b>：
+          干这件事的，是<b class="wv">软件测试工程师</b>：
           在缺陷到达用户之前发现它、定位它，再确认它被修好。
         </p>
-        <p><b>qa-skills 做的，就是让 AI 助手学会这套本事。</b></p>
+        <p><b class="hl">qa-skills 做的，就是让 AI 助手学会这套本事。</b></p>
       </div>
     </div>
   </div>
@@ -508,12 +570,12 @@
         <div class="eyebrow">它是什么</div>
         <h3>不是软件，<br>是一套装进 AI 的工作方法。</h3>
         <p>
-          它由 <b style="color:#f5f5f7">10 个领域 Skill</b> 和一个共享知识库（core/）组成，
+          它由 <b class="cir">10 个领域 Skill</b> 和一个共享知识库（core/）组成，
           全部是 Markdown 指令文件。
           装进 <span class="nb">Claude Code</span>、<span class="nb">DeepSeek Harness</span> 这类编程助手，放对目录就能生效。
         </p>
         <p>
-          装上之后，AI 助手就有了<b style="color:#f5f5f7">资深工程师的工作纪律</b>：
+          装上之后，AI 助手就有了<b class="wv">资深工程师的工作纪律</b>：
           先澄清什么，依据什么排风险，哪些类型必测，哪些明确不测，
           每条结论标注几级证据。
         </p>
@@ -546,12 +608,10 @@
       <div class="eyebrow">怎么工作</div>
       <h2>一句指令，从需求到报告。</h2>
       <p>
-        对 AI 助手说「帮我测试这个需求」，剩下的交给流水线。
-        每个阶段的产出都存成文件，不靠对话记忆：
-        中断了，新开一个接着跑。
+        对 AI 助手说「帮我测试这个需求」，从需求到报告，七个环节自动接力，每个环节都有明确的产出物。
       </p>
     </div>
-    <figure class="hero-figure reveal" style="max-width: 960px; margin-top: 0;">
+    <figure class="figure-wide reveal">
       <img loading="lazy" data-img="Minimalist isometric 3D render of a modern software quality control assembly line, a conveyor belt carrying colorful app interface cards through inspection stations with a magnifying glass, checklist clipboard and testing tools, the final card receives a big green approval checkmark stamp, soft pastel colors, clean light background, clean modern tech aesthetic"
            data-size="landscape_16_9"
            alt="现代化质检流水线：软件界面卡片在传送带上依次经过各个检查站，最终盖上绿色合格章">
@@ -683,11 +743,11 @@
         <p>
           需求有歧义，先澄清；执行走人工还是自动化，你选；
           Bug 怎么定性、预算上限设多少，你说了算。
-          这四类检查点，AI 助手<b>只提案、不代答</b>。
+          这四类检查点，AI 助手<b class="cir">只提案、不代答</b>。
         </p>
         <p>
           每一次裁决都记录在案，后续阶段照办，不得推翻。
-          <b style="color:#f5f5f7">拍板的，始终是你。</b>
+          <b class="wv">拍板的，始终是你。</b>
         </p>
       </div>
     </div>
@@ -735,6 +795,7 @@
     </div>
   </div>
 </section>
+</main>
 
 <!-- ============ Footer ============ -->
 <footer>
@@ -768,6 +829,7 @@
    */
   function mountImages() {
     document.querySelectorAll('img[data-img]').forEach(function (el) {
+      el.decoding = 'async'; // 异步解码，避免图片解码阻塞渲染
       el.src = buildImageUrl(el.dataset.img, el.dataset.size || 'landscape_4_3');
     });
   }
