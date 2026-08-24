@@ -1,0 +1,42 @@
+{
+  "name": "dsh-qa-skills",
+  "version": "0.5.0",
+  "description": "DeepSeek Harness (dsh) plugin: 10 testing skills (requirement analysis, test strategy, case writing/review, E2E/API automation, exploratory, regression, bug analysis) + shared core knowledge base — a full QA pipeline as agent skills.",
+  "type": "module",
+  "main": ".dsh/plugins/qa-skills.js",
+  "exports": {
+    ".": "./.dsh/plugins/qa-skills.js",
+    "./.dsh/plugins/qa-skills.js": "./.dsh/plugins/qa-skills.js",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "skills",
+    ".dsh"
+  ],
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "agent-skills",
+    "skills",
+    "qa",
+    "testing",
+    "test-case",
+    "test-automation"
+  ],
+  "license": "MIT",
+  "author": "fishzjp",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fishzjp/qa-skills.git"
+  },
+  "homepage": "https://github.com/fishzjp/qa-skills#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./.dsh/cordis.patch.yml"
+    }
+  }
+}

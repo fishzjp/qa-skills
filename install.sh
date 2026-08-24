@@ -8,9 +8,10 @@
 #   ./install.sh --target <目录> --link   用软链代替拷贝（git pull 后即更新，升级方便）
 #
 # 宿主目录检测优先级：
-#   ~/.agents/skills   跨宿主共享目录（多 Agent 共读，推荐）
+#   ~/.agents/skills   跨宿主共享目录（多 Agent 共读，推荐；DeepSeek Harness 也读这里）
 #   ~/.claude/skills   Claude Code（用户级）
 #   ~/.codex/skills    Codex CLI（用户级）
+#   ~/.dsh/skills      DeepSeek Harness dsh（用户级）
 #   ./.claude/skills   当前项目（Claude Code 项目级）
 #
 # 卸载：./uninstall.sh --target <目录>（或同参数重跑 install 会提示）
@@ -33,6 +34,7 @@ detect_candidates() {
   [ -d "$HOME/.agents/skills" ] && cands+=("$HOME/.agents/skills")
   [ -d "$HOME/.claude/skills" ] && cands+=("$HOME/.claude/skills")
   [ -d "$HOME/.codex/skills" ] && cands+=("$HOME/.codex/skills")
+  [ -d "$HOME/.dsh/skills" ] && cands+=("$HOME/.dsh/skills")
   [ -d "$REPO_ROOT/.claude/skills" ] && cands+=("$REPO_ROOT/.claude/skills")
   # 空数组直接展开在 bash 4.4+ 会输出空行、bash 3.2 + set -u 会报 unbound——先判长度
   if [ "${#cands[@]}" -gt 0 ]; then

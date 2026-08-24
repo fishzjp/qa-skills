@@ -32,6 +32,7 @@ if [ -z "$TARGET" ]; then
   installed_in "$HOME/.agents/skills" && cands+=("$HOME/.agents/skills")
   installed_in "$HOME/.claude/skills" && cands+=("$HOME/.claude/skills")
   installed_in "$HOME/.codex/skills" && cands+=("$HOME/.codex/skills")
+  installed_in "$HOME/.dsh/skills" && cands+=("$HOME/.dsh/skills")
   installed_in "$REPO_ROOT/.claude/skills" && cands+=("$REPO_ROOT/.claude/skills")
   if [ "${#cands[@]}" -eq 0 ]; then echo "未发现已安装的 qa-skills。"; exit 0; fi
   if [ "${#cands[@]}" -eq 1 ]; then TARGET="${cands[0]}"; else

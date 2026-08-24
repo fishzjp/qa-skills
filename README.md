@@ -38,6 +38,14 @@ cd qa-skills
 npx skills add fishzjp/qa-skills            # 交互式勾选，全装用 --skill '*'
 ```
 
+**DeepSeek Harness（dsh）用户**：本仓库已打包为 dsh 插件，一条命令安装——
+
+```bash
+dsh plugin --profile web add github:fishzjp/qa-skills   # 或 npm 发布后的 dsh-qa-skills
+```
+
+也可以走文件路径：dsh 原生兼容本仓库格式，装到 `~/.agents/skills/`（`./install.sh --target ~/.agents/skills`）或 `~/.dsh/skills/`，重启 dsh 生效。已在 dsh 0.1.0-rc.8 + deepseek-v4-flash 上完成双路径端到端验证。
+
 > `core` 是共享知识库依赖单元（不可执行任务），安装任一 skill 时必须一并安装，否则引用路径断裂。
 
 装好后对 Agent 说一句：
@@ -57,6 +65,7 @@ Skill 是纯 Markdown 指令文件（frontmatter + 相对路径引用），不�
 |------|---------|------|
 | Claude Code | `~/.claude/skills/` 或 `<项目>/.claude/skills/` | ✅ 主要适配对象，评测基于此 |
 | 跨宿主共享目录 | `~/.agents/skills/` | ✅ 多 Agent 共读一份，`install.sh` 默认推荐 |
+| DeepSeek Harness (dsh) | `~/.agents/skills/`、`~/.dsh/skills/` 或 `<项目>/.agents/skills/` | ✅ 实测通过（dsh 原生实现 Anthropic Skills 规范；deepseek-v4-flash 全链路验证：识别 / 触发 / 产出） |
 | Codex CLI | `~/.codex/skills/` | 🔶 按约定应可用，未系统评测 |
 | 其他支持 Skills 的 Agent | 各自的 skills 目录 | 🔶 同上 |
 

@@ -32,6 +32,14 @@ cd qa-skills
 ./install.sh --auto # or fully automatic
 ```
 
+**DeepSeek Harness (dsh) users**: this repo ships as a dsh plugin — one command install:
+
+```bash
+dsh plugin --profile web add github:fishzjp/qa-skills   # or dsh-qa-skills once published on npm
+```
+
+File-based install also works (dsh natively supports this format): copy to `~/.agents/skills/` (`./install.sh --target ~/.agents/skills`) or `~/.dsh/skills/`, then restart dsh. Both paths verified end-to-end on dsh 0.1.0-rc.8 + deepseek-v4-flash.
+
 Then tell your agent:
 
 > **Test this requirement: {description + repo URL}**
@@ -49,6 +57,7 @@ Skills are plain Markdown (frontmatter + relative-path references) with no host-
 |------|------------------|--------|
 | Claude Code | `~/.claude/skills/` or `<project>/.claude/skills/` | ✅ primary target; evaluations run on it |
 | Shared directory | `~/.agents/skills/` | ✅ one copy for many agents (install.sh default) |
+| DeepSeek Harness (dsh) | `~/.agents/skills/`, `~/.dsh/skills/`, or `<project>/.agents/skills/` | ✅ verified end-to-end (dsh natively implements the Anthropic Skills spec; tested on deepseek-v4-flash: discovery / trigger / output) |
 | Codex CLI | `~/.codex/skills/` | 🔶 should work by convention; not systematically evaluated |
 | Other Skills-capable agents | their skills directory | 🔶 same |
 

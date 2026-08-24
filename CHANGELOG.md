@@ -7,6 +7,18 @@
 
 ### 变更
 
+- **DeepSeek Harness（dsh）插件化发布**：新增 dsh Cordis 插件三件套（`package.json`
+  的 `dsh.bundle` manifest、`.dsh/cordis.patch.yml` 补丁层、`.dsh/plugins/qa-skills.js`
+  注册器——Node 内建零依赖，参照 superpowers 的 dsh 适配模式），`dsh plugin --profile web
+  add github:fishzjp/qa-skills` 一键安装（npm 包名 `dsh-qa-skills` 待发布）。core 单元
+  在插件注册时标记双不可调用（modelInvocable/userInvocable 均为 false），技能目录中
+  不再出现——比文件安装路径更干净（文件路径下 core 会进目录，靠 description 免触发）。
+  端到端实测（dsh 0.1.0-rc.8 + deepseek-v4-flash 最弱段位）：文件路径与插件路径双轨
+  验证——11 单元识别 / 中文 description 触发 / 阶段〇索取仓库 / markmap+schema 双产物
+  落盘（24 条用例）/ `../core/*` 按需加载 / core/scripts/validate_schema.py 被正确调用。
+  双轨均发现同一弱点：v4-flash 对 `../` 相对路径存在解析抖动（一次正确一次丢 `../`），
+  已作为 dogfooding 案例记入迭代池候选。`install.sh`/`uninstall.sh` 增加 `~/.dsh/skills`
+  检测，README 双语增补 dsh 安装说明与兼容性矩阵行。
 - **分发渠道接入 skills.sh（`npx skills`，Vercel Labs 开放技能生态，50+ Agent 宿主）**：
   `npx skills add fishzjp/qa-skills` 即装（全装 `--skill '*'`）。上架适配：`core/` 新增
   非触发型 SKILL.md（声明仅被引用、不独立执行任务），使其成为安装器可识别的依赖单元——
