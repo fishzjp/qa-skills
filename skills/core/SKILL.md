@@ -1,0 +1,34 @@
+---
+name: core
+description: qa-skills 共享知识库，安装依赖单元（非触发 skill）：承载被其余 10 个 skill 以相对路径引用的方法、规则、模板与脚本（可执行性标准、证据分级、风险模型、类型决策矩阵等）。仅在 qa-skills 系列 skill 工作流中被引用读取；任何具体测试任务都不要独立触发本 skill，独立使用无意义。通过 npx skills 等安装器单独安装其他 qa-skills skill 时，必须同时安装本 skill，否则引用路径断裂。
+---
+
+# qa-skills 共享知识库（core）
+
+本目录是框架的公共层：不定义工作流、不面向用户触发，仅被 `skills/` 下其余
+10 个 skill（qa / requirement-analysis / test-strategy / …）以相对路径
+`../core/<file>` 按需引用。单一维护源，多 skill 复用。
+
+## 共享文档
+
+| 文件 | 内容 |
+|------|------|
+| `evidence.md` | 证据分级标准（E0–E4）与状态标注 |
+| `risk-model.md` | 风险评级模型（评级强制挂证据） |
+| `executability.md` | 用例可执行性硬标准（8 条，一票否决项） |
+| `testing-principles.md` | 测试原则 |
+| `case-format.md` | 用例编号与格式规范 |
+| `coverage.md` | 覆盖评估口径 |
+| `schema-extraction.md` | schema.yaml 抽取规则 |
+| `clarify-pattern.md` | 澄清检查点模式 |
+| `test-type-matrix.md` | 类型决策矩阵（十轴全轴必答） |
+| `report-template.md` | 测试报告模板 |
+| `methods/*.md` | 设计方法细则（边界 / 数据驱动 / 权限 / 状态机） |
+| `scripts/*.py` | Schema 校验器、类型信号扫描器 |
+
+## When NOT to Use
+
+- 任何具体测试任务（写用例、定策略、查 Bug 等）**都不要触发本 skill**：
+  它不包含工作流，独立使用没有产出。对应任务请用其余 10 个 skill 之一。
+- 本 skill 仅在两种情况下被触及：① 其余 skill 工作流按需引用上述文件；
+  ② 安装/校验场景（作为安装依赖单元被安装器识别）。

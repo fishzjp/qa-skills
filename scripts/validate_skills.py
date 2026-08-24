@@ -5,7 +5,7 @@
   1. 每个 skill 目录的 SKILL.md frontmatter 含 name（与目录名一致）与 description（≤300 字符）
   2. SKILL.md ≤ 500 行（L2 工作流红线）
   3. 每个 skill 必须有 "When NOT to Use" 段（反触发边界）
-  4. core/ 不含 SKILL.md（纯共享引用目录）
+  4. core/ 为纯共享引用层：SKILL.md 仅作安装依赖单元，必须声明不独立触发
   5. SKILL.md 与 core/**/*.md 中反引号引用的仓库内相对路径必须存在
      （识别 `../`、`references/`、`templates/`、`core/` 前缀；兼容 core 文件的
      skills 根相对写法；中文产物名与代码块内示例不在校验范围）
@@ -80,6 +80,9 @@ def check_references(md_path, errors):
         target = target.resolve()
         if not target.is_relative_to(SKILLS_ROOT):
             continue
+        # core/ 永远视为共享层：其 SKILL.md 仅为安装依赖单元，不算 skill 目录
+        if target.is_relative_to(SKILLS_ROOT / "core"):
+            continue
         tgt_owner = owning_skill_dir(target)
         if tgt_owner is not None and tgt_owner != src_owner:
             bad = f"{md_path.relative_to(REPO)}: 跨 skill 引用 `{ref}`（属于 {tgt_owner.name}/）——被多 skill 消费的内容应下沉 core/"
@@ -90,9 +93,13 @@ def check_references(md_path, errors):
 def main():
     errors = []
 
-    # 红线 4：core/ 不含 SKILL.md
-    if (SKILLS_ROOT / "core" / "SKILL.md").exists():
-        errors.append("skills/core/SKILL.md 存在——core/ 必须是纯共享引用目录，不得含 SKILL.md")
+    # 红线 4：core/ 是纯共享引用层——SKILL.md 允许存在（作为安装器可识别的依赖单元），
+    # 但必须声明"不独立触发"，防止共享知识库被当成面向任务的 skill 使用
+    core_sk = SKILLS_ROOT / "core" / "SKILL.md"
+    if core_sk.exists():
+        core_text = core_sk.read_text()
+        if ("不要独立触发" not in core_text) or ("When NOT to Use" not in core_text):
+            errors.append("skills/core/SKILL.md: 必须声明不独立触发（description + When NOT to Use 段）")
 
     for d in skill_dirs():
         sk = d / "SKILL.md"
@@ -129,7 +136,7 @@ def main():
             except json.JSONDecodeError as e:
                 errors.append(f"{f.relative_to(REPO)}: 非法 JSON（{e}）")
 
-    skills = skill_dirs()
+    skills = [d for d in skill_dirs() if d.name != "core"]
     print(f"校验 {len(skills)} 个 skill + core/ {len(core_mds)} 个共享文档")
     if errors:
         print(f"\n❌ {len(errors)} 处违规：")

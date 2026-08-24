@@ -32,6 +32,14 @@ cd qa-skills
 ./install.sh --auto     # 或全自动安装
 ```
 
+或通过 [skills.sh](https://skills.sh) 跨 Agent 安装（Claude Code / Cursor / Codex / OpenCode 等 50+ 宿主）：
+
+```bash
+npx skills add fishzjp/qa-skills            # 交互式勾选，全装用 --skill '*'
+```
+
+> `core` 是共享知识库依赖单元（不可执行任务），安装任一 skill 时必须一并安装，否则引用路径断裂。
+
 装好后对 Agent 说一句：
 
 > **帮我测试这个需求：{需求描述 + 仓库地址}**
@@ -187,7 +195,7 @@ PRD / 代码
 ```text
 skills/                  产品本体（10 个 skill + core 共享知识库）
   qa/                    编排入口（薄，无领域知识）
-  core/                  共享知识库（无 SKILL.md，不参与触发）：evidence / risk-model /
+  core/                  共享知识库（SKILL.md 仅作安装依赖单元，不参与任务触发）：evidence / risk-model /
                          executability / testing-principles / report-template / case-format /
                          coverage / schema-extraction / clarify-pattern / test-type-matrix
                          （类型决策矩阵）+ methods/（4 篇设计方法细则）+ scripts/
