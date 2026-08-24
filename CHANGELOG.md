@@ -7,6 +7,14 @@
 
 ### 变更
 
+- **撞顶续写协议端到端验证 + 二阶效应修复（本地评测链路）**：续写在真实 run 中触发闭环
+  （mimo 14K 上限：撞顶→续写→接缝干净→usage 累加→合并产物真实执行收集 46 测试）。
+  验证中发现并修复续写二阶效应：续写会重发已输出文件（缩短版），exec 组装"后写覆盖"
+  冲掉截断前完整原件——改为**先写优先**并强化续写指令。另两项修复：exec 阶段按模型 tag
+  遍历产物（此前 `--model` 运行的产物被整体跳过）；exec 0 收集补 detail 标注（与全挂
+  可区分）。附注：zen 端点对 deepseek-v4-flash 无视 max_tokens（18–39K 报 stop），撞顶
+  实验只能用尊重上限的模型（mimo 精确生效）。README 双语 Token 成本口径补基准标注
+  （任务级均值、含全量注入；主模型轮 3.3× / 弱模型轮最高 9.5×）。
 - **撞顶续写协议 + 产物提取双修复（本地评测链路测量修复）**：①finish_reason 全链路透传 +
   `call_model_cont` 撞 max_tokens 续写一轮（On/Off 对称、usage 跨轮累加如实计成本、
   接缝重叠剥离），meta 落档 finish_reason/continued，truncation 统计进 metrics 与报告；

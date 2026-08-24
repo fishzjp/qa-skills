@@ -162,7 +162,7 @@ Golden set of 12 tasks, same model, same harness; the only difference is whether
 - **Planted-bug detection**: code-review tasks; heterogeneous-judge caliber (100% under same-family judge).
 - **Quality**: heterogeneous judge; Δ +6.1pp (95%CI includes zero; significant under same-family judging).
 - **API real-execution pass rate †**: disclosed adverse result — skill-enforced strict assertions fail more visibly while weak assertions pass easily; full 3-sample caliber (earlier 87% was a 2-sample mean).
-- **Token cost**: better but more expensive; a single-file ablation shows the gains cannot be obtained by taking just the core standards document.
+- **Token cost**: better but more expensive; basis is total-token ratio (per-task mean, skill fully injected): 3.3× on the glm-5.2 main-model round, up to 9.5× on the weak-model (mimo) round where reasoning overhead counts toward output; a single-file ablation shows the gains cannot be obtained by taking just the core standards document.
 </details>
 
 <details>
