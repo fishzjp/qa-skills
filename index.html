@@ -42,7 +42,10 @@
     backdrop-filter: saturate(180%) blur(20px);
     -webkit-backdrop-filter: saturate(180%) blur(20px);
     border-bottom: 1px solid rgba(0,0,0,.06);
+    transition: box-shadow .35s ease, background .35s ease;
   }
+  /* 滚动态：离开顶部后浮现轻投影，压实玻璃层次 */
+  nav.scrolled { background: rgba(255,255,255,.86); box-shadow: 0 6px 20px -8px rgba(0,0,0,.10); }
   nav .container {
     height: 100%; display: flex; align-items: center; justify-content: space-between;
   }
@@ -103,15 +106,14 @@
   .btn-primary:hover { background: var(--blue-hover); transform: translateY(-2px); }
   .btn-ghost { color: var(--blue); }
   .btn-ghost:hover { text-decoration: underline; }
+  .btn:active { transform: scale(.97); }
   .hero-figure {
     margin: 70px auto 0; max-width: 920px;
     border-radius: var(--radius); overflow: hidden;
     box-shadow: 0 40px 90px -20px rgba(0,0,0,.25), 0 8px 24px rgba(0,0,0,.08);
-    transform: perspective(1400px) rotateX(4deg);
-    transition: transform .6s ease;
   }
-  .hero-figure:hover { transform: perspective(1400px) rotateX(0deg); }
-  .hero-figure img { width: 100%; aspect-ratio: 16/9; object-fit: cover; }
+  /* 大图预放大 12%，为滚动视差的位移留出边缘余量（transform 由 JS 每帧改写） */
+  .hero-figure img { width: 100%; aspect-ratio: 16/9; object-fit: cover; transform: scale(1.12); will-change: transform; }
 
   /* ============ 通用区块 ============ */
   .section { padding: 130px 0; }
@@ -188,7 +190,13 @@
     text-wrap: balance;
   }
   .compare-note small { display: inline-block; margin-top: 10px; font-weight: 400; color: var(--text-2); font-size: 15px; }
-  .compare-note span { background: linear-gradient(transparent 62%, rgba(52,199,89,.28) 62%); }
+  /* 高亮标记随区块入场从左到右扫开 */
+  .compare-note span {
+    background-image: linear-gradient(rgba(52,199,89,.28), rgba(52,199,89,.28));
+    background-repeat: no-repeat; background-position: 0 64%; background-size: 0% 36%;
+    transition: background-size 1.1s cubic-bezier(.22,1,.36,1) .45s;
+  }
+  .compare-note.in span { background-size: 100% 36%; }
   /* 术语与产品名禁止跨行断开（中文排版允许断字，但 qa-skills / 全任务 这类词断开影响识别） */
   .nb { white-space: nowrap; }
 
@@ -346,7 +354,11 @@
   }
 
   /* ============ 滚动渐入动画 ============ */
-  .reveal { opacity: 0; transform: translateY(34px); transition: opacity .85s ease, transform .85s ease; }
+  /* 统一入场节奏：缓出曲线（快进慢停），位移收敛 */
+  .reveal { opacity: 0; transform: translateY(26px); transition: opacity .9s cubic-bezier(.22,1,.36,1), transform .9s cubic-bezier(.22,1,.36,1); }
+  /* 配图随容器入场做 1.045→1 的微缩放（hero 大图除外，它有自己的视差） */
+  .reveal:not(.hero-figure) > img { transition: transform 1.5s cubic-bezier(.22,1,.36,1); }
+  .reveal:not(.in):not(.hero-figure) > img { transform: scale(1.045); }
   .reveal.in { opacity: 1; transform: none; }
   .reveal.d1 { transition-delay: .12s; }
   .reveal.d2 { transition-delay: .24s; }
@@ -355,6 +367,8 @@
   .reveal.d5 { transition-delay: .60s; }
   @media (prefers-reduced-motion: reduce) {
     .reveal { opacity: 1; transform: none; transition: none; }
+    .reveal:not(.hero-figure) > img { transition: none; }
+    .compare-note span { transition: none; background-size: 100% 36%; }
     html { scroll-behavior: auto; }
   }
 </style>
@@ -807,6 +821,36 @@
   }
 
   /**
+   * 导航滚动态：页面离开顶部后加 scrolled 类，浮现轻投影
+   */
+  function initNavElevation() {
+    var nav = document.querySelector('nav');
+    var update = function () { nav.classList.toggle('scrolled', window.scrollY > 8); };
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+  }
+
+  /**
+   * Hero 大图滚动视差：图片预放大 12% 留出边缘余量，
+   * 随滚动缓慢下沉，与页面形成差速制造纵深；reduced-motion 用户跳过
+   */
+  function initHeroParallax() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var img = document.querySelector('.hero-figure img');
+    if (!img) return;
+    var ticking = false;
+    window.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        var ty = Math.min(window.scrollY * 0.08, 28); // 28px < 6% 顶部余量，不出边
+        img.style.transform = 'scale(1.12) translateY(' + ty + 'px)';
+        ticking = false;
+      });
+    }, { passive: true });
+  }
+
+  /**
    * 监听统计数字卡片，首次进入视口时触发滚动动画（只触发一次）
    */
   function initCountUp() {
@@ -826,6 +870,8 @@
   initRevealOnScroll();
   initCountUp();
   initExternalLinks();
+  initNavElevation();
+  initHeroParallax();
 </script>
 </body>
 </html>
