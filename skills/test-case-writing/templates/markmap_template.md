@@ -235,7 +235,7 @@
 ### 15.3 错误信息
 - {错误信息}，{含定位信息，格式符合规范}
 
-## 16. 安全性 <!-- Web/API 项目；type_scope 轴 2 include 时 type: security 用例（硬默认轴），越权功能正确性归模块 7（功能域 permission），域间裁决见 ../../core/test-type-matrix.md 第 2 节 -->
+## 16. 安全性 <!-- Web/API 项目；type_scope 轴 2 include 时 type: security + [安全] 标签用例（硬默认轴），越权功能正确性归模块 7（功能域 permission），域间裁决见 ../../core/test-type-matrix.md 第 2 节 -->
 
 - {未认证访问}，{拒绝} [P0]
 - {越权访问}，{拒绝} [P0]
