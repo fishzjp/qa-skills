@@ -102,6 +102,7 @@ git diff <base>...<head> -U3             # 逐文件读改动内容，定位改�
 
 - 清单落盘后交执行：自动化部分 → `automated-e2e-testing` / `api-testing`；手动部分 → 测试工程师
 - 回归结果汇总进测试报告（`../core/report-template.md` §5 回归摘要）
+- **回归结果同步 Bug 状态**：修复验证对应的 Bug 条目按结果更新——通过 → 已验证关闭；失败 → 已修复待验证（附失败证据），字段口径见 `../core/report-template.md` §3（使用约定 6）
 
 ## Common Mistakes
 

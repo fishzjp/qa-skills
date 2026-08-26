@@ -22,7 +22,8 @@
      类型域 decision: exclude/handoff）
   V2 include 挂证据——signals 或 risk_refs 非空（无证据纳入 = 过测）
   V3 exclude 挂理由——rationale 非空 + scanned 含 G 级与 S 级双记录（无理由排除 = 漏测；
-     无代码仓库场景豁免 S 级）
+     无代码仓库场景豁免 S 级）；security_business 为硬默认轴（Web/API 系统无排除
+     出口），其 exclude 须在 rationale 声明非 Web/API 依据，否则告警级提示复核
   V4 full 有预算——depth=full 轴必须挂 risk_refs；full 总数（两域合并）≤3，
      超限须有 budget_review（预算裁决记录，R6>R1）；depth_budget.full_axes 与实际一致。
      两域 scope 可写在同一或不同 yaml 代码块，均纳入统计
@@ -119,6 +120,11 @@ TYPE_AXES = ["performance", "security_business", "reliability", "concurrency",
              "contract_integration"]
 FULL_MAX = 3
 DEPTHS = {"full", "standard", "light"}
+# 轴 2（security_business）排除的合法依据形态：系统非 Web/API（命令行 / 桌面 / 离线库等）。
+# 宽松匹配——告警级提示复核，不是门禁
+NON_WEB_API_RE = re.compile(
+    r"非\s*[-/·、\s]*[Ww]eb|非\s*[-/·、\s]*API|无\s*[-/·、\s]*[Ww]eb|无\s*[-/·、\s]*API"
+    r"|不是\s*[Ww]eb|不是\s*API|命令行|CLI|桌面|离线|纯库|无网络|无界面")
 AXIS_LINE_RE = {axis: re.compile(rf"^[ \t]*{axis}:[ \t]*\{{(.+)\}}[ \t]*$", re.M)
                 for axis in TYPE_AXES}
 FLOW_LINE_RE = re.compile(r"^[ \t]*(\w+):[ \t]*\{(.+)\}[ \t]*$", re.M)
@@ -188,6 +194,13 @@ def validate_strategy(path):
             rationale = scalar(kv, "rationale")
             if not rationale:
                 errors.append(f"V3 {axis}: exclude 缺 rationale（无理由排除 = 漏测）")
+            elif axis == "security_business" and not NON_WEB_API_RE.search(rationale):
+                # 硬默认轴（矩阵 §4：Web/API 系统一律 standard，无排除出口）——
+                # 脚本无法判定系统形态，故仅告警：排除仅在非 Web/API 系统成立，
+                # rationale 未声明该依据时提示人工复核
+                warnings.append(
+                    f"V3 {axis}: exclude 但 rationale 未声明非 Web/API 依据——"
+                    "该轴为硬默认轴（Web/API 系统无排除出口），请复核排除是否成立")
             scanned = list_items(kv.get("scanned"))
             if not scanned:
                 errors.append(f"V3 {axis}: exclude 缺 scanned 清单（G 级 + S 级双记录）")

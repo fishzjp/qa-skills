@@ -20,7 +20,7 @@
 | 明显状态流转 | State Machine | 提取状态 → 事件 → 新状态；按状态节点分模块；每条边一个用例；非法转换配拦截用例 |
 | 输入输出型功能 | Equivalence Partitioning + Boundary Value Analysis | 划分有效/无效等价类；边界取值：空 / 最小 / 最小-1 / 最小+1 / 最大 / 最大+1 / 超大 |
 | 权限系统 | Role × Action × Resource | 行为权限矩阵逐格核对；资源级隔离（A 的数据 B 不可见）；角色变更后权限即时性 |
-| API | Parameter Matrix | 参数 × 类型/必填/边界/默认值逐格；鉴权 / 幂等 / 并发 / 错误码 |
+| API | Parameter Matrix | 参数 × 类型/必填/边界/默认值逐格；多参数组合显式降档（全组合 → 成对 → 风险挑选，见 `core/methods/data-driven.md` 第 2 节）；鉴权 / 幂等 / 并发 / 错误码 |
 | 复杂业务流程 | Workflow | 端到端主链 + 每环节失败分支 + 中断恢复 + 多轮累积 |
 | 数据转换 | Input → Transform → Output | 典型输入 / 畸形输入 / 空输入 → 逐类核对输出；转换保真（读回一致） |
 | 历史 Bug 较多 | Regression-focused | 每个历史 Bug 一条回归用例；聚类找系统性薄弱区加防 |
