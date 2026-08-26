@@ -25,7 +25,10 @@
   明示跳过不再静默假绿；install.sh 重装前归属校验（slug 指纹与 uninstall 对齐——共享目录中
   其他框架同名 qa/core 不再被无声覆盖删除）、uninstall.sh 非 core 目录认领收紧到 slug 指纹 +
   补 --auto 参数对称；scan_signals.py 补可执行位；core 内部互引统一规范为自所在文件可解析的
-  相对路径写法（markmap 模板 2 处补 ../../ 前缀）。
+  相对路径写法（markmap 模板 2 处补 ../../ 前缀）。提交前自审补漏四处：uninstall
+  的 -h 输出随新增行扩范围（--auto 用法此前漏打）、pages.yml 触发条件纳入 og.jpg
+  （否则单独换图不重新部署）、校验器版本检查改为单次 frontmatter 解析复用、
+  CONTRIBUTING 红线 5 去除已删 Overview 标题的示例指称。
 - **README 实测表 API 行改用修复后复验口径**（勘误，2026-08-26）：「API 代码真实执行
   通过率」一行由历史反向结果（无/有 skill 组 74% / 52%）改为契约与截断修复后的干净
   复验值（**100% / 99.2%**，差距 0.8pp，n=3 噪声带内，反转消除；弱模型段位同向

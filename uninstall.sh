@@ -15,7 +15,7 @@ SKILL_DIRS=(
 )
 SRC_ROOT="$REPO_ROOT/skills"
 
-usage() { sed -n '2,6p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
+usage() { sed -n '2,7p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
 
 TARGET="" AUTO=false
 while [ $# -gt 0 ]; do

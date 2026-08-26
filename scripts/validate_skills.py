@@ -124,8 +124,12 @@ def check_md_links(md_path, errors):
             errors.append(f"{rel}: 链接目标不存在 ({raw})")
 
 
-def check_versions(errors):
-    """红线 7：SKILL.md frontmatter version ↔ package.json 三处同步。"""
+def check_versions(errors, versions):
+    """红线 7：SKILL.md frontmatter version ↔ package.json 三处同步。
+
+    versions 为 (skill 目录名, frontmatter version 或 None)，由 main 循环
+    解析 frontmatter 时顺带收集，避免二次解析。
+    """
     pkg = REPO / "package.json"
     if not pkg.exists():
         print("(i) 未检出 package.json——跳过版本一致性校验")
@@ -135,12 +139,9 @@ def check_versions(errors):
     except (json.JSONDecodeError, KeyError) as e:
         errors.append(f"package.json: 无法读取版本号（{e}）")
         return
-    for d in skill_dirs():
-        m = FRONTMATTER.match((d / "SKILL.md").read_text())
-        ver = re.search(r"^version:\s*(.+)$", m.group(1), re.M) if m else None
-        v = ver.group(1).strip() if ver else None
+    for name, v in versions:
         if v != pkg_version:
-            errors.append(f"{d.name}/SKILL.md: frontmatter version '{v}' 与 package.json '{pkg_version}' 不一致"
+            errors.append(f"{name}/SKILL.md: frontmatter version '{v}' 与 package.json '{pkg_version}' 不一致"
                           "（发版时三处同步：全部 SKILL.md / package.json / CHANGELOG）")
 
 
@@ -159,8 +160,8 @@ def main():
     for d in skill_dirs():
         sk = d / "SKILL.md"
         text = sk.read_text()
-        # 红线 1：frontmatter（version 返回值用于红线 7）
-        versions.append(check_frontmatter(text, d.name, errors))
+        # 红线 1：frontmatter（返回的 version 供红线 7 一致性检查复用）
+        versions.append((d.name, check_frontmatter(text, d.name, errors)))
         # 红线 2：行数
         n = len(text.splitlines())
         if n > MAX_LINES:
@@ -180,7 +181,7 @@ def main():
         check_md_links(md, errors)
 
     # 红线 7：版本一致性
-    check_versions(errors)
+    check_versions(errors, versions)
 
     # 红线 9：产品自包含——skills/ 内不得引用 eval/ 等本地评测链路路径
     #（\b 收紧：evaluation / retrieval / medieval 等词不触发）

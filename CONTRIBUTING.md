@@ -29,7 +29,7 @@
 2. **每个 skill 必须有 When NOT to Use**，且指明"交给谁"；触发措辞保持现状约定——`qa` 独占"端到端 / 帮我测试"意图词，其余 skill 的 description 均含正向触发词与反触发（"不用于…→ 对应 skill"），新增 / 修改 skill 时对照既有 description 的写法
 3. **core/ 是共享依赖单元**：`skills/core/SKILL.md` 仅为安装依赖单元而存在（frontmatter 显式声明"不可独立触发"，不参与任务触发竞争）；其余核心文件为纯共享引用内容，加入新内容需确认至少两个 skill 消费
 4. **skill 自包含，禁止跨 skill 引用**：任何 skill 的文件不得引用兄弟 skill 目录内的文件（含另一 skill 的 SKILL.md / references / scripts）；被多 skill 消费的方法 / 格式 / 规则一律下沉 `core/`（设计方法细则放 `core/methods/`，工具脚本放 `core/scripts/`）
-5. **description ≤ 300 字符**：description 常驻宿主每个会话的上下文，只装正触发话术 + 一句产出 + 反触发指向；机制细节写进 SKILL.md 正文（When to Use / Overview）
+5. **description ≤ 300 字符**：description 常驻宿主每个会话的上下文，只装正触发话术 + 一句产出 + 反触发指向；机制细节写进 SKILL.md 正文（When to Use 等）
 6. **风险等级（Critical / High / Medium / Low）与用例优先级（P0 / P1 / P2）是两套体系**，不得混用命名；Bug 严重程度用 **S0/S1/S2**（缺陷影响等级，口径说明见 `skills/core/report-template.md` §3），与用例优先级的 P 系词汇分离
 7. **产出落盘**：skill 的阶段产物必须落盘为文件（落盘清单见各 SKILL.md 的「落盘产物」行与 `skills/qa/SKILL.md` 的流水线表），Skill 间只通过文件衔接
 
