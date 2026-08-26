@@ -368,7 +368,8 @@ qa-skills/
     └── results/                 # 评测结果归档
 ```
 
-> **布局注记（2026-08-22 收敛后）**：本树为 v2 规划时的仓库布局；公开仓库现已收敛为 skills 产品内容，`eval/` 与 `tests/` 转为维护者本地目录，公开侧证据链改为每版 Release 附增益矩阵快照。
+> **布局注记（2026-08-22 收敛后；2026-08-26 补充过期项清单）**：本树为 v2 规划时的仓库布局；公开仓库现已收敛为 skills 产品内容，`eval/` 与 `tests/` 转为维护者本地目录，公开侧证据链改为每版 Release 附增益矩阵快照。
+> 本节相关三处表述按 v2 时点冻结、已被后续迭代取代：① 目录树中 core/ 注释「无 SKILL.md」且 scripts/ 只列 validate_schema.py——现行 core/SKILL.md 已存在（安装依赖单元，frontmatter 声明不可独立触发），scripts/ 另含 scan_signals.py（类型信号扫描器）；② 下文「关于 core/ 的两条硬规则」第 1 条同此演进；③ §7.4 Schema 的 type 枚举未含后续新增的 security_business / performance / compatibility / i18n。现行结构以 skills/ 实际内容、[CONTRIBUTING](../CONTRIBUTING.md) 架构红线与 [decision-layer-design](./decision-layer-design.md) 为准。
 
 关于 `core/` 的两条硬规则：
 

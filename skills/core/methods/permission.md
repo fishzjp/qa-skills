@@ -1,6 +1,6 @@
 # 权限测试方法（permission）
 
-> 权限系统 / 多角色功能的用例设计方法（何时选它见 `core/testing-principles.md` 第 2 节）。
+> 权限系统 / 多角色功能的用例设计方法（何时选它见 `../testing-principles.md` 第 2 节）。
 
 ## 1. Role × Action × Resource 矩阵
 

@@ -1,6 +1,6 @@
 # 数据驱动与参数矩阵方法（data-driven）
 
-> API、导入类、数据转换类功能的用例设计方法（何时选它见 `core/testing-principles.md` 第 2 节）。
+> API、导入类、数据转换类功能的用例设计方法（何时选它见 `../testing-principles.md` 第 2 节）。
 
 ## 1. API 参数矩阵
 

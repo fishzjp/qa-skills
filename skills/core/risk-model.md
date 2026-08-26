@@ -1,6 +1,6 @@
 # 统一风险模型（Risk Model）
 
-> 所有 Skill 统一引用本文件。风险模型与证据体系（`core/evidence.md`）强制挂钩：**没有证据的风险评级视为无效评级**。
+> 所有 Skill 统一引用本文件。风险模型与证据体系（`evidence.md`）强制挂钩：**没有证据的风险评级视为无效评级**。
 
 ## 1. 风险评分
 
@@ -44,7 +44,7 @@ Low        1–3
 risk:
   id: R1
   feature: 用户删除
-  dimension: 数据一致性          # 功能域维度：权限/数据一致性/边界/状态流转/资损；类型域用矩阵轴名（并发/可靠/安全/性能/兼容/迁移/契约…），见 core/test-type-matrix.md
+  dimension: 数据一致性          # 功能域维度：权限/数据一致性/边界/状态流转/资损；与策略 scope 六轴的对应：权限→permission、边界→boundary、状态流转→state、数据一致性→data_consistency、资损→functional 主干（业务正确性缺陷的财务后果面）；regression 轴的风险按回归触发的变更面（diff / Bug 修复）识别。类型域用矩阵轴名（并发/可靠/安全/性能/兼容/迁移/契约…），见 test-type-matrix.md
   impact: 5                      # 删除后残留导致隐私与合规问题
   likelihood: 3                  # user_service.go:124 删除事务未覆盖关联表
   level: High                    # 15 = 5 × 3

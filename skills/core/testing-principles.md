@@ -1,15 +1,15 @@
 # 测试原则与设计方法选择
 
-> 跨 Skill 共享的测试方法论。`test-strategy` 用它决定测什么类型 / 多深；`test-case-writing` 用它选设计方法与组织结构。方法级落地细节在 `core/methods/`，覆盖度检查表在 `core/coverage.md`。
+> 跨 Skill 共享的测试方法论。`test-strategy` 用它决定测什么类型 / 多深；`test-case-writing` 用它选设计方法与组织结构。方法级落地细节在 `methods/`，覆盖度检查表在 `coverage.md`。
 
 ## 1. 测试原则
 
 1. **一条用例只测一个点**，预期结果明确唯一；"或 A 或 B"拆成两条
-2. **风险驱动**：围绕风险设计测试，而不是机械生成——风险 → 策略 → 用例的推导链（见 `core/risk-model.md`）
-3. **证据先行**：所有结论标注证据等级与来源（见 `core/evidence.md`）
+2. **风险驱动**：围绕风险设计测试，而不是机械生成——风险 → 策略 → 用例的推导链（见 `risk-model.md`）
+3. **证据先行**：所有结论标注证据等级与来源（见 `evidence.md`）
 4. **代码优先**：有代码必读代码，以实现为行为基线（测准声明）
 5. **先澄清再动手**：模糊 / 矛盾之处向用户提问，不硬猜
-6. **给人看、给人执行**：用例是给测试工程师执行的操作指令，不是覆盖度展示品（见 `core/executability.md`）
+6. **给人看、给人执行**：用例是给测试工程师执行的操作指令，不是覆盖度展示品（见 `executability.md`）
 7. **失败之后要有重试**：每种失败 / 拦截场景，配"失败 → 再试 → 恢复"用例
 8. **逆向操作成对验证**：创建↔删除、分配↔释放、导入↔撤销，每对都要有用例
 
@@ -20,12 +20,12 @@
 | 明显状态流转 | State Machine | 提取状态 → 事件 → 新状态；按状态节点分模块；每条边一个用例；非法转换配拦截用例 |
 | 输入输出型功能 | Equivalence Partitioning + Boundary Value Analysis | 划分有效/无效等价类；边界取值：空 / 最小 / 最小-1 / 最小+1 / 最大 / 最大+1 / 超大 |
 | 权限系统 | Role × Action × Resource | 行为权限矩阵逐格核对；资源级隔离（A 的数据 B 不可见）；角色变更后权限即时性 |
-| API | Parameter Matrix | 参数 × 类型/必填/边界/默认值逐格；多参数组合显式降档（全组合 → 成对 → 风险挑选，见 `core/methods/data-driven.md` 第 2 节）；鉴权 / 幂等 / 并发 / 错误码 |
+| API | Parameter Matrix | 参数 × 类型/必填/边界/默认值逐格；多参数组合显式降档（全组合 → 成对 → 风险挑选，见 `methods/data-driven.md` 第 2 节）；鉴权 / 幂等 / 并发 / 错误码 |
 | 复杂业务流程 | Workflow | 端到端主链 + 每环节失败分支 + 中断恢复 + 多轮累积 |
 | 数据转换 | Input → Transform → Output | 典型输入 / 畸形输入 / 空输入 → 逐类核对输出；转换保真（读回一致） |
 | 历史 Bug 较多 | Regression-focused | 每个历史 Bug 一条回归用例；聚类找系统性薄弱区加防 |
 
-各方法的落地细则（按需加载）：边界 / 等价类 → `core/methods/boundary.md`；参数矩阵 / 导入 / 数据转换 → `core/methods/data-driven.md`；权限矩阵 → `core/methods/permission.md`；状态机组织 → `core/methods/state-machine.md`。
+各方法的落地细则（按需加载）：边界 / 等价类 → `methods/boundary.md`；参数矩阵 / 导入 / 数据转换 → `methods/data-driven.md`；权限矩阵 → `methods/permission.md`；状态机组织 → `methods/state-machine.md`。
 
 ## 3. 二阶交叉覆盖（一阶枚举的补漏公式）
 
@@ -37,7 +37,7 @@
 
 ## 4. 覆盖维度索引
 
-覆盖度检查的完整维度清单（19 维 + 横切可执行性）由 `core/coverage.md` 维护，`test-case-review` 独立审查时同样引用该清单（`test-strategy` 的范围决策走 `core/risk-model.md` 的风险维度，不直接消费该清单）。
+覆盖度检查的完整维度清单（19 维 + 横切可执行性）由 `coverage.md` 维护，`test-case-review` 独立审查时同样引用该清单（`test-strategy` 的范围决策走 `risk-model.md` 的风险维度，不直接消费该清单）。
 
 ## 5. 引用方式
 

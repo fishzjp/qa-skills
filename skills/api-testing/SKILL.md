@@ -78,7 +78,7 @@ def client():
 
 - 从 OpenAPI 文档提取：接口清单、参数表（必填/类型/范围/默认值）、错误码、鉴权方式
 - 从用例 Schema 过滤：`execution_model: dev-collab` 或 `automation.framework: api` 的用例 → 转换对象（test 名沿用 TC 编号：`test_TC_05_01_写入字段读回一致`）
-- 环境未知 → 向用户索取（base URL、账号、是否可写生产旁路环境），**不确定就问，不猜接口行为**
+- 环境未知 → 向用户索取（base URL、账号、是否可写生产旁路环境），**不确定就问，不猜接口行为**（提问格式与裁决落盘统一按 `../core/clarify-pattern.md`，场景用「执行确认」）
 
 ### 2. 用例设计（此时加载 `../core/testing-principles.md`，方法细节 `../core/methods/data-driven.md`）
 
@@ -110,7 +110,7 @@ pytest api-tests/ -v --tb=short          # 全量
 pytest api-tests/test_coupon_create.py   # 单文件
 ```
 
-- 失败用例先分辨：被测系统 Bug / 环境问题 / 用例自身错误——**不自行假设**，环境问题与预期歧义列出来问用户
+- 失败用例先分辨：被测系统 Bug / 环境问题 / 用例自身错误——**不自行假设**，环境问题与预期歧义列出来问用户（提问格式同上，`../core/clarify-pattern.md`）
 - **结构覆盖补充证据（可选）**：有被测服务代码且测试环境可插桩（Python 服务 `coverage run` 启动；JVM 服务 JaCoCo agent）时，接口用例跑完取**被测服务的行/分支覆盖率**作为补充 E3 证据——只用于发现**零覆盖/极低覆盖的接口与分支**（漏测信号，转补用例或策略升档），不作为追高的虚荣指标；无插桩条件直接跳过，不阻塞交付
 - 发现的 Bug：证据（请求/响应原文、时间戳）按 `../core/report-template.md` §3 记录条目，根因分析移交 `bug-analysis`
 

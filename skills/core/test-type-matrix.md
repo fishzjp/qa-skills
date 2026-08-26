@@ -45,9 +45,9 @@
 - **代码信号**：鉴权中间件覆盖面缺口〔S〕；对象级授权缺失模式〔S〕（user_id 来自请求参数而非会话）；可枚举 ID 直接引用；敏感字段明文返回或落日志；SQL 拼接
 - **默认档**：**硬默认**——Web / API 系统一律 standard，无 R4 exclude 出口（成本极低 × 价值极高）；其余九轴均为软默认
 - **档位语义**：full = 未授权视角全矩阵（匿名 + 低权角色对全部高危资源的可达性探测）+ 敏感数据流追踪 + 注入面；standard = 高危资源越权抽样 + 注入面 / 敏感暴露扫描；light = 设计层审查（Cx 记录）。**越权功能正确性用例归功能域 permission 轴产出**（第 2 节裁决），本轴不重复产
-- **执行归属**：agent（复用 API 测试基建与测试账号矩阵；方法基线 `core/methods/permission.md`）
+- **执行归属**：agent（复用 API 测试基建与测试账号矩阵；方法基线 `methods/permission.md`）
 - **成本因子**：低——测试账号矩阵是唯一前置
-- **消费方式**：用例型——standard 及以上产手动用例（type: security）；light 产 Cx 审查条目
+- **消费方式**：用例型——standard 及以上产手动用例（type: security，标签 `[安全]`）；light 产 Cx 审查条目
 
 ## 5. 轴 3 可靠性（reliability）
 
@@ -137,7 +137,7 @@
 
 | 消费方式 | 适用（standard 及以上；例外档位见格内标注） | 产出 |
 |---|---|---|
-| 用例型 | 轴 2（type: security）、轴 3（reliability）、轴 4（concurrency）、轴 5（compatibility）；轴 8 / 9 / 10（type: functional + 标签） | 手动用例进 markmap，type / 标签见左 |
+| 用例型 | 轴 2（type: security，标签 `[安全]`）、轴 3（reliability）、轴 4（concurrency）、轴 5（compatibility）；轴 8 / 9 / 10（type: functional + 标签） | 手动用例进 markmap，type / 标签见左 |
 | 脚本型 | 轴 1（压测模型 + 执行物）、轴 6（axe 扫描任务与违规清单，**任意档位**）、轴 7（截图基线） | 不产手动用例，产执行物进执行策略裁决 |
 | 审查型 | 各轴 light 档 | 扫描 / 审查清单条目（Cx 通道），不进用例正文 |
 

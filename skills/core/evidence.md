@@ -58,7 +58,7 @@ finding:
 | 产出物 | 标注方式 |
 |--------|---------|
 | `test-case-writing` 附录缺陷记录 Cx | 每条 Cx 含：现象 + `evidence.level`（E0–E4，代码审查发现通常为 E2）+ `evidence.source`（`文件:行`）+ confidence + status（待实测确认 / 已证伪等处置语义映射到 fact / hypothesis / verified） |
-| `test-case-writing` 附录高风险点 Dn | 每条 Dn 按 `core/risk-model.md` 评级，证据字段同上 |
+| `test-case-writing` 附录高风险点 Dn | 每条 Dn 按 `risk-model.md` 评级，证据字段同上 |
 | `test-strategy` Risk Map | 每条风险（R1、R2…）强制带 evidence（level + source）与 confidence；**没有证据的风险评级视为无效评级** |
 | `bug-analysis` Root Cause | 根因结论标注 status（Inference → 读代码推断；Verified → 已复现验证 E3）；影响范围逐条给来源 |
 | `requirement-analysis` 需求模型 rules | 每条业务规则标注 evidence（文档章节或 `文件:行`）；用户裁决记入 open_questions 的裁决字段 |

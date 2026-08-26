@@ -14,7 +14,7 @@
 #   ~/.dsh/skills      DeepSeek Harness dsh（用户级）
 #   ./.claude/skills   当前项目（Claude Code 项目级）
 #
-# 卸载：./uninstall.sh --target <目录>（或同参数重跑 install 会提示）
+# 卸载：./uninstall.sh --target <目录>（或 --auto 自动选择检测到的安装目录）
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -27,6 +27,21 @@ SKILL_DIRS=(
   automated-e2e-testing api-testing exploratory-testing bug-analysis regression-testing
 )
 SRC_ROOT="$REPO_ROOT/skills"
+
+# 归属校验：目标位置的单元确实是本框架装的才允许覆盖删除——
+# ~/.agents/skills 是多 Agent 共享目录，不能无声吞掉其他框架或用户自己的同名目录。
+# 判据与 uninstall.sh 对齐：软链精确指向本仓库；core 靠特有文件指纹；
+# 其余 skill 要求 SKILL.md 且 frontmatter 的 slug 与目录名一致（本框架特有字段）
+owns_unit() {
+  local d="$1" dst="$TARGET/$1"
+  if [ -L "$dst" ]; then
+    [ "$(readlink "$dst")" = "$SRC_ROOT/$d" ]
+  elif [ "$d" = "core" ]; then
+    [ -f "$dst/evidence.md" ] && [ -f "$dst/report-template.md" ]
+  else
+    [ -f "$dst/SKILL.md" ] && grep -q "^slug: ${d}$" "$dst/SKILL.md" 2>/dev/null
+  fi
+}
 
 # 检测候选目录（存在才算）
 detect_candidates() {
@@ -43,7 +58,7 @@ detect_candidates() {
 }
 
 usage() {
-  sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'
   exit 1
 }
 
@@ -111,8 +126,15 @@ for d in "${SKILL_DIRS[@]}"; do
   src="$SRC_ROOT/$d" dst="$TARGET/$d"
   [ -d "$src" ] || { echo "❌ 仓库缺少 ${d}（仓库不完整？）" >&2; exit 1; }
   if [ -e "$dst" ] || [ -L "$dst" ]; then
-    rm -rf "$dst"   # 重装 = 覆盖旧版本
-    echo "  更新 $d"
+    if owns_unit "$d"; then
+      rm -rf "$dst"   # 重装 = 覆盖旧版本（仅覆盖确认属于本框架的目录）
+      echo "  更新 $d"
+    else
+      echo "❌ 目标已存在同名 ${d}/，但不是本框架安装的目录，拒绝覆盖。" >&2
+      echo "   （防误删：共享目录里可能有其他框架或你自己的同名内容）" >&2
+      echo "   确认无用了可手动处理后再装：rm -rf \"$dst\"" >&2
+      exit 1
+    fi
   else
     echo "  安装 $d"
   fi

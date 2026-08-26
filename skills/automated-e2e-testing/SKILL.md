@@ -8,8 +8,6 @@ description: 将手动测试用例转为 Playwright E2E 测试并执行时使用
 
 # 自动化 E2E 测试（automated-e2e-testing）
 
-## Overview
-
 本 skill 覆盖 Web 应用自动化测试的完整工作流：将手动测试用例（markmap + Schema）转化为 Playwright spec → 运行并验证 → 发现 Bug → 输出测试报告。
 
 核心原则：

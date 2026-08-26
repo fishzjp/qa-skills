@@ -43,7 +43,7 @@ L3  references/ + core/   方法/规则/模板/方法论:按需加载,工作流�
 2. **每次触发都需要的才进 SKILL.md**，分支性内容一律外移按需加载
 3. **外移不降级**：硬约束外移后必须在工作流步骤中被显式引用执行（"此步执行 references/xxx.md 全部检查项"），不得变成"可选参考"
 4. **宁窄而深，不做全能**：单 Skill 职责收窄，跨阶段协作交给编排层
-5. **core/ 不含 SKILL.md**：纯共享引用目录，不参与触发竞争；新文件需至少两个 skill 消费
+5. **core/ 是共享依赖单元**：核心文件纯共享引用、不参与触发竞争；core/SKILL.md 仅为安装依赖单元而存在（frontmatter 显式声明不可独立触发）；新内容需至少两个 skill 消费
 
 外部参考：[Building Skills for AI Agents: Pitfalls and Best Practices（Red Hat，2026-07）](https://next.redhat.com/2026/07/28/building-skills-for-ai-agents-pitfalls-and-best-practices/)——其"轻量路由 Skill""L1 负向约束""Eval 作为迭代质量门"与本项目 `qa` 编排、触发 / 反触发表、黄金集质量门相互印证。
 
@@ -140,7 +140,7 @@ Eval 要回答的是"**用了 Skill 后，Agent 的测试能力到底提升了�
 - **真实执行验证**（SWE-bench 式）：E2E 产物跑真实浏览器 + mock 被测应用，API 产物跑真实 HTTP 服务 + pytest
 - **GT 标注独立审计**：标注者不得既写标注又复核；一致率落盘
 - **门预注册冻结**（pre-registration）：阈值在校准轮后、验证轮前冻结并记录于 EXPECTED.md（本地评测链路）；验证轮结果按冻结门判定，**不因数据改门**；任何阈值修订须独立提交先行入库
-- **失败与反向结果如实记录**：门判定 4/7、API 执行 On 落后 Off、成本 3.3× 都在 README 与报告中呈现——评测失去诚实就失去意义
+- **失败与反向结果如实记录**：门判定 4/7、API 执行的历史反向结果（后经逐失败归类定案为评测侧缺陷而非 skill 缺陷，干净复验后两组持平并勘误，见 CHANGELOG 2026-08-26）、成本 3.3× 都在 README 与报告中呈现——评测失去诚实就失去意义
 
 完整契约（本地评测链路维护，不随仓库分发）：EXPECTED.md（冻结门）、harness README（方法学）、最新运行报告——公开侧浓缩为每版 Release 附带的增益矩阵快照。
 

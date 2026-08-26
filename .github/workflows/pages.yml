@@ -1,5 +1,5 @@
 # 宣传落地页部署：index.html 变更合入 main 后自动发布到 GitHub Pages
-# 产物只打包 index.html 单文件，不携带仓库其余内容
+# 产物打包 index.html + og.jpg 两个文件，不携带仓库其余内容
 name: pages
 
 on:
@@ -34,6 +34,8 @@ jobs:
         run: |
           mkdir -p _site
           cp index.html _site/
+          # og:image 的绝对 URL 指向站点根的 og.jpg，必须随页面一起部署，否则社交分享图 404
+          cp og.jpg _site/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5

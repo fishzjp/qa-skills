@@ -75,7 +75,7 @@ Skills are plain Markdown (frontmatter + relative-path references) with no host-
 | Codex CLI | `~/.codex/skills/` | 🔶 should work by convention; not systematically evaluated |
 | Other Skills-capable agents | their skills directory | 🔶 same |
 
-The pipeline's per-stage context isolation relies on host sub-session/sub-agent support; hosts without it degrade to sequential sessions joined by files — correctness is unaffected (see [DESIGN.md](./docs/DESIGN.md)).
+The pipeline's per-stage context isolation relies on host sub-session/sub-agent support; hosts without it degrade to sequential sessions joined by files — correctness is unaffected (see the "编排会话模型" / orchestration-session-model section in [DESIGN.md](./docs/DESIGN.md)).
 </details>
 
 ### First run
@@ -225,7 +225,8 @@ skills/        the product (10 skills + shared core/)
   qa/          orchestration entry (thin, no domain knowledge)
   core/        shared knowledge base (no task triggering): evidence / risk-model / executability /
                testing-principles / report-template / case-format / coverage /
-               schema-extraction / clarify-pattern / test-type-matrix + methods/ + scripts/
+               schema-extraction / clarify-pattern / test-type-matrix (decision matrix)
+               + methods/ (4 design-method guides) + scripts/ (schema validator + type-signal scanner)
   requirement-analysis/  test-strategy/  test-case-writing/  test-case-review/
   automated-e2e-testing/  api-testing/  exploratory-testing/  bug-analysis/  regression-testing/
 docs/          design documents (DESIGN / decision-layer / v2 blueprint)

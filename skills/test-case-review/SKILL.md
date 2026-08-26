@@ -59,7 +59,7 @@ description: 审查已有测试用例（存量资产、他人编写、AI 产出�
 ### 5. 修订与落盘
 
 - **直接在用例文件中修订**：补缺失用例（追加 TC 编号）、删除冗余、改正错误断言、补可执行性要素（导读区/时限/入口路径/具体数据）；新增与改写的用例**同样执行 `../core/case-format.md` 格式硬约束**（四段式/协作五段式、TC 编号、正文零代码内部）
-- 修订后**重新抽取 Schema**（字段与转义规则见 `../core/schema-extraction.md`，可用 `../core/scripts/validate_schema.py` 校验）
+- 修订后**重新抽取 Schema**（字段与转义规则见 `../core/schema-extraction.md`），并用 `../core/scripts/validate_schema.py` 复验通过后再落盘
 - 文件末尾追加审查记录：
 
 ```markdown

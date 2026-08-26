@@ -235,7 +235,7 @@
 ### 15.3 错误信息
 - {错误信息}，{含定位信息，格式符合规范}
 
-## 16. 安全性 <!-- Web/API 项目；type_scope 轴 2 include 时 type: security 用例（硬默认轴），越权功能正确性归模块 7（功能域 permission），域间裁决见 core/test-type-matrix.md 第 2 节 -->
+## 16. 安全性 <!-- Web/API 项目；type_scope 轴 2 include 时 type: security 用例（硬默认轴），越权功能正确性归模块 7（功能域 permission），域间裁决见 ../../core/test-type-matrix.md 第 2 节 -->
 
 - {未认证访问}，{拒绝} [P0]
 - {越权访问}，{拒绝} [P0]
@@ -269,7 +269,7 @@
 ### 20.2 先查后写窗口
 - {并发触发先查后写路径}，{结果与串行执行一致}
 
-> 性能（轴 1）为**脚本型**轴：不产手动用例——压测模型与执行物走专项脚本或移交（executor 如 k6，见 core/test-type-matrix.md 第 12 节消费方式映射），本模板不设性能手动用例模块；可靠（轴 3，type: reliability + [可靠] 标签）的超时/重试/降级用例按需在本模块外另立子模块。
+> 性能（轴 1）为**脚本型**轴：不产手动用例——压测模型与执行物走专项脚本或移交（executor 如 k6，见 ../../core/test-type-matrix.md 第 12 节消费方式映射），本模板不设性能手动用例模块；可靠（轴 3，type: reliability + [可靠] 标签）的超时/重试/降级用例按需在本模块外另立子模块。
 
 ## 21. 数据迁移/升级 <!-- 存量系统迭代；type_scope 轴 9 include standard+ 时选用，type: functional + [迁移] 标签 -->
 

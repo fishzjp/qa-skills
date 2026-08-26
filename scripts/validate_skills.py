@@ -6,13 +6,17 @@
   2. SKILL.md ≤ 500 行（L2 工作流红线）
   3. 每个 skill 必须有 "When NOT to Use" 段（反触发边界）
   4. core/ 为纯共享引用层：SKILL.md 仅作安装依赖单元，必须声明不独立触发
-  5. SKILL.md 与 core/**/*.md 中反引号引用的仓库内相对路径必须存在
-     （识别 `../`、`references/`、`templates/`、`core/` 前缀；兼容 core 文件的
-     skills 根相对写法；中文产物名与代码块内示例不在校验范围）
+  5. 引用的仓库内路径必须存在。识别三种形态：
+     a) 反引号 + 前缀引用：`../`、`references/`、`templates/`、`core/`（SKILL.md 与全库），
+        兼容 core 文件的 skills 根相对写法
+     b) 反引号 + 文件相对裸引用：core/**/*.md 内的 `x.md`、`methods/x.md`、`../x.md`
+     c) markdown 链接 / 图片：](path.md) 形态（全 skills 范围；外链与纯锚点跳过）
+     中文产物名与代码块内示例不在校验范围
   6. 禁止跨 skill 引用：任何 skill 的文件不得引用兄弟 skill 目录内的文件——
      被多 skill 消费的方法/格式/规则一律下沉 core/（skill 自包含红线）
-  7. eval/harness/*.json 与 eval/golden/*/annotation.json 必须是合法 JSON
-  8. 产品自包含：skills/ 内不得引用 eval/ 等本地评测链路路径（公开分发面 = skills 产品本体）
+  7. 各 SKILL.md frontmatter 的 version 必须与 package.json 一致（三处同步的机械防线）
+  8. eval/harness/*.json 与 eval/golden/*/annotation.json 必须是合法 JSON
+  9. 产品自包含：skills/ 内不得引用 eval/ 等本地评测链路路径（公开分发面 = skills 产品本体）
 
 用法：python3 scripts/validate_skills.py （仓库根或任意目录均可）
 退出码：0 通过 / 1 有违规
@@ -27,7 +31,10 @@ SKILLS_ROOT = REPO / "skills"   # 产品本体（10 个 skill + core/ 共享库�
 MAX_LINES = 500
 MAX_DESC_CHARS = 300
 REF_PATTERN = re.compile(r"`((?:\.\./|references/|templates/|core/)[\w./-]+\.(?:md|json|py|ts|tsx|ya?ml))`")
+CORE_BARE_PATTERN = re.compile(r"`((?:\.\./)?(?:[\w-]+/)*[\w-]+\.(?:md|py))`")
+MD_LINK_PATTERN = re.compile(r"\]\(([^()\s]+)\)")
 FRONTMATTER = re.compile(r"\A---\n(.*?)\n---\n", re.S)
+MD_EXTS = (".md", ".json", ".py", ".ts", ".tsx", ".yml", ".yaml")
 
 
 def skill_dirs():
@@ -49,7 +56,7 @@ def check_frontmatter(text, dirname, errors):
     m = FRONTMATTER.match(text)
     if not m:
         errors.append(f"{dirname}/SKILL.md: 缺少 frontmatter（--- name/description ---）")
-        return
+        return None
     fm = m.group(1)
     name = re.search(r"^name:\s*(.+)$", fm, re.M)
     desc = re.search(r"^description:\s*(.+)$", fm, re.M)
@@ -62,32 +69,79 @@ def check_frontmatter(text, dirname, errors):
     elif len(desc.group(1)) > MAX_DESC_CHARS:
         errors.append(f"{dirname}/SKILL.md: description {len(desc.group(1))} 字符超过 {MAX_DESC_CHARS} 上限"
                       "（description 常驻每个会话上下文，机制细节移入正文 When to Use）")
+    ver = re.search(r"^version:\s*(.+)$", fm, re.M)
+    return ver.group(1).strip() if ver else None
+
+
+def check_target(md_path, ref, errors):
+    """引用目标存在性 + 跨 skill 红线（红线 6）。"""
+    src_owner = owning_skill_dir(md_path)
+    target = (md_path.parent / ref)
+    if not target.exists():
+        target = (SKILLS_ROOT / ref)  # core 文件内的 skills 根相对写法（历史兼容）
+    if not target.exists():
+        errors.append(f"{md_path.relative_to(REPO)}: 引用的文件不存在 `{ref}`")
+        return
+    target = target.resolve()
+    if not target.is_relative_to(SKILLS_ROOT):
+        return
+    if target.is_relative_to(SKILLS_ROOT / "core"):
+        return  # core 共享层：其 SKILL.md 仅为安装依赖单元，不算跨引用
+    tgt_owner = owning_skill_dir(target)
+    if tgt_owner is not None and tgt_owner != src_owner:
+        bad = f"{md_path.relative_to(REPO)}: 跨 skill 引用 `{ref}`（属于 {tgt_owner.name}/）——被多 skill 消费的内容应下沉 core/"
+        if bad not in errors:
+            errors.append(bad)
 
 
 def check_references(md_path, errors):
+    """反引号引用（前缀形态全库 + 裸相对形态仅 core）。"""
     text = md_path.read_text()
-    # 去掉代码围栏内容？——保留：架构树等代码块内的 references/ 引用同样应有效
-    src_owner = owning_skill_dir(md_path)
     for m in REF_PATTERN.finditer(text):
-        ref = m.group(1)
-        target = (md_path.parent / ref)
-        if not target.exists():
-            target = (SKILLS_ROOT / ref)  # core 文件内的 skills 根相对写法（core/xxx.md）
-        if not target.exists():
-            errors.append(f"{md_path.relative_to(REPO)}: 引用的文件不存在 `{ref}`")
+        check_target(md_path, m.group(1), errors)
+    in_core = md_path.resolve().is_relative_to((SKILLS_ROOT / "core").resolve())
+    if in_core:
+        for m in CORE_BARE_PATTERN.finditer(text):
+            ref = m.group(1)
+            if "/" not in ref and not ref.startswith("../"):
+                continue  # 纯文件名提及（无路径成分）不强制视为引用，避免误伤术语
+            check_target(md_path, ref, errors)
+
+
+def check_md_links(md_path, errors):
+    """markdown 链接 / 图片目标的本地存在性（外链、锚点、含占位符的模板串跳过）。"""
+    rel = md_path.relative_to(REPO)
+    for m in MD_LINK_PATTERN.finditer(md_path.read_text()):
+        raw = m.group(1)
+        if raw.startswith(("http://", "https://", "mailto:", "#")):
             continue
-        # 红线 6：跨 skill 引用（skill ↔ skill 与 core → skill 均不允许；skill → core 合法）
-        target = target.resolve()
-        if not target.is_relative_to(SKILLS_ROOT):
+        path_part = raw.split("#", 1)[0].lstrip("./")
+        if not path_part.lower().endswith(MD_EXTS):
             continue
-        # core/ 永远视为共享层：其 SKILL.md 仅为安装依赖单元，不算 skill 目录
-        if target.is_relative_to(SKILLS_ROOT / "core"):
-            continue
-        tgt_owner = owning_skill_dir(target)
-        if tgt_owner is not None and tgt_owner != src_owner:
-            bad = f"{md_path.relative_to(REPO)}: 跨 skill 引用 `{ref}`（属于 {tgt_owner.name}/）——被多 skill 消费的内容应下沉 core/"
-            if bad not in errors:
-                errors.append(bad)
+        if any(ch in path_part for ch in "{}<>:*|"):
+            continue  # 模板占位符 / 通配描述不在校验范围
+        if not (md_path.parent / path_part).exists():
+            errors.append(f"{rel}: 链接目标不存在 ({raw})")
+
+
+def check_versions(errors):
+    """红线 7：SKILL.md frontmatter version ↔ package.json 三处同步。"""
+    pkg = REPO / "package.json"
+    if not pkg.exists():
+        print("(i) 未检出 package.json——跳过版本一致性校验")
+        return
+    try:
+        pkg_version = json.loads(pkg.read_text())["version"]
+    except (json.JSONDecodeError, KeyError) as e:
+        errors.append(f"package.json: 无法读取版本号（{e}）")
+        return
+    for d in skill_dirs():
+        m = FRONTMATTER.match((d / "SKILL.md").read_text())
+        ver = re.search(r"^version:\s*(.+)$", m.group(1), re.M) if m else None
+        v = ver.group(1).strip() if ver else None
+        if v != pkg_version:
+            errors.append(f"{d.name}/SKILL.md: frontmatter version '{v}' 与 package.json '{pkg_version}' 不一致"
+                          "（发版时三处同步：全部 SKILL.md / package.json / CHANGELOG）")
 
 
 def main():
@@ -101,11 +155,12 @@ def main():
         if ("不要独立触发" not in core_text) or ("When NOT to Use" not in core_text):
             errors.append("skills/core/SKILL.md: 必须声明不独立触发（description + When NOT to Use 段）")
 
+    versions = []
     for d in skill_dirs():
         sk = d / "SKILL.md"
         text = sk.read_text()
-        # 红线 1：frontmatter
-        check_frontmatter(text, d.name, errors)
+        # 红线 1：frontmatter（version 返回值用于红线 7）
+        versions.append(check_frontmatter(text, d.name, errors))
         # 红线 2：行数
         n = len(text.splitlines())
         if n > MAX_LINES:
@@ -120,7 +175,14 @@ def main():
     for md in core_mds:
         check_references(md, errors)
 
-    # 红线 8：产品自包含——skills/ 内不得引用 eval/ 等本地评测链路路径
+    # 红线 5c：全库 markdown 链接存在性
+    for md in sorted(SKILLS_ROOT.rglob("*.md")):
+        check_md_links(md, errors)
+
+    # 红线 7：版本一致性
+    check_versions(errors)
+
+    # 红线 9：产品自包含——skills/ 内不得引用 eval/ 等本地评测链路路径
     #（\b 收紧：evaluation / retrieval / medieval 等词不触发）
     for md in sorted(SKILLS_ROOT.rglob("*.md")):
         for i, line in enumerate(md.read_text().splitlines(), 1):
@@ -129,12 +191,17 @@ def main():
                                "（skills 必须自包含，评测依赖不得进产品）")
 
     # JSON 合法性（harness 配置 + golden 标注；归档运行结果不在此范围）
+    # eval/ 为维护者本地评测链路，公开检出中不存在则跳过并明示，避免静默空转假绿
+    checked_json = 0
     for pattern in ("eval/harness/*.json", "eval/golden/*/annotation.json"):
         for f in REPO.glob(pattern):
+            checked_json += 1
             try:
                 json.loads(f.read_text())
             except json.JSONDecodeError as e:
                 errors.append(f"{f.relative_to(REPO)}: 非法 JSON（{e}）")
+    if checked_json == 0 and not (REPO / "eval").exists():
+        print("(i) 未检出 eval/（本地评测链路不随仓库分发）——跳过 JSON 校验")
 
     skills = [d for d in skill_dirs() if d.name != "core"]
     print(f"校验 {len(skills)} 个 skill + core/ {len(core_mds)} 个共享文档")
@@ -143,7 +210,8 @@ def main():
         for e in errors:
             print(f"  - {e}")
         return 1
-    print("✅ 架构红线全部通过（frontmatter / ≤500 行 / When NOT to Use / core 纯引用 / 引用完整 / 无跨 skill 引用 / JSON 合法 / 无 eval 越界引用）")
+    print("✅ 架构红线全部通过（frontmatter / ≤500 行 / When NOT to Use / core 依赖单元声明 / "
+          "引用完整含 md 链接 / 无跨 skill 引用 / 版本一致 / JSON 合法 / 无 eval 越界引用）")
     return 0
 
 

@@ -7,6 +7,25 @@
 
 ### 变更
 
+- **全面审查修复**（第三轮审查闭环，2026-08-26）：**对外物料**——落地页 API 行改为复验口径
+  100% / 99.2% 并撤下已证伪的"严断言"归因（页面此前仍挂 74% → 52% 旧叙事，与 README
+  勘误冲突）；`pages.yml` 随单文件补部署 `og.jpg`（og:image 绝对 URL 指向它、此前分享图必然
+  404）；落地页运行时生图补端点故障本地兜底（内联 SVG 占位 + no-referrer）。**文档同步**——
+  CONTRIBUTING 架构红线 3 与 DESIGN 硬规则 5 改写为 core 依赖单元现实（原文"core 不含
+  SKILL.md"与现状矛盾，CHANGELOG 的红线编号指称一并改为按名指称）；qa-skills-v2 对目录树 /
+  core 硬规则 / type 枚举三处冻结表述补演进注记；DESIGN 如实披露条目为 API 反转加历史定案
+  限定；英文 README 补 DESIGN 章节指针与仓库结构注释对齐中文信息量。**skills 本体**——
+  api-testing 两处向用户提问接线 clarify-pattern（clarify-pattern 宣称其为消费者却从未被引用，
+  "问题卡片跨 skill 同构"承诺在此漏接）；qa frontmatter 流水线词序对齐正文阶段表（"风险分析"
+  独立环节 → 并入测试策略）；轴 2 补 `[安全]` 标签消费规格；风险扫描五维 ↔ scope 六轴映射
+  落进 risk-model dimension 注释；e2e 去唯一英文 Overview 标题；test-case-review Schema 复验
+  由"可用"改强制措辞；test-case-writing"修复 v3"记法消歧为日期描述。**工具链**——
+  validate_skills.py 新增三类检查并经负向自测：core 内裸相对引用存在性 / markdown 链接目标
+  存在性 / 全部 SKILL.md version ↔ package.json 一致性（发版三处同步的机械防线），eval 缺省时
+  明示跳过不再静默假绿；install.sh 重装前归属校验（slug 指纹与 uninstall 对齐——共享目录中
+  其他框架同名 qa/core 不再被无声覆盖删除）、uninstall.sh 非 core 目录认领收紧到 slug 指纹 +
+  补 --auto 参数对称；scan_signals.py 补可执行位；core 内部互引统一规范为自所在文件可解析的
+  相对路径写法（markmap 模板 2 处补 ../../ 前缀）。
 - **README 实测表 API 行改用修复后复验口径**（勘误，2026-08-26）：「API 代码真实执行
   通过率」一行由历史反向结果（无/有 skill 组 74% / 52%）改为契约与截断修复后的干净
   复验值（**100% / 99.2%**，差距 0.8pp，n=3 噪声带内，反转消除；弱模型段位同向
@@ -43,7 +62,8 @@
 - **DeepSeek Harness（dsh）插件化发布**：新增 dsh Cordis 插件三件套（`package.json`
   的 `dsh.bundle` manifest、`.dsh/cordis.patch.yml` 补丁层、`.dsh/plugins/qa-skills.js`
   注册器——Node 内建零依赖，参照 superpowers 的 dsh 适配模式），已发布至 npm
-  （[`dsh-qa-skills@0.5.0`](https://www.npmjs.com/package/dsh-qa-skills)，MIT、零依赖），
+  （[`dsh-qa-skills@0.5.0`](https://www.npmjs.com/package/dsh-qa-skills)，MIT、零依赖；
+  发布动作发生在 v0.5.0 tag 之后、包版本随内容基线取 0.5.0，故记于本 Unreleased 段），
   `dsh plugin --profile web add dsh-qa-skills` 一键安装；已提交 awesome-dsh-plugin
   收录 PR #3068（skill 分类）。core 单元
   在插件注册时标记双不可调用（modelInvocable/userInvocable 均为 false），技能目录中
@@ -59,8 +79,8 @@
   `npx skills add fishzjp/qa-skills` 即装（全装 `--skill '*'`）。上架适配：`core/` 新增
   非触发型 SKILL.md（声明仅被引用、不独立执行任务），使其成为安装器可识别的依赖单元——
   此前安装器只复制含 SKILL.md 的目录，core 会被丢弃导致全部 `../core/` 引用断裂。
-  架构红线同步：红线 4 由"core 禁含 SKILL.md"演进为内容检查（必须声明不独立触发）；
-  红线 6 将 core 排除出跨 skill 引用判定（skill → core 合法不变）。隔离环境双源验证
+  架构红线同步：core 条目由"core 禁含 SKILL.md"演进为内容检查（SKILL.md 必须声明
+  不独立触发）；跨 skill 引用禁令将 core 排除出判定（skill → core 合法不变）。隔离环境双源验证
   （本地路径 + GitHub 源）：11 个单元全部落地，core/scripts 完整，引用路径有效。
   skills.sh 排行榜为安装驱动（无提交入口），用户真实安装即自动上榜。
 - **国内渠道上架腾讯 SkillHub（skillhub.cn，skillId 172576 起 11 个单元）**：v0.5.0
@@ -155,6 +175,8 @@ canary，见本地评测链路存档）。
     写成多行块式 YAML 致机械校验解析失败（决策内容无恙，纯格式损耗）——
     SKILL.md 增补"每轴单行 flow、禁止拆多行、写前照抄上一行形状"硬约束；
     复验轮格式失败归零、类型查全率 0.53 → 0.88（最弱模型，n=3，类别性判读）。
+    注意分母口径：此为 On 臂首轮严格口径 → 复验轮自身对比；README 头条的 0 → 0.88
+    是 Off 臂基线 vs On 复验轮对比，两处数字不等是分母不同而非矛盾。
     配套修复：scan_signals.py 中文关键词 `\b` 词边界失效（Python re Unicode
     下中文属 \w，永不命中）
 - **Skill 自包含重构（消除跨 skill 引用）**：被多 skill 消费的方法 / 格式 / 规则

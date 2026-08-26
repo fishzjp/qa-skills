@@ -4,6 +4,7 @@
 # 用法：
 #   ./uninstall.sh --target <目录>    卸载指定目录下的 qa-skills
 #   ./uninstall.sh                    交互选择（同 install 的检测逻辑）
+#   ./uninstall.sh --auto             自动选择第一个检测到的安装目录（归属校验与确认逻辑不变）
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -16,10 +17,11 @@ SRC_ROOT="$REPO_ROOT/skills"
 
 usage() { sed -n '2,6p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
 
-TARGET=""
+TARGET="" AUTO=false
 while [ $# -gt 0 ]; do
   case "$1" in
     --target) TARGET="${2:?--target 需要一个目录参数}"; shift 2 ;;
+    --auto) AUTO=true; shift ;;
     -h|--help) usage ;;
     *) echo "未知参数: $1" >&2; usage ;;
   esac
@@ -35,7 +37,10 @@ if [ -z "$TARGET" ]; then
   installed_in "$HOME/.dsh/skills" && cands+=("$HOME/.dsh/skills")
   installed_in "$REPO_ROOT/.claude/skills" && cands+=("$REPO_ROOT/.claude/skills")
   if [ "${#cands[@]}" -eq 0 ]; then echo "未发现已安装的 qa-skills。"; exit 0; fi
-  if [ "${#cands[@]}" -eq 1 ]; then TARGET="${cands[0]}"; else
+  if [ "${#cands[@]}" -eq 1 ]; then TARGET="${cands[0]}"; elif $AUTO; then
+    TARGET="${cands[0]}"
+    echo "--auto：选择第一个检测到的安装目录 $TARGET"
+  else
     echo "检测到多处安装，选择要卸载的："
     i=1; for c in "${cands[@]}"; do echo "  $i) $c"; i=$((i + 1)); done
     read -r -p "序号 [1]: " idx || idx=""; idx="${idx:-1}"
@@ -71,12 +76,14 @@ for d in "${SKILL_DIRS[@]}"; do
   if [ -L "$TARGET/$d" ]; then
     [ "$(readlink "$TARGET/$d")" = "$SRC_ROOT/$d" ] || { echo "  跳过 ${d}（软链不指向本仓库）"; continue; }
   elif [ "$d" = "core" ]; then
-    # core 无 SKILL.md，用本框架特有文件识别，防误删目标目录下同名无关目录
+    # SKILL.md 人人不缺、无区分度，用本框架特有文件指纹识别，防误删同名无关目录
     if [ ! -f "$TARGET/$d/evidence.md" ] || [ ! -f "$TARGET/$d/report-template.md" ]; then
       echo "  跳过 ${d}（非本框架 core 目录）"; continue
     fi
-  elif [ ! -f "$TARGET/$d/SKILL.md" ]; then
-    echo "  跳过 ${d}（非 skill 目录）"; continue
+  elif [ -f "$TARGET/$d/SKILL.md" ] && grep -q "^slug: ${d}$" "$TARGET/$d/SKILL.md" 2>/dev/null; then
+    : # 本框架 skill（frontmatter slug 指纹与 install.sh 的归属校验一致）
+  else
+    echo "  跳过 ${d}（非本框架 skill 目录）"; continue
   fi
   rm -rf "$TARGET/$d"; echo "  移除 $d"
 done

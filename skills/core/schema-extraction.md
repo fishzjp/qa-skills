@@ -15,7 +15,7 @@ test_case:
   module:                       # ← 所属一级模块标题（状态机节点/子模块）
   priority: P0 | P1 | P2        # ← 名称行 [Px] 标注，缺省 P1
   type: functional | boundary | exception | permission | regression | state | data | reliability | concurrency | security | compatibility
-                                # ← 按模块/子模块类别与用例内容判定；类型域四值（reliability/concurrency/security/compatibility）仅用于测试策略 type_scope 用例型轴产出的用例（映射见 core/test-type-matrix.md 第 12 节）
+                                # ← 按模块/子模块类别与用例内容判定；类型域四值（reliability/concurrency/security/compatibility）仅用于测试策略 type_scope 用例型轴产出的用例（映射见 test-type-matrix.md 第 12 节）
   execution_model: ui | dev-collab  # ← 执行模型判定结果（协作五段式 → dev-collab）
   smoke: SMOKE-1                # ← 名称后（SMOKE-n），非冒烟省略
   preconditions: []             # ← 该条「前置条件」行（共享前置在模块级，不重复）

@@ -732,7 +732,7 @@
       </div>
     </div>
     <p class="fine-print reveal">
-      也如实交代代价：Token 成本约 3.3 倍；API 通过率出现了回落（74% → 52%），因为<span class="nb">严格校验</span>更容易暴露失败，<span class="nb">宽松校验</span>容易「假通过」。
+      也如实交代代价：Token 成本约 3.3 倍；API 脚本真实执行通过率 <span class="nb">100% vs 99.2%</span>（修复评测侧缺陷后复验：两组基本持平，早期测得的回落经逐失败归类定案为评测任务契约缺陷，非 skill 缺陷）。
       覆盖提升：写用例 <span class="nb">+8.7pp</span>、<span class="nb">全任务 +13.2pp</span>、找缺陷 <span class="nb">+9.7pp</span>。
       完整数据见 README，每版 Release 附跨模型增益矩阵快照。
     </p>
@@ -826,12 +826,28 @@
   }
 
   /**
+   * 本地兜底占位图：第三方生图端点故障 / 被拦截时降级显示，不留破图。
+   * 与页面同气质的中性浅灰渐变（内联 SVG，无额外请求）。
+   */
+  var IMG_FALLBACK = 'data:image/svg+xml,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">' +
+    '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">' +
+    '<stop offset="0" stop-color="#e8eaee"/><stop offset="1" stop-color="#d3d7dd"/>' +
+    '</linearGradient></defs>' +
+    '<rect width="800" height="600" fill="url(#g)"/></svg>');
+
+  /**
    * 为页面上所有带 data-img 属性的图片挂载真实 src
    * 提示词明文写在标签属性里，统一在此编码，保持 HTML 可读
    */
   function mountImages() {
     document.querySelectorAll('img[data-img]').forEach(function (el) {
       el.decoding = 'async'; // 异步解码，避免图片解码阻塞渲染
+      el.referrerPolicy = 'no-referrer'; // 端点不依赖 referer，关掉以防防盗链误拦
+      el.addEventListener('error', function onErr() {
+        el.removeEventListener('error', onErr);
+        el.src = IMG_FALLBACK;
+      });
       el.src = buildImageUrl(el.dataset.img, el.dataset.size || 'landscape_4_3');
     });
   }
