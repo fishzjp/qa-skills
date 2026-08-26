@@ -180,7 +180,7 @@ Evaluated on 12 tasks: same model, same evaluation pipeline; the only difference
 | E2E real execution (single task × 3 samples) | 0/3 runnable | 1 full + 2×(2/3) |
 | Planted-bug detection | — | **75%** |
 | Quality (LLM judge) | 0.70 | **0.76** |
-| API real-execution pass rate † | **74%** | 52% |
+| API real-execution pass rate † | 100% | 99.2% |
 | Token cost | 1× | 3.3× |
 
 > **Decision layer, first round (2026-08-23, category-level readout, not yet in the formal gain table)** — test-type decision tasks (5 tasks, reference answers dual-annotated), weakest model deepseek-v4-flash (n=3, injection upper-bound):
@@ -197,7 +197,7 @@ Evaluated on 12 tasks: same model, same evaluation pipeline; the only difference
 - **E2E real execution**: real browser + real app, no judge; the same failing test reproduces stably across two with-skill samples; the without-skill group mixes no-code and failing-code outcomes.
 - **Planted-bug detection**: code-review tasks; heterogeneous-judge caliber (100% under same-family judge).
 - **Quality**: heterogeneous judge; Δ +6.1pp (95%CI includes zero; significant under same-family judging).
-- **API real-execution pass rate †**: disclosed historical adverse result (74% vs 52%, 3-sample caliber; an earlier 87% was a 2-sample mean). Root causes are now established and fixed (2026-08-24 per-failure triage): the dominant cause was a broken state machine in the eval task contract (creation always returns unpublished, claiming requires published, yet the contract exposed no publish path — a task defect, not a skill defect), plus output truncation, a degenerate sample, and a missing login-response contract; the earlier "strict assertions fail more visibly" explanation was falsified (only 4 of 46 failures were assertion-related, all over-strict beyond the written contract). Clean re-verification after the fixes (main model glm-5.2): **100% without vs 99.2% with the skill** — a 0.8pp gap, reversal gone (weak-model tier same direction: 0.67 with vs 0.30 without).
+- **API real-execution pass rate †**: clean re-verification caliber (task-contract and truncation fixes, main model glm-5.2, n=3): **100% without vs 99.2% with the skill** — a 0.8pp gap, within the noise band, effectively at parity; weak-model tier same direction (0.30 without vs 0.67 with, skill better). The table shows these re-verified numbers; the earlier historical adverse result (74% vs 52%, 3-sample caliber; a still-earlier 87% was a 2-sample mean) was established by the 2026-08-24 per-failure triage as evaluation-side defects, not skill defects: dominated by a broken state machine in the eval task contract (creation always returns unpublished, claiming requires published, yet the contract exposed no publish path — a task defect), plus output truncation, a degenerate sample, and a missing login-response contract; the earlier "strict assertions fail more visibly" explanation was falsified point by point (only 4 of 46 failures were assertion-related, all over-strict beyond the written contract). Reversal eliminated — errata recorded in the [CHANGELOG](./CHANGELOG.md).
 - **Token cost**: better but more expensive; basis is total-token ratio (per-task mean, skill fully injected): 3.3× on the glm-5.2 main-model round, up to 9.5× on the weak-model (mimo) round where reasoning overhead counts toward output; a single-file ablation shows the gains cannot be obtained by taking just the core standards document.
 </details>
 
