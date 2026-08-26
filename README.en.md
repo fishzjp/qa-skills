@@ -24,6 +24,10 @@
 
 ## Quick start
 
+### Install
+
+**Option 1: the universal install script** (auto-detects agent skills directories)
+
 ```bash
 git clone https://github.com/fishzjp/qa-skills.git
 cd qa-skills
@@ -32,21 +36,31 @@ cd qa-skills
 ./install.sh --auto # or fully automatic
 ```
 
-**DeepSeek Harness (dsh) users**: this repo ships as a dsh plugin ([`dsh-qa-skills` on npm](https://www.npmjs.com/package/dsh-qa-skills)) — one command install:
+**Option 2: [skills.sh](https://skills.sh) cross-agent install** (Claude Code / Cursor / Codex / OpenCode and 50+ other hosts)
+
+```bash
+npx skills add fishzjp/qa-skills            # interactive selection; install everything with --skill '*'
+```
+
+**Option 3: the DeepSeek Harness (dsh) plugin** ([`dsh-qa-skills` on npm](https://www.npmjs.com/package/dsh-qa-skills))
 
 ```bash
 dsh plugin --profile web add dsh-qa-skills
 ```
 
-File-based install also works (dsh natively supports this format): copy to `~/.agents/skills/` (`./install.sh --target ~/.agents/skills`) or `~/.dsh/skills/`, then restart dsh. Both paths verified end-to-end on dsh 0.1.0-rc.8 + deepseek-v4-flash.
+dsh natively supports this repo's format, so a file-based install works too (see install details below); both paths verified end-to-end on dsh 0.1.0-rc.8 + deepseek-v4-flash.
 
-Then tell your agent:
+> `core/` is the shared knowledge base dependency unit (not an executable skill): it must be installed alongside any skill, or the relative-path references break.
 
-> **Test this requirement: {description + repo URL}**
+<details>
+<summary><strong>Manual install, verification & uninstall</strong></summary>
 
-The complete pipeline runs from requirement understanding through risk and test-type decisions to the test report. Single-stage asks (write cases / review / convert to automation / regression scope) trigger the corresponding skill directly. Uninstall: `./uninstall.sh`; manual install: `cp -r skills/* <your skills directory>/` (**core/ must be copied along** — every skill references it by relative path). Verify: `ls <your skills directory>` should show 10 skill directories + `core/` + `qa-skills.VERSION`.
-
-→ [Design doc](./docs/DESIGN.md) · [Decision-layer design](./docs/decision-layer-design.md) · [On / Off output comparison](./examples/)
+- Manual install: `cp -r skills/* <your skills directory>/` — **`core/` must be copied along**, every skill references it by relative path.
+- Verify: `ls <your skills directory>` should show 10 skill directories + `core/` + `qa-skills.VERSION`.
+- dsh file-based install: copy to `~/.agents/skills/` (`./install.sh --target ~/.agents/skills`) or `~/.dsh/skills/`, then restart dsh.
+- Upgrade: `./install.sh --target <dir> --link` installs symlinks instead of copies — `git pull` updates in place.
+- Uninstall: `./uninstall.sh`.
+</details>
 
 <details>
 <summary><strong>Host compatibility & fallback path</strong></summary>
@@ -61,8 +75,16 @@ Skills are plain Markdown (frontmatter + relative-path references) with no host-
 | Codex CLI | `~/.codex/skills/` | 🔶 should work by convention; not systematically evaluated |
 | Other Skills-capable agents | their skills directory | 🔶 same |
 
-The pipeline's per-stage context isolation relies on host sub-session/sub-agent support; hosts without it degrade to sequential sessions joined by files — correctness is unaffected (see [DESIGN.md](./docs/DESIGN.md)). `--link` installs upgrade with `git pull`.
+The pipeline's per-stage context isolation relies on host sub-session/sub-agent support; hosts without it degrade to sequential sessions joined by files — correctness is unaffected (see [DESIGN.md](./docs/DESIGN.md)).
 </details>
+
+### First run
+
+Tell your agent:
+
+> **Test this requirement: {description + repo URL}**
+
+The complete pipeline runs from requirement understanding through risk and test-type decisions to the test report. For a single stage only (write cases / review / convert to automation / regression scope), just describe the need — no full pipeline required.
 
 ## What it does
 
@@ -150,7 +172,7 @@ Execution artifacts + bug evidence → bug-analysis → regression-testing
 
 ## Measured results
 
-Golden set of 12 tasks, same model, same harness; the only difference is whether this framework is injected. Numbers from the heterogeneous-judge re-evaluation, reported as measured — including the adverse ones. Full methodology, raw data, and study reports live in the locally maintained evaluation pipeline and are not distributed with this repo; each release ships a cross-model gain-matrix snapshot ([Releases](https://github.com/fishzjp/qa-skills/releases)), and the On/Off output comparison is in [examples/](./examples/):
+Evaluated on 12 tasks: same model, same evaluation pipeline; the only difference is whether this framework is injected. Numbers come from the heterogeneous-judge re-evaluation and are reported as measured, including the adverse ones. Full methodology, raw data, and study reports live in the locally maintained evaluation pipeline and are not distributed with this repo; each release ships a cross-model gain-matrix snapshot ([Releases](https://github.com/fishzjp/qa-skills/releases)), and the On/Off output comparison is in [examples/](./examples/):
 
 | Metric | Without | With |
 |--------|:---:|:---:|
@@ -161,13 +183,18 @@ Golden set of 12 tasks, same model, same harness; the only difference is whether
 | API real-execution pass rate † | **74%** | 52% |
 | Token cost | 1× | 3.3× |
 
-> **Decision layer, first round (2026-08-23, category-level readout, not yet in the formal gain table)**: on test-type decision tasks (5-task golden set, GT dual-annotated), the weakest model (deepseek-v4-flash, n=3, injection upper-bound) produced **zero explicit type decisions** without the skill — even under lenient parsing: the prose *mentions* the right types but never makes per-axis include/exclude calls (the blind spot is decision discipline, not type knowledge). With the skill: type recall 0 → **0.88** (format-hammer validation round); code-signal-only axes 0 → 8/9. Numbers to enter the formal table after task-pool growth and cross-model gradient rounds.
+> **Decision layer, first round (2026-08-23, category-level readout, not yet in the formal gain table)** — test-type decision tasks (5 tasks, reference answers dual-annotated), weakest model deepseek-v4-flash (n=3, injection upper-bound):
+>
+> - Without the skill: **zero explicit type decisions** — even under lenient parsing. The prose *mentions* the right types but never makes per-axis include/exclude calls; the blind spot is decision discipline, not type knowledge.
+> - With the skill: type recall **0 → 0.88** (format-hammer validation round); code-signal-only axes (absent from the PRD) 0 → 8/9.
+>
+> Both numbers enter the formal table after task-pool growth and cross-model gradient rounds.
 
 <details>
 <summary><strong>Per-metric calibers</strong></summary>
 
-- **Case-conformance score** (formerly "executability"): format × content-rubric composite, no judge. The gap is primarily format adoption; both arms near ceiling on content red lines; zero-caliber (earlier 0.77 was pre-fix — errata recorded in the [CHANGELOG](./CHANGELOG.md)); replicated across two generator models (0.20→0.99).
-- **E2E real execution**: real browser + real app, no judge; the same failing test reproduces stably across two On-side samples; Off mixes no-code and failing-code outcomes.
+- **Case-conformance score** (formerly "executability"): format × content-rubric composite, no judge. The gap is primarily format adoption; both groups near ceiling on content red lines; format-free samples score 0 (same caliber; the earlier 0.77 was pre-fix — errata recorded in the [CHANGELOG](./CHANGELOG.md)); replicated across two generator models (0.20→0.99).
+- **E2E real execution**: real browser + real app, no judge; the same failing test reproduces stably across two with-skill samples; the without-skill group mixes no-code and failing-code outcomes.
 - **Planted-bug detection**: code-review tasks; heterogeneous-judge caliber (100% under same-family judge).
 - **Quality**: heterogeneous judge; Δ +6.1pp (95%CI includes zero; significant under same-family judging).
 - **API real-execution pass rate †**: disclosed historical adverse result (74% vs 52%, 3-sample caliber; an earlier 87% was a 2-sample mean). Root causes are now established and fixed (2026-08-24 per-failure triage): the dominant cause was a broken state machine in the eval task contract (creation always returns unpublished, claiming requires published, yet the contract exposed no publish path — a task defect, not a skill defect), plus output truncation, a degenerate sample, and a missing login-response contract; the earlier "strict assertions fail more visibly" explanation was falsified (only 4 of 46 failures were assertion-related, all over-strict beyond the written contract). Clean re-verification after the fixes (main model glm-5.2): **100% without vs 99.2% with the skill** — a 0.8pp gap, reversal gone (weak-model tier same direction: 0.67 with vs 0.30 without).
@@ -196,7 +223,7 @@ Pre-registered gates: 4/7 under the same-family judge, 5/8 under the heterogeneo
 ```text
 skills/        the product (10 skills + shared core/)
   qa/          orchestration entry (thin, no domain knowledge)
-  core/        shared knowledge base (no SKILL.md): evidence / risk-model / executability /
+  core/        shared knowledge base (no task triggering): evidence / risk-model / executability /
                testing-principles / report-template / case-format / coverage /
                schema-extraction / clarify-pattern / test-type-matrix + methods/ + scripts/
   requirement-analysis/  test-strategy/  test-case-writing/  test-case-review/

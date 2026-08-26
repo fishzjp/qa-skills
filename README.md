@@ -24,6 +24,10 @@
 
 ## 快速开始
 
+### 安装
+
+**方式一：通用安装脚本**（自动检测宿主 skills 目录）
+
 ```bash
 git clone https://github.com/fishzjp/qa-skills.git
 cd qa-skills
@@ -32,29 +36,31 @@ cd qa-skills
 ./install.sh --auto     # 或全自动安装
 ```
 
-或通过 [skills.sh](https://skills.sh) 跨 Agent 安装（Claude Code / Cursor / Codex / OpenCode 等 50+ 宿主）：
+**方式二：[skills.sh](https://skills.sh) 跨 Agent 安装**（Claude Code / Cursor / Codex / OpenCode 等 50+ 宿主）
 
 ```bash
 npx skills add fishzjp/qa-skills            # 交互式勾选，全装用 --skill '*'
 ```
 
-**DeepSeek Harness（dsh）用户**：本仓库已打包为 dsh 插件（npm 包 [`dsh-qa-skills`](https://www.npmjs.com/package/dsh-qa-skills)），一条命令安装——
+**方式三：DeepSeek Harness（dsh）插件**（npm 包 [`dsh-qa-skills`](https://www.npmjs.com/package/dsh-qa-skills)）
 
 ```bash
 dsh plugin --profile web add dsh-qa-skills
 ```
 
-也可以走文件路径：dsh 原生兼容本仓库格式，装到 `~/.agents/skills/`（`./install.sh --target ~/.agents/skills`）或 `~/.dsh/skills/`，重启 dsh 生效。已在 dsh 0.1.0-rc.8 + deepseek-v4-flash 上完成双路径端到端验证。
+dsh 原生兼容本仓库格式，走文件路径安装亦可（见下方安装细节）；已在 dsh 0.1.0-rc.8 + deepseek-v4-flash 上完成两条安装路径的端到端验证。
 
-> `core` 是共享知识库依赖单元（不可执行任务），安装任一 skill 时必须一并安装，否则引用路径断裂。
+> `core/` 是共享知识库依赖单元（不可执行任务）：安装任一 skill 时必须一并安装，否则引用路径断裂。
 
-装好后对 Agent 说一句：
+<details>
+<summary><strong>手动安装、验证与卸载</strong></summary>
 
-> **帮我测试这个需求：{需求描述 + 仓库地址}**
-
-从需求理解、风险与类型决策，到测试报告——完整流水线就此跑通。只需要其中某个阶段（写用例 / 审查 / 转自动化 / 回归范围）时，直接描述需求即可，无需走完整流水线。卸载：`./uninstall.sh`；手动安装：`cp -r skills/* <skills 目录>/`（**core/ 必须一起复制**，各 skill 以相对路径引用它）。验证安装：`ls <skills 目录>` 应见 10 个 skill 目录 + `core/` + `qa-skills.VERSION`。
-
-→ [设计文档](./docs/DESIGN.md) · [决策层设计](./docs/decision-layer-design.md) · [Skill On / Off 产出对照](./examples/)
+- 手动安装：`cp -r skills/* <skills 目录>/`——**`core/` 必须一起复制**，各 skill 以相对路径引用它。
+- 验证安装：`ls <skills 目录>` 应见 10 个 skill 目录 + `core/` + `qa-skills.VERSION`。
+- dsh 文件路径安装：装到 `~/.agents/skills/`（`./install.sh --target ~/.agents/skills`）或 `~/.dsh/skills/`，重启 dsh 生效。
+- 升级：`./install.sh --target <目录> --link` 用软链代替拷贝，`git pull` 后即更新。
+- 卸载：`./uninstall.sh`。
+</details>
 
 <details>
 <summary><strong>宿主兼容性与降级路径</strong></summary>
@@ -69,8 +75,16 @@ Skill 是纯 Markdown 指令文件（frontmatter + 相对路径引用），不�
 | Codex CLI | `~/.codex/skills/` | 🔶 按约定应可用，未系统评测 |
 | 其他支持 Skills 的 Agent | 各自的 skills 目录 | 🔶 同上 |
 
-`qa` 流水线的"阶段间上下文隔离"依赖宿主的子会话 / 子代理能力；宿主不支持时自动退化为顺序会话 + 文件衔接，正确性不受影响（见 [DESIGN.md](./docs/DESIGN.md) 编排会话模型一节）。`--link` 软链安装随 `git pull` 升级。
+`qa` 流水线的"阶段间上下文隔离"依赖宿主的子会话 / 子代理能力；宿主不支持时自动退化为顺序会话 + 文件衔接，正确性不受影响（见 [DESIGN.md](./docs/DESIGN.md) 编排会话模型一节）。
 </details>
+
+### 开始使用
+
+装好后对 Agent 说一句：
+
+> **帮我测试这个需求：{需求描述 + 仓库地址}**
+
+从需求理解、风险与类型决策，到测试报告——完整流水线就此跑通。只需要其中某个阶段（写用例 / 审查 / 转自动化 / 回归范围）时，直接描述需求即可，无需走完整流水线。
 
 ## 能力总览
 
@@ -158,7 +172,7 @@ PRD / 代码
 
 ## 实测效果
 
-在 12 个任务的黄金集上评测：同一模型、同一评测链路，唯一差异是是否注入本框架；数字以异构裁判复评轮为准，如实披露（含反向结果）。完整方法学、原始数据与研究报告在本地评测链路中维护、不随仓库分发；每版 Release 附跨模型增益矩阵快照（[Releases](https://github.com/fishzjp/qa-skills/releases)），On / Off 产出对照见 [examples/](./examples/)：
+在 12 个评测任务上对比：同一模型、同一评测链路，唯一差异是是否注入本框架；数字以异构裁判复评轮为准，如实披露（含反向结果）。完整方法学、原始数据与研究报告在本地评测链路中维护、不随仓库分发；每版 Release 附跨模型增益矩阵快照（[Releases](https://github.com/fishzjp/qa-skills/releases)），Skill On / Off 产出对照见 [examples/](./examples/)：
 
 | 指标 | 无 Skill | 有 Skill |
 |------|:---:|:---:|
@@ -169,7 +183,12 @@ PRD / 代码
 | API 代码真实执行通过率 † | **74%** | 52% |
 | Token 成本 | 1× | 3.3× |
 
-> **决策层首轮（2026-08-23，类别性判读，未进正式增益表）**：类型域决策任务（5 任务黄金集，参考答案经双人独立标注复核）在最弱模型（deepseek-v4-flash，n=3，注入式上界口径）上：**无 skill 组零显式类型决策**（宽容口径亦为 0——输出里"提到"了正确类型，但没有逐轴的纳入/排除决策，盲区在决策纪律而非类型知识）；**有 skill 组类型查全率 0 → 0.88**（格式锤复验轮），其中需求未提、只存在于代码的可靠性/契约轴 0 → 8/9。数字待任务扩容与跨模型梯度轮后进正式表。
+> **决策层首轮（2026-08-23，类别性判读，未进正式增益表）**：类型域决策任务（5 个任务，参考答案经双人独立标注复核）在最弱模型 deepseek-v4-flash 上（n=3，注入式上界口径）：
+>
+> - 无 skill 组**零显式类型决策**——宽容口径亦为 0：输出里"提到"了正确类型，但没有逐轴的纳入/排除决策。盲区在决策纪律，而非类型知识。
+> - 有 skill 组类型查全率 **0 → 0.88**（格式锤复验轮）；其中需求未提、只存在于代码的可靠性/契约轴，从 0 提升到 8/9。
+>
+> 两个数字均待任务扩容与跨模型梯度轮后进正式增益表。
 
 <details>
 <summary><strong>逐项口径</strong></summary>
