@@ -73,7 +73,7 @@
 ## 7. 轴 5 兼容性（compatibility）
 
 - **需求信号**：明确支持的浏览器 / 设备清单；企业客户旧环境（旧内核）；跨端一致性要求
-- **代码信号**：有前端（扫描器探测 package.json 前端依赖 / .vue / .svelte / 多 .html；移动端信号同计为有前端——pubspec.yaml(Flutter)、react-native/@tarojs/@dcloudio 跨端依赖、project.config.json 小程序配置）；浏览器特性 API 使用（IntersectionObserver 等）；UA 判断分支；响应式断点；多端平台分支（Platform.OS / kIsWeb / wx.getSystemInfo / `#ifdef MP-WEIXIN` 等）；系统版本门槛（minSdkVersion / deployment_target 等）
+- **代码信号**：有前端（扫描器探测 package.json 前端依赖 / .vue / .svelte / 多 .html / 样式族（.css/.scss/.less）；移动端信号同计为有前端——pubspec.yaml(Flutter)、react-native/@tarojs/@dcloudio 跨端依赖、project.config.json 小程序配置）；浏览器特性 API 使用（IntersectionObserver 等）；UA 判断分支；响应式断点；多端平台分支（Platform.OS / kIsWeb / wx.getSystemInfo / `#ifdef MP-WEIXIN` 等）；系统版本门槛（minSdkVersion / deployment_target 等）
 - **默认档**：软默认——有前端 → light；有明确支持清单 → standard
 - **档位语义**：full = 支持矩阵逐格（浏览器 × 设备 × 分辨率 × P0 路径）；standard = 支持清单矩阵 × P0 路径；light = 最新 Chrome / Safari / Edge / Firefox 冒烟
 - **执行归属**：agent + Playwright 项目矩阵（现成接入片段：automated-e2e-testing 工程约定第 14 节）
