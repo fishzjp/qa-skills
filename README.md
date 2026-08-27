@@ -216,6 +216,7 @@ PRD / 代码
 - [v2 规划](./docs/qa-skills-v2.md) —— 演进蓝图与历史决策记录
 - [examples/](./examples/) —— 同一 PRD 的 Skill On / Off 产出对照
 - [CHANGELOG.md](./CHANGELOG.md) —— 版本历史（各版本附增益矩阵快照）
+- [RELEASING.md](./RELEASING.md) —— 发版规则与检查单（四面分发同步 / 版本策略 / 测试门）
 
 <details>
 <summary><strong>仓库结构</strong></summary>

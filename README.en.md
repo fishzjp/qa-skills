@@ -216,6 +216,7 @@ Pre-registered gates: 4/7 under the same-family judge, 5/8 under the heterogeneo
 - [v2 blueprint](./docs/qa-skills-v2.md) (Chinese) — evolution plan and historical decision records
 - [examples/](./examples/) — Skill On/Off output comparison on the same PRD
 - [CHANGELOG.md](./CHANGELOG.md) — release history (each release ships a gain-matrix snapshot)
+- [RELEASING.md](./RELEASING.md) (Chinese) — release rules and checklist (four-channel sync / versioning / test gates)
 
 <details>
 <summary><strong>Repository layout</strong></summary>
