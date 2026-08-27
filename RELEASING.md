@@ -93,6 +93,7 @@ minor 及以上追加（本地链路）：按分级门跑模型矩阵 + in-situ�
 
 - [ ] `git status --short` 暂存面不含 `eval/`、`tests/`、`.in-situ-lab/` 等本地评测产物（.gitignore 已隔离，但要肉眼复核）
 - [ ] 无真实环境地址、账号、密钥、内部系统名（CONTRIBUTING 自检第 1 条）
+- [ ] 跟踪面白名单校验通过（validate_skills.py 红线 10 随 §3 测试关自动执行；`git ls-files` 中不得出现临时文件、测试数据、实验·开发报告、开发计划等与 skills 无关内容，白名单维护规则见 CONTRIBUTING 架构红线 8）
 
 ### §5 发布动作（四面依次）
 

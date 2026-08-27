@@ -17,12 +17,16 @@
   7. 各 SKILL.md frontmatter 的 version 必须与 package.json 一致（三处同步的机械防线）
   8. eval/harness/*.json 与 eval/golden/*/annotation.json 必须是合法 JSON
   9. 产品自包含：skills/ 内不得引用 eval/ 等本地评测链路路径（公开分发面 = skills 产品本体）
+ 10. 跟踪面白名单：git 跟踪的每个文件必须落在白名单内（根目录既有文件 + 产品目录前缀 + docs 三例外）——
+     临时文件、测试数据、实验报告、开发报告、开发计划等与 skills 无关的内容不得入库
 
 用法：python3 scripts/validate_skills.py （仓库根或任意目录均可）
 退出码：0 通过 / 1 有违规
 """
 import json
 import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -35,6 +39,19 @@ CORE_BARE_PATTERN = re.compile(r"`((?:\.\./)?(?:[\w-]+/)*[\w-]+\.(?:md|py))`")
 MD_LINK_PATTERN = re.compile(r'\]\(([^()\s]+)(?:\s+"[^"]*")?\)')
 FRONTMATTER = re.compile(r"\A---\n(.*?)\n---\n", re.S)
 MD_EXTS = (".md", ".json", ".py", ".ts", ".tsx", ".yml", ".yaml")
+
+# 红线 10 白名单：白名单制而非黑名单关键词——临时文件命名不可枚举，
+# 且 test-case-writing、report-template 等合法文件名含 test/report 字样会被关键词误杀。
+# 新增合法产品路径时：同步扩展此处常量并登记 CONTRIBUTING.md 架构红线 8
+# docs/ 准入标准：仅限正式对外文档（须已被 README 延伸阅读区链接）；故意不列入
+# ALLOWED_DIR_PREFIXES，临时文档 / 开发文档 / 开发计划一律走下方精确文件白名单拦截
+ALLOWED_ROOT_FILES = {
+    ".gitignore", ".npmignore", "AGENTS.md", "CHANGELOG.md", "CONTRIBUTING.md",
+    "LICENSE", "README.en.md", "README.md", "RELEASING.md", "index.html",
+    "install.sh", "og.jpg", "package.json", "uninstall.sh",
+}
+ALLOWED_DIR_PREFIXES = ("skills/", "scripts/", ".github/", ".dsh/", "assets/", "examples/")
+ALLOWED_DOCS = {"docs/DESIGN.md", "docs/decision-layer-design.md", "docs/qa-skills-v2.md"}
 
 
 def skill_dirs():
@@ -145,6 +162,41 @@ def check_versions(errors, versions):
                           "（发版时三处同步：全部 SKILL.md / package.json / CHANGELOG）")
 
 
+def _find_git():
+    """定位 git 可执行文件：优先 PATH，退化到 macOS 常见绝对路径；均不存在返回 None。"""
+    git = shutil.which("git")
+    if git:
+        return git
+    for cand in ("/usr/bin/git", "/usr/local/bin/git", "/opt/homebrew/bin/git"):
+        if Path(cand).exists():
+            return cand
+    return None
+
+
+def check_tracked_files(errors):
+    """红线 10：仓库跟踪面白名单——git ls-files 全量枚举，白名单外即违规。
+
+    无 git 环境时显式打印跳过并明示，避免静默空转假绿。
+    """
+    git = _find_git()
+    if not git:
+        print("(i) 未检出 git——跳过跟踪面白名单校验")
+        return
+    r = subprocess.run([git, "ls-files"], cwd=REPO, capture_output=True, text=True)
+    if r.returncode != 0:
+        errors.append(f"跟踪面白名单: git ls-files 执行失败（{r.stderr.strip()}）")
+        return
+    for f in r.stdout.splitlines():
+        f = f.strip()
+        if not f:
+            continue
+        if f in ALLOWED_ROOT_FILES or f in ALLOWED_DOCS or f.startswith(ALLOWED_DIR_PREFIXES):
+            continue
+        errors.append(f"{f}: 不在跟踪面白名单内——临时文件 / 测试数据 / 实验报告 / 开发报告 / 开发计划"
+                      "等与 skills 无关内容禁止入库（确属产品内容：扩展 validate_skills.py 白名单常量"
+                      "并在 CONTRIBUTING.md 架构红线 8 登记）")
+
+
 def main():
     errors = []
 
@@ -205,6 +257,9 @@ def main():
     if checked_json == 0 and not (REPO / "eval").exists():
         print("(i) 未检出 eval/（本地评测链路不随仓库分发）——跳过 JSON 校验")
 
+    # 红线 10：跟踪面白名单——临时文件 / 测试数据 / 实验·开发报告 / 开发计划等不得入库
+    check_tracked_files(errors)
+
     skills = [d for d in skill_dirs() if d.name != "core"]
     print(f"校验 {len(skills)} 个 skill + core/ {len(core_mds)} 个共享文档")
     if errors:
@@ -213,7 +268,7 @@ def main():
             print(f"  - {e}")
         return 1
     print("✅ 架构红线全部通过（frontmatter / ≤500 行 / When NOT to Use / core 依赖单元声明 / "
-          "引用完整含 md 链接 / 无跨 skill 引用 / 版本一致 / JSON 合法 / 无 eval 越界引用）")
+          "引用完整含 md 链接 / 无跨 skill 引用 / 版本一致 / JSON 合法 / 无 eval 越界引用 / 跟踪面白名单）")
     return 0
 
 
