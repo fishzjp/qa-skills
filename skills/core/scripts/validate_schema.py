@@ -376,6 +376,12 @@ def validate_strategy(path, repo_root=None):
         kv = parse_flow_map(inner)
         depth = scalar(kv, "depth")
         decision = kv.get("decision", "")
+        # depth 缺省警示：类型域轴必须显式声明档位，否则绕过 full_axes/预算审计链；
+        # functional_scope 行无 depth 属常态，仅对类型域轴名告警防误伤
+        if name in TYPE_AXES and not depth:
+            warnings.append(
+                f"V4 {name}: depth 缺省——档位未声明则不参与 full_axes/预算审计，"
+                "请显式写入 full/standard/light（'不测'应表达为 exclude/handoff 并挂理由）")
         # 指涉真实性抽查：signals / scanned 中 "文件.ext:行号" 必须真实存在于仓库（告警级，
         # 抓"格式合规的幻觉证据"，见 --repo-root 参数说明）
         if repo_root is not None:
@@ -398,6 +404,12 @@ def validate_strategy(path, repo_root=None):
         declared = [x.strip() for x in m_budget.group(1).split(",") if x.strip()]
         if sorted(declared) != sorted(full_axes):
             errors.append(f"V4 depth_budget.full_axes {declared} 与实际 full 轴 {full_axes} 不一致")
+    elif full_axes:
+        # 实际存在 full 轴却检不出行内数组声明：或漏写、或用了多行展开式（后者不受支持），
+        # 两种情况都令一致性核对失效——警示级提示人工补声明
+        warnings.append(
+            f"V4 未检出 depth_budget.full_axes 行内数组声明（实际 full 轴 {full_axes}）"
+            "——缺声明或多行展开式（不受支持），无法核对一致性")
     if len(full_axes) > FULL_MAX and not re.search(r"^[ \t]*budget_review:", block, re.M):
         errors.append(f"V4 full 轴 {len(full_axes)} 个 > {FULL_MAX}（两域合并）："
                       "须触发预算裁决检查点并记录 budget_review（R6 > R1）")

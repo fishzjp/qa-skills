@@ -49,8 +49,9 @@ TEXT_FILE_NAMES = {"Podfile"}
 AXIS_PATTERNS = {
     "performance": [
         ("缓存依赖", re.compile(r"\b(redis|memcach\w*|@(?:Cacheable|CacheEvict|CachePut)|cache\.(?:get|set|del))\b", re.I)),
-        ("消息队列", re.compile(r"\b(kafka|rabbitmq|rocketmq|amqp|pulsar|celery|sidekiq|bullmq)\b", re.I)),
         ("无分页全量查询", re.compile(r"SELECT\s+\*\s+FROM", re.I)),
+        # 「消息队列」已迁 reliability 轴「消息队列消费与 ack」（对齐矩阵轴3口径）；
+        # 轴1 剩余的 MQ 关切（积压/消费速率）是 S 级语义项，由 agent 读代码复核承载
     ],
     "security_business": [
         ("鉴权机制存在", re.compile(r"auth(?!or)\w*|jwt|oauth\w*|rbac|@PreAuthorize|hasRole|requireLogin|鉴权|登录校验", re.I)),
@@ -61,6 +62,12 @@ AXIS_PATTERNS = {
     "reliability": [
         ("重试逻辑", re.compile(r"retry\w*|backoff|max_?retries|重试", re.I)),
         ("超时配置", re.compile(r"\b(timeout|deadline|context\.WithTimeout|TimeSpan\.From)\b", re.I)),
+        # 矩阵轴3 口径「消息队列消费与 ack」：broker 存在性 + 显式 ack 语义；
+        # celery/sidekiq 由下方「异步任务/调度」覆盖，此处不重复挂载
+        ("消息队列消费与 ack", re.compile(
+            r"\b(kafka|rabbitmq|rocketmq|amqp|pulsar|bullmq)\b"
+            r"|@(?:KafkaListener|RabbitListener|JmsListener)"
+            r"|basic_(?:ack|nack)\b", re.I)),
         ("异步任务/调度", re.compile(r"\b(celery|sidekiq|xxl-?job|quartz|cron\w*|scheduler\w*)\b", re.I)),
         ("断路器", re.compile(r"\b(circuit[_\s-]?breaker|hystrix|resilience4j|sentinel)\b", re.I)),
         ("事务/补偿", re.compile(r"\b(@Transactional|begin[_\s]?transaction|rollback|compensat\w*|saga)\b", re.I)),
@@ -90,6 +97,10 @@ AXIS_PATTERNS = {
     ],
     "i18n": [
         ("i18n 框架/格式化", re.compile(r"\b(i18next|vue-i18n|react-intl|formatjs|gettext|Intl\.(?:DateTime|Number)Format|dayjs|date-fns|moment)\b", re.I)),
+        # 矩阵轴8 口径「时区处理逻辑」：显式时区 token 即 G 级线索（结论仍须 agent 复核）
+        ("时区处理", re.compile(
+            r"\b(?:UTC|timezone\w*|time[\s_-]?zone\w*|ZoneId|ZonedDateTime|OffsetDateTime"
+            r"|pytz|tzdata|dateutil\.tz|utcOffset)\b|时区|\.tz\(", re.I)),
     ],
     "migration": [
         ("DDL/回填", re.compile(r"ALTER\s+TABLE|CREATE\s+(?:UNIQUE\s+)?INDEX|backfill|回填|db[_\s-]?migrat\w*", re.I)),
@@ -113,7 +124,10 @@ AXIS_PATH_PATTERNS = {
     ],
     "migration": [
         ("migration 目录", re.compile(r"(^|/)(migrations?|alembic|flyway|liquibase|db/migrate)/", re.I)),
-        ("migration 文件", re.compile(r"\.(?:sql)$", re.I)),
+        # .sql 不再全局兜底：根目录散落的 init.sql / dump.sql 等无升级语义，
+        # 仅当位于迁移目录上下文（含其子层）内才计为独立文件信号——对齐矩阵轴9口径
+        ("migration 文件", re.compile(
+            r"(^|/)(migrations?|alembic|flyway|liquibase|db/migrate)/(?:.*/)?[^/]*\.sql$", re.I)),
     ],
     "i18n": [
         ("locale 资源目录", re.compile(r"(^|/)(locales?|i18n|lang)/[^/]+\.(?:json|ya?ml|ts|po)$", re.I)),
@@ -132,7 +146,9 @@ FE_DEP_RE = re.compile(
     r'|@dcloudio/[a-z-]+|uni-app|mpvue|wepy)"', re.I)
 FLUTTER_MARKER_NAME = "pubspec.yaml"     # Flutter/Dart 工程唯一入口文件，出现即视作客户端信号
 MINI_PROGRAM_CONFIGS = {"project.config.json"}   # 微信/字节等小程序工程标志配置
-FE_EXT_RE = re.compile(r"\.(vue|svelte|html|jsx|tsx|dart|wxml)$", re.I)
+# 样式族（css/scss/less）计入前端源码计数：≥3 个样式文件几乎必然是前端工程，
+# 且轴5/6/7 的探测依赖「有前端」信号点亮；.min.css 产物已在 SKIP_FILE_SUFFIXES 排除
+FE_EXT_RE = re.compile(r"\.(vue|svelte|html|jsx|tsx|dart|wxml|css|scss|less)$", re.I)
 FE_FILE_THRESHOLD = 3
 
 AXES = ["performance", "security_business", "reliability", "concurrency",

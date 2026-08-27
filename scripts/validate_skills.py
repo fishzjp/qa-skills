@@ -166,9 +166,10 @@ def main():
         n = len(text.splitlines())
         if n > MAX_LINES:
             errors.append(f"{d.name}/SKILL.md: {n} 行超过 {MAX_LINES} 行红线（方法细节下沉 references/ 或 core/）")
-        # 红线 3：When NOT to Use
-        if "When NOT to Use" not in text:
-            errors.append(f"{d.name}/SKILL.md: 缺 'When NOT to Use' 段（须指明交给哪个 skill）")
+        # 红线 3：When NOT to Use——锚定真实二级标题形态，
+        # 防 code fence 示例或正文顺带提及骗过朴素子串闸
+        if not re.search(r"^## +When NOT to Use\s*$", text, re.M):
+            errors.append(f"{d.name}/SKILL.md: 缺 '## When NOT to Use' 二级标题段（须指明交给哪个 skill）")
         check_references(sk, errors)
 
     # 红线 5/6：core/**/*.md 的引用与跨 skill 引用检查
