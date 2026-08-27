@@ -81,6 +81,7 @@ git diff --stat                                                  # 复验：每�
 python3 scripts/validate_skills.py            # 九项架构红线全绿，退出码 0（与 CI 同一校验）
 node --check .dsh/plugins/qa-skills.js       # 仅插件单元有改动时：语法通过
 bash -n install.sh && bash -n uninstall.sh  # 仅安装器有改动时：语法通过
+npm pack --dry-run                           # 触达发包范围时必跑：清单里不得出现 __pycache__/*.pyc 等运行时产物（踩坑 6）
 ```
 
 push 后观察 CI「架构红线与语法校验」 job 为绿再进入 §4（skills 市场 #2 的可见性以 CI 绿为前提）。
@@ -106,10 +107,12 @@ git push origin main
 git push origin v0.7.0                         # 禁止 --tags：会重推全部历史 tag，已被拒项制造噪音报错
 
 # 4) 推送 #3 npm 插件市场（手动强制项！）
-npm whoami                                     # 未登录先 npm login
-npm view dsh-qa-skills version                 # 预检：latest ≠ 本次版本（既防重发、也暴露断档）
-npm publish                                    # package.json files 白名单仅含 skills 与 .dsh，产品本体
-npm view dsh-qa-skills version                 # 复验：latest == 本次版本
+NPM_REGISTRY="https://registry.npmjs.org"    # 本机默认源可能是 npmmirror 只读镜像（踩坑 5），一律显式官方源
+npm whoami --registry "$NPM_REGISTRY"        # 未登录先：npm login --registry "$NPM_REGISTRY" --auth-type=web
+npm view dsh-qa-skills version --registry "$NPM_REGISTRY"   # 预检：latest ≠ 本次版本（既防重发、也暴露断档）
+npm pack --dry-run                           # 清单核对：仅 skills 与 .dsh 本体，无 pyc 缓存（踩坑 6）
+npm publish --registry "$NPM_REGISTRY" --otp="<验证器当前6位动态码>"   # 强制 2FA 下必带第二因子（踩坑 7）
+npm view dsh-qa-skills version --registry "$NPM_REGISTRY"   # 复验：latest == 本次版本
 ```
 
 - \#4 GitHub Release 页：贴 CHANGELOG 对应节原文，并附跨模型增益矩阵快照（README 对外承诺：每版 Release 附快照）
@@ -128,3 +131,6 @@ npm view dsh-qa-skills version                 # 复验：latest == 本次版本
 2. **`--tags` 重推噪音**：v0.6.0 发布时 `git push origin main --tags` 把 v0.1.0–v0.4.0 一并重推，远端已存在被拒、退出码非 0。改为精确推送单个 tag。
 3. **名实分离**（第五轮审查）：发布文案宣称的修复在实际写盘时静默丢失。由此确立"同文件串行编辑 + 每批写盘即回验"协议，以及 §1 的逐条实体核对。
 4. **sed 误伤正文**：版本替换若不锚定行首（`^version: x\.y\.z$`），会改掉正文中作为历史叙述出现的版本字样。§2 固定命令已内置防御。
+5. **默认源是 npmmirror 只读镜像**（2026-08-27 补发实战）：本机 npm 默认 registry 指向淘宝镜像，镜像不能 publish，首次 `npm login` 会把人带去 `registry.npmmirror.com` 空转。§5 第 4 步所有 npm 命令因此一律显式 `--registry https://registry.npmjs.org`。
+6. **pyc 编译缓存混入发包**（2026-08-27 补发实战）：发包前核对 tarball 清单，发现 `skills/core/scripts/__pycache__/*.pyc` 入包（38 files）。npm 的 `files` 白名单是目录级，兜不住运行时生成的缓存子目录；处理 = 即时删除 + 根级 `.npmignore`（排除 `__pycache__/`、`*.pyc`）根治，并把 `npm pack --dry-run` 固化为 §3 测试关与 §5 第 4 步的固定动作。复核后 37 files 干净入站。
+7. **npm 发布认证新政：EOTP/E403 两段墙**（2026-08-27 补发实战）：publish 必须携带第二因子，且策略因账号而异——绑定 TOTP 时报 `EOTP`（等码）；关掉 2FA 或使用未获 bypass 授权的令牌反而报 `E403`（"Two-factor authentication or granular access token with bypass 2fa enabled is required"）。另据官方公告，bypass-2fa 细粒度令牌正被限制直接发布——令牌路线是死路。正解：①账号 Two-Factor Authentication 以 Authenticator App 方式绑定（服务端 `two-factor auth: auth-and-writes` 即就绪）②发版用 `npm publish --otp=<当前6位动态码>`。实测兜底：CLI 的 `--otp` 位也接受恢复码（每条一次性消耗），验证器不在手边时可应急；恢复码已多次暴露的应整体重新生成。
