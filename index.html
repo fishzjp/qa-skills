@@ -91,7 +91,7 @@
     padding: 6px 14px; margin-bottom: 26px;
     background: rgba(255,255,255,.6);
   }
-  .hero-badge b { color: var(--text); font-weight: 600; }
+  .hero-badge b { color: var(--text); font-weight: 600; white-space: nowrap; }
   .hero h1 {
     font-size: clamp(36px, 7vw, 80px);
     /* Apple 大标题是 semibold + 松字距，过重的字重和过紧的 CJK 负字距都会发闷 */
@@ -103,7 +103,13 @@
   }
   @media (max-width: 560px) {
     .hero h1 { font-size: 34px; }
-    .hero h1 br { display: none; }
+    /* 手机上 badge 换两行：放弃胶囊形，改圆角卡片 + 文本自然折行，避免顿号孤行 */
+    .hero-badge {
+      display: block;
+      border-radius: 14px;
+      padding: 8px 18px;
+      line-height: 1.7;
+    }
   }
   .hero .sub {
     margin: 24px auto 0; max-width: 720px;
@@ -144,11 +150,6 @@
   .section-alt { background: var(--bg-alt); }
   .section-dark { background: var(--dark); color: #f5f5f7; }
   .section-head { max-width: 820px; margin: 0 auto 72px; text-align: center; }
-  .eyebrow {
-    font-size: 15px; font-weight: 600; color: var(--blue);
-    letter-spacing: .03em; margin-bottom: 14px;
-  }
-  .section-dark .eyebrow { color: var(--blue-dark); }
   .section-head h2 {
     font-size: clamp(32px, 5vw, 56px); font-weight: 600;
     letter-spacing: -.012em; line-height: 1.14; text-wrap: balance;
@@ -275,7 +276,7 @@
     transition: background .3s ease;
   }
   .fp:hover { background: rgba(255,255,255,.09); }
-  .fp .fp-num { font-size: 32px; font-weight: 200; line-height: 1; color: var(--blue-dark); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
+  .fp .fp-num { font-size: 32px; font-weight: 500; line-height: 1; color: var(--blue-dark); letter-spacing: .02em; font-variant-numeric: tabular-nums; }
   .fp h4 { margin-top: 18px; font-size: 21px; font-weight: 600; color: #f5f5f7; text-wrap: balance; }
   .fp p { margin-top: 10px; font-size: 15.5px; line-height: 1.65; color: #a1a1a6; text-wrap: pretty; }
   /* 纯黑底上彩色 glow 是模板手法；换成 hairline 描边，靠图片自身的光感表达 */
@@ -462,7 +463,7 @@
 <header class="hero" id="top">
   <div class="container">
     <div class="hero-badge reveal">开源 · MIT 许可 · 兼容 <b>Claude Code</b>、<b>DeepSeek Harness</b> 等 AI 编程助手</div>
-    <h1 class="reveal d1">让 AI 像资深测试工程师<br>一样工作</h1>
+    <h1 class="reveal d1">让测试工程<br>成为 AI 的本能</h1>
     <p class="sub reveal d2">
       一套面向 AI Agent 的<b class="hl">测试工程 Skill 框架</b>。<br>
       装进编程助手，AI 就能按资深工程师的方式做测试：<br>
@@ -491,7 +492,6 @@
              alt="质检员拿着放大镜仔细检查一个悬浮的应用界面卡片，寻找隐藏的缺陷">
       </div>
       <div class="duo-text reveal d1">
-        <div class="eyebrow">质量保障</div>
         <h3>软件发布之前，<br>总得有人先把住质量关</h3>
         <p>
           每一款软件上线前，都要回答成百上千个「如果」：
@@ -511,7 +511,6 @@
 <section class="section" id="problem">
   <div class="container">
     <div class="section-head reveal">
-      <div class="eyebrow">为什么需要它</div>
       <h2>能写，更要能执行。</h2>
       <p>
         通用大模型写出的测试用例，常常看着专业、实际没法执行：<br>
@@ -569,7 +568,6 @@
              alt="一块发光的琥珀色知识芯片正在被安装到机器人头部，光粒上升">
       </div>
       <div class="duo-text reveal d1">
-        <div class="eyebrow">它是什么</div>
         <h3>不是软件，<br>是一套装进 AI 的工作方法。</h3>
         <p>
           它由 <b class="cir">10 个领域 Skill</b> 和一个共享知识库（core/）组成，
@@ -607,7 +605,6 @@
 <section class="section" id="how">
   <div class="container">
     <div class="section-head reveal">
-      <div class="eyebrow">怎么工作</div>
       <h2>一句指令，从需求到报告。</h2>
       <p>
         对 AI 助手说「帮我测试这个需求」，从需求到报告，七个环节自动接力，每个环节都有明确的产出物。
@@ -634,7 +631,6 @@
 <section class="section section-alt" id="skills">
   <div class="container">
     <div class="section-head reveal">
-      <div class="eyebrow">能力</div>
       <h2>从用例到回归，<br>每道工序都有对应的 Skill。</h2>
       <p>每个 Skill 单独可用，也能串成完整流水线。需要哪一段，就用哪一段。</p>
     </div>
@@ -701,7 +697,6 @@
 <section class="section section-dark" id="proof">
   <div class="container">
     <div class="section-head reveal">
-      <div class="eyebrow">实测效果</div>
       <h2>每一个数字，都来自实测。</h2>
       <p>同一批任务，同一个模型，唯一差异是装没装 <span class="nb">qa-skills</span>。<br>数字如实披露，包括不好看的那些。</p>
     </div>
@@ -760,8 +755,7 @@
 <section class="section" id="install">
   <div class="container">
     <div class="section-head reveal">
-      <div class="eyebrow">开始使用</div>
-      <h2>两步，开始。</h2>
+      <h2>两步接入你的 AI 助手</h2>
       <p>不需要账号，不需要订阅。两条命令，一句话。</p>
     </div>
     <div class="install-grid">
