@@ -45,6 +45,23 @@ TEXT_EXTS = {
 # 无后缀但有固定文件名的配置文本（如 iOS CocoaPods 清单）
 TEXT_FILE_NAMES = {"Podfile"}
 
+
+def _casefold_charclass(word):
+    """把小写词展开为逐字符大小写皆可的字符类序列（kafka → [Kk][Aa][Ff][Kk][Aa]）.
+
+    用于 MQ 词表边界放宽：re.I 会污染边界断言中的字符类（[a-z] 在 re.I 下
+    连大写也匹配），使「后非小写字母」的 camelCase 判定无法表达；显式 casefold
+    展开后可脱离 re.I，保留组合标识符友好的自定义边界（见「消息队列消费与 ack」）。
+    """
+    return "".join(f"[{c}{c.upper()}]" for c in word)
+
+
+# MQ 词表 casefold 展开结果（供 AXIS_PATTERNS 内 f-string 引用）
+_MQ_TOKENS = "|".join(
+    _casefold_charclass(w)
+    for w in ("kafka", "rabbitmq", "rocketmq", "amqp", "pulsar", "bullmq")
+)
+
 # 每轴 G 级内容信号：(标签, 正则)。正则命中 ≠ 结论成立——预填表仅供 agent 修订。
 AXIS_PATTERNS = {
     "performance": [
@@ -63,11 +80,16 @@ AXIS_PATTERNS = {
         ("重试逻辑", re.compile(r"retry\w*|backoff|max_?retries|重试", re.I)),
         ("超时配置", re.compile(r"\b(timeout|deadline|context\.WithTimeout|TimeSpan\.From)\b", re.I)),
         # 矩阵轴3 口径「消息队列消费与 ack」：broker 存在性 + 显式 ack 语义；
-        # celery/sidekiq 由下方「异步任务/调度」覆盖，此处不重复挂载
+        # celery/sidekiq 由下方「异步任务/调度」覆盖，此处不重复挂载。
+        # 词表边界用双 lookaround（前非任意字母 / 后非小写字母）替代 \b：
+        # AMQP_URL / rabbitmq_conn / KafkaProducer 等组合标识符可命中，
+        # kafkaesque / pykafka 等小写粘连异义词仍排除（\b 对前者天然漏检）。
+        # 本标签不用 re.I：词表经 _casefold_charclass 展开自带大小写，
+        # 注解名（Java PascalCase 固定形态）与 basic_ack（协议恒小写）本就精确
         ("消息队列消费与 ack", re.compile(
-            r"\b(kafka|rabbitmq|rocketmq|amqp|pulsar|bullmq)\b"
+            rf"(?<![A-Za-z])(?:{_MQ_TOKENS})(?![a-z])"
             r"|@(?:KafkaListener|RabbitListener|JmsListener)"
-            r"|basic_(?:ack|nack)\b", re.I)),
+            r"|basic_(?:ack|nack)\b")),
         ("异步任务/调度", re.compile(r"\b(celery|sidekiq|xxl-?job|quartz|cron\w*|scheduler\w*)\b", re.I)),
         ("断路器", re.compile(r"\b(circuit[_\s-]?breaker|hystrix|resilience4j|sentinel)\b", re.I)),
         ("事务/补偿", re.compile(r"\b(@Transactional|begin[_\s]?transaction|rollback|compensat\w*|saga)\b", re.I)),
