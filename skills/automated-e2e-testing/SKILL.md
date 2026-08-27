@@ -2,7 +2,7 @@
 name: automated-e2e-testing
 slug: automated-e2e-testing
 displayName: E2E 自动化测试
-version: 0.6.0
+version: 0.7.0
 description: 将手动测试用例转为 Playwright E2E 测试并执行时使用；含写自动化前的业务熟悉踩点、Page Object/Helper 编写、执行中的 Bug 证据收集与报告条目记录。不用于：纯 API 接口测试（api-testing）、以理解系统为目的的独立探索会话（exploratory-testing）、已确认 Bug 的根因分析（bug-analysis）。
 ---
 
@@ -17,7 +17,7 @@ description: 将手动测试用例转为 Playwright E2E 测试并执行时使用
 4. **每个 test 独立**（自建数据 + 自清理）
 5. **必须使用 Page Object** — 正式测试中禁止裸写定位器，所有页面交互封装在 Page Object 中
 
-工程约定（脚手架、配置、场景代码模板、Page Object 规范）统一在 `references/playwright-conventions.md`——写代码时加载；通用 Helper（登录、多会话、证据收集）的参考实现在 `references/helpers_reference.md`。
+工程约定（脚手架、配置、场景代码模板、Page Object 规范）统一在 `references/playwright-conventions.md`——写代码时加载；通用 Helper（登录、多会话、证据收集）的参考实现在 `references/helpers_reference.md`；类型域三类执行片段（a11y 扫描 / 视觉基线 / 多浏览器矩阵）见工程约定第 12–14 节，type_scope 判入对应轴时按档加载取用
 
 ## When to Use
 
@@ -93,7 +93,7 @@ description: 将手动测试用例转为 Playwright E2E 测试并执行时使用
 3. **编写 spec**：使用 Page Object 封装所有页面交互
 4. **运行验证**：`npx playwright test tests/{文件名}.spec.ts`
 
-脚手架、场景代码模板（CRUD / 表单提交 / 状态流转 / 多用户并发）、Page Object 规范与 spec 命名**此时加载 `references/playwright-conventions.md`**（第 5–7 节）。
+脚手架、场景代码模板（CRUD / 表单提交 / 状态流转 / 多用户并发）、Page Object 规范与 spec 命名**此时加载 `references/playwright-conventions.md`**（第 1、5–7 节）。
 
 ---
 
@@ -102,6 +102,8 @@ description: 将手动测试用例转为 Playwright E2E 测试并执行时使用
 在已理解业务逻辑的前提下，系统性验证页面功能，发现 Bug 和不一致。
 
 > 批量失败前置分流：一轮执行结束**失败 ≥3 条**时，先加载 `../core/triage.md` 做四分类定类（A 真缺陷 / B 资产问题 / C 环境 / D 不稳定），仅 A 类进入本工作流的证据收集与报告条目；<3 条维持单条流程不变。
+>
+> headless 流水线场景（PR 冒烟 / 夜间全量 / 发布卡点）：检查点降级为未决项、产物落盘规范与退出码语义按 `../core/pipeline-integration.md`（此时加载）；其回流闭环中的批量失败同样进入上方分流流程。
 
 > 职责边界：本工作流负责**发现 + 证据收集 + 报告条目**。Bug 被**确认**后的根因定位、影响分析、回归建议移交 `bug-analysis` skill（对应报告条目中根因分析等五个扩展字段留 TODO）。
 

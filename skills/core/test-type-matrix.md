@@ -76,7 +76,7 @@
 - **代码信号**：有前端（扫描器探测 package.json 前端依赖 / .vue / .svelte / 多 .html；移动端信号同计为有前端——pubspec.yaml(Flutter)、react-native/@tarojs/@dcloudio 跨端依赖、project.config.json 小程序配置）；浏览器特性 API 使用（IntersectionObserver 等）；UA 判断分支；响应式断点；多端平台分支（Platform.OS / kIsWeb / wx.getSystemInfo / `#ifdef MP-WEIXIN` 等）；系统版本门槛（minSdkVersion / deployment_target 等）
 - **默认档**：软默认——有前端 → light；有明确支持清单 → standard
 - **档位语义**：full = 支持矩阵逐格（浏览器 × 设备 × 分辨率 × P0 路径）；standard = 支持清单矩阵 × P0 路径；light = 最新 Chrome / Safari / Edge / Firefox 冒烟
-- **执行归属**：agent + Playwright 项目矩阵
+- **执行归属**：agent + Playwright 项目矩阵（现成接入片段：automated-e2e-testing 工程约定第 14 节）
 - **成本因子**：多浏览器 CI runner；真机（移动端超出 v1 范围）
 - **消费方式**：用例型——standard 及以上产 type: compatibility 用例（标签 [兼容]）；light 产冒烟清单条目
 
@@ -86,7 +86,7 @@
 - **代码信号**：有前端即最低信号（语义化标签缺失、img 无 alt、键盘不可达、表单无 label——由 axe 扫描器核实）
 - **默认档**：软默认——有前端 → light
 - **档位语义**：full = WCAG 2.2 AA 逐页审计 + 键盘全路径 + 读屏抽样（读屏归人工）；standard = axe 全页扫描 + 违规分级 + 关键流键盘走查；light = axe 扫描 P0 页面
-- **执行归属**：agent + axe-core（Playwright 集成）
+- **执行归属**：agent + axe-core（Playwright 集成；现成接入片段：automated-e2e-testing 工程约定第 12 节）
 - **成本因子**：极低
 - **消费方式**：审查 / 脚本型——任意档位产 axe 扫描任务与违规清单（客观违规项分级呈现）；full 的读屏抽样子项标注人工
 - **边界**：主观判定类（对比度阈值争议、读屏体验）标人工复核，agent 只出客观违规清单
@@ -97,7 +97,7 @@
 - **代码信号**：有前端即信号；已有截图测试（toHaveScreenshot 等）
 - **默认档**：软默认——有前端 → light
 - **档位语义**：full = 全页面截图基线 + 逐变更 diff；standard = 关键页基线 + diff；light = P0 页面截图存档供人比对（不自动判）
-- **执行归属**：agent + Playwright screenshot
+- **执行归属**：agent + Playwright screenshot（现成接入片段：automated-e2e-testing 工程约定第 13 节）
 - **成本因子**：低；基线维护与动态内容遮罩规则（时间 / 头像 / 随机推荐位）是主要复杂度
 - **消费方式**：脚本型——standard 及以上产截图基线执行物；light 产截图存档任务
 - **防 flaky 硬约束**：自动 diff 必须先声明遮罩规则，未声明遮罩的 diff 失败不判 Bug

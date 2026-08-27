@@ -3,6 +3,20 @@
 本项目所有显著变更都记录在此，格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.7.0] - 2026-08-27
+
+### 新增
+
+- **流水线集成与非交互运行约定**（core/pipeline-integration.md）：补齐"skills 只服务人机对话、进入流水线无章可循"的能力空缺——CI 触发词此前在全部 SKILL.md 零命中，测试左移的真实战场在 PR 冒烟 / 夜间全量 / 发布卡点三层流水线里。三块主体：非交互三约定——⏸ 检查点降级三级序（保守默认值 → 意图问题记未决项 → 统一落盘未决项文件；铁律：agent 代答裁决即伪造，evidence 第三类裁决规则无人值守时失效）、产物落盘路径规范与命名纪律、退出码四值语义（0 通过 / 1 A 类缺陷主导 / 2 C 类环境故障主导或基建自身异常——自动原样重跑一次且再次为 2 只告警 DevOps 不通知测试组 / 3 U 类超阈 >10% 或自校验失败），判定顺序与 triage 判定树第 0 步同构；CI 触发分层（PR-smoke <10min → nightly-full 定时 02:00 东八区 → release-gate 门禁）配 GitHub Actions host agent 无头调用范式（claude -p + allowedTools 白名单 + artifact 上传 if: always()）；失败回流闭环——流水线批量失败统一回流 core/triage.md 四分类。消费钩子五处接线：regression-testing §4（P0/P1/P2 分层消费）、api-testing §4 与 automated-e2e-testing 工作流二（headless 模式加载指引）、report-template 使用约定第 7 条 + 新增"机读摘要片段"yaml 章节（source_run / triage_distribution / exit_code_hint 等字段与三文件互认，与正文冲突以正文为准；置于模板围栏外避免嵌套 fence）、core/SKILL.md 共享文档表登记。
+
+- **类型域执行层断链落底**（automated-e2e-testing/references/playwright-conventions.md 新增 §12–§14）：decision-layer-design 十轴宣告"agent + axe-core（一条命令接入）/ screenshot diff / 项目矩阵"，但 e2e 执行层对应关键词零命中——V5 回收表的执行方声明沦为空头支票。三个现成接入片段补齐断链，弱模型不再需要临场拼装 Playwright 配置：§12 可访问性——@axe-core/playwright 集成 helper（runAxeScan 函数含注释，只回收 critical/serious 阻断级并输出结构化清单供分流表直接引用）；§13 视觉基线——toHaveScreenshot 配置纪律（snapshotPathTemplate、maxDiffPixelRatio 阈值、动态区域 mask 硬约束遮时间戳与推荐流，基线更新仅限分流判 B1 附依据后执行——拿红灯就重录等于把真回归洗白成绿灯）；§14 浏览器兼容——projects 多浏览器矩阵（chromium/firefox/webkit + channel 方式 msedge 覆盖 light 档），本地固定 --project=chromium 收敛反馈环、多浏览器留给夜间档的成本纪律。test-type-matrix 轴 5（兼容）/轴 6（无障碍）/轴 7（视觉）三处"执行归属"列同步接上小节号指针，e2e SKILL.md 工程约定节加类型域取用入口。
+
+### 变更
+
+- **Triage 显式聚簇坍缩**（core/triage.md，业界四动作补齐 Cluster）：业界最佳实践归因链路为 Classify→Cluster→Attribute→Recommend，本 skill 此前缺显式聚簇步骤、大批量失败逐条定性是 O(N) 人工量——正是夜间构建 triage 占回归成本 30–40% 的痛点本体。判定树新增第 0.5 步"个体聚簇"：聚类键 = error message / 堆栈公共帧 / 选择器接口（G 级信号表前三行即统计口径），每簇仅取证据最全的代表进第 1 步定性，簇内继承类别；S 级人工量 O(N)→O(M)。配套防伪留痕：失败分流文件给簇编组号（CL-1/CL-2…），继承行 evidence 必须引用代表行编号（如「CL-1 代表 #3」），禁止零依据照抄；Common Mistakes 表新增"大批量逐条独立定性"反模式行。bug-analysis 输入通道打通：其输入来源追加批量分流产出（条目附带的 G/S 信号摘要与 evidence 字段即深挖复现起点）。
+
+- **AI 特有失效模式轴战略储备登记**（docs/decision-layer-design.md §10 开放问题区新增 10.6）：十轴矩阵对幻觉率门限 / prompt 注入 / 输出漂移 / 上下文污染等非确定性 AI 失效模式零覆盖，而含 LLM 组件的被测对象占比持续上升。只登记不动工、防过度设计：立项硬门槛 = AGENTS.md 每周 dogfooding 沉淀案例中 AI 失效域攒够 ≥3 例；立项草案随登记预置待取用（需求与代码信号 → scan_signals grep 清单、软默认档、light/standard/full 档位语义（属性断言 / 幻觉率门限 + 注入三攻击面 / RAG 双层评估 + 多次运行统计化判定）、执行归属守 V5 纪律不做空头承诺、成本因子强制 full 档预算声明、幻觉率阈值域别起点）；轴空间封闭原则不变，新增即矩阵版本升级并由黄金集标注记录版本号。
+
 ## [0.6.0] - 2026-08-27
 
 ### 新增
@@ -405,7 +419,9 @@ v2 改造：从两个 skill 升级为全生命周期 QA Agent Skills 框架。
 - 双轨产物：markmap（人执行）+ Test Case Schema（机器消费）
 - 早期迭代：test-case-writing 代码驱动增强、两层审查架构、二阶交叉覆盖
 
-[Unreleased]: https://github.com/fishzjp/qa-skills/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/fishzjp/qa-skills/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/fishzjp/qa-skills/compare/v0.6.0...v0.7.0
+[0.6.0]: https://github.com/fishzjp/qa-skills/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/fishzjp/qa-skills/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/fishzjp/qa-skills/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/fishzjp/qa-skills/compare/v0.3.0...v0.4.0

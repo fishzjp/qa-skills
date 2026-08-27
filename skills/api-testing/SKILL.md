@@ -2,7 +2,7 @@
 name: api-testing
 slug: api-testing
 displayName: API 接口测试
-version: 0.6.0
+version: 0.7.0
 description: 接口级测试时使用——从 OpenAPI/Swagger 文档或用例 Schema 中可自动化的接口用例出发，覆盖参数、边界、鉴权、幂等、并发、错误响应与数据一致性，产出可执行的 API 测试脚本与运行结果。不用于：Web UI 流程（automated-e2e-testing）、手动用例编写（test-case-writing）。
 ---
 
@@ -105,6 +105,8 @@ def client():
 
 ### 4. 运行与结果
 
+报告条目与统计口径以 `../core/report-template.md` 为唯一来源（含机读摘要片段，收尾时加载），保证可直接拼装进 `qa` 收尾的最终报告：
+
 ```bash
 pytest api-tests/ -v --tb=short          # 全量
 pytest api-tests/test_coupon_create.py   # 单文件
@@ -112,6 +114,7 @@ pytest api-tests/test_coupon_create.py   # 单文件
 
 - 失败用例先分辨：被测系统 Bug / 环境问题 / 用例自身错误——**不自行假设**，环境问题与预期歧义列出来问用户（提问格式同上，`../core/clarify-pattern.md`）
 - 失败 ≥3 条时升级为**批量分流**：先按 `../core/triage.md` 四分类定类（A 真缺陷 / B 资产问题〔补齐产品预期变更 B1〕/ C 环境 / D 不稳定），仅 A 类进入下方 Bug 记录流程，替换单条逐个分辨
+- **流水线运行**：以 headless 模式进入 PR 冒烟 / 夜间任务时，检查点降级为未决项、产物按规范落盘、退出码分离基建故障与真缺陷——三条约定见 `../core/pipeline-integration.md`（此时加载）
 - **结构覆盖补充证据（可选）**：有被测服务代码且测试环境可插桩（Python 服务 `coverage run` 启动；JVM 服务 JaCoCo agent）时，接口用例跑完取**被测服务的行/分支覆盖率**作为补充 E3 证据——只用于发现**零覆盖/极低覆盖的接口与分支**（漏测信号，转补用例或策略升档），不作为追高的虚荣指标；无插桩条件直接跳过，不阻塞交付
 - 发现的 Bug：证据（请求/响应原文、时间戳）按 `../core/report-template.md` §3 记录条目，根因分析移交 `bug-analysis`
 

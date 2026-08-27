@@ -91,6 +91,33 @@
 4. **报告是落盘产物**：追加不覆盖——新版本报告另存，历史报告保留（文件名含日期）
 5. **专项结果回收**：qa 收尾汇总类型域专项状态（handoff / 外部执行 / blocked / exclude）；执行结果按 §7 表归一化回收，exclude 轴以"未纳入 + scanned 见策略"呈现——类型范围决策在报告里可见、可审计
 6. **Bug 状态同步**：状态随回归结果更新——回归通过 → 已验证关闭；回归失败 → 已修复待验证（附失败证据）；裁决不修 → 不予修复（附依据）。qa 收尾按最新回归结果逐条同步（衔接 `regression-testing` §4），无回归记录的保持"新建"——消灭"Bug 报了但永远关不掉"的断链
+7. **机读摘要**：qa 收尾与执行类 skill 生成分报告时，将下方"机读摘要片段"（占位符替换后）追加为报告末节的固定内容；流水线聚合与质量门禁只解析此节，人读内容不受影响。字段口径见 `pipeline-integration.md` 约定二/三
+
+## 机读摘要片段
+
+```yaml
+# 追加到报告末尾；与正文各节一一对应，冲突时以正文为准
+meta:
+  project: {项目名}
+  date: {日期}
+  source_run: {PR-smoke | nightly-full | release-gate}   # 触发分层对照 pipeline-integration 第 1 节
+summary:                       # ← §2 执行统计
+  total: {总数}
+  passed: {通过数}
+  failed: {失败数}
+  blocked: {阻塞数}
+triage_distribution:           # ← 失败分流表结论分布（未分流轮省略本节）
+  A: 0
+  B1: 0
+  B2: 0
+  C: 0
+  D: 0
+  U: 0
+exit_code_hint: 0              # ← 对照 pipeline-integration 约定三（0/1/2/3）
+open_items: {§6 未闭环条数}
+bugs:                          # ← §3 Bug 清单一行一条（id / severity / status）
+  - {id: BUG-001, severity: S1, status: 新建}
+```
 
 ## 引用方式
 

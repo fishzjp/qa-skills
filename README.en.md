@@ -227,7 +227,7 @@ skills/        the product (10 skills + shared core/)
   core/        shared knowledge base (no task triggering): evidence / risk-model / executability /
                testing-principles / report-template / case-format / coverage /
                schema-extraction / clarify-pattern / test-type-matrix (decision matrix) /
-               triage (failure-triage rules)
+               triage (failure-triage rules) / pipeline-integration (headless & CI conventions)
                + methods/ (4 design-method guides) + scripts/ (schema validator + type-signal scanner)
   requirement-analysis/  test-strategy/  test-case-writing/  test-case-review/
   automated-e2e-testing/  api-testing/  exploratory-testing/  bug-analysis/  regression-testing/

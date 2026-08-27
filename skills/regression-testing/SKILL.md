@@ -2,7 +2,7 @@
 name: regression-testing
 slug: regression-testing
 displayName: 回归测试
-version: 0.6.0
+version: 0.7.0
 description: 代码变更（diff/Bug 修复/需求变更）后判断应回归哪些测试时使用——沿"改动文件 → 改动函数 → 受影响功能 → 受影响用例"分析链，基于用例 Schema 的追溯映射产出分级回归清单。不用于：用例文件本身的增量修改（test-case-writing）、长期回归策略（test-strategy）。
 ---
 
@@ -105,6 +105,7 @@ git diff <base>...<head> -U3             # 逐文件读改动内容，定位改�
 ### 4. 交付与执行衔接
 
 - 清单落盘后交执行：自动化部分 → `automated-e2e-testing` / `api-testing`；手动部分 → 测试工程师
+- **流水线分层消费**：本清单的三级分级同时是流水线触发分层的依据——PR 冒烟跑 P0、夜间任务跑 P1+P2、发布卡点全量；headless 非交互运行时检查点降级/产物落盘/退出码语义见 `../core/pipeline-integration.md`（此时加载），回流后的批量失败进 `../core/triage.md`
 - 回归结果汇总进测试报告（`../core/report-template.md` §5 回归摘要）
 - **多失败先分流**：一轮回归失败 ≥3 条时，先按 `../core/triage.md` 四分类预归类——C 环境 / D 不稳定剔出本轮 Bug 同步口径（C 修复后受影响批次强制原样重跑），B 资产问题单列待办，剩余 A 类才进入下行状态同步
 - **回归结果同步 Bug 状态**：修复验证对应的 Bug 条目按结果更新——通过 → 已验证关闭；失败 → 已修复待验证（附失败证据；条目已处于该状态则**复验轮次 +1**，达 3 向用户提示升级裁决——换修复方向 / 转不予修复评审），字段口径见 `../core/report-template.md` §3（使用约定 6）

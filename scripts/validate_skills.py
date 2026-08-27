@@ -32,7 +32,7 @@ MAX_LINES = 500
 MAX_DESC_CHARS = 300
 REF_PATTERN = re.compile(r"`((?:\.\./|references/|templates/|core/)[\w./-]+\.(?:md|json|py|ts|tsx|ya?ml))`")
 CORE_BARE_PATTERN = re.compile(r"`((?:\.\./)?(?:[\w-]+/)*[\w-]+\.(?:md|py))`")
-MD_LINK_PATTERN = re.compile(r"\]\(([^()\s]+)\)")
+MD_LINK_PATTERN = re.compile(r'\]\(([^()\s]+)(?:\s+"[^"]*")?\)')
 FRONTMATTER = re.compile(r"\A---\n(.*?)\n---\n", re.S)
 MD_EXTS = (".md", ".json", ".py", ".ts", ".tsx", ".yml", ".yaml")
 
@@ -115,7 +115,7 @@ def check_md_links(md_path, errors):
         raw = m.group(1)
         if raw.startswith(("http://", "https://", "mailto:", "#")):
             continue
-        path_part = raw.split("#", 1)[0].lstrip("./")
+        path_part = raw.split("#", 1)[0]
         if not path_part.lower().endswith(MD_EXTS):
             continue
         if any(ch in path_part for ch in "{}<>:*|"):
@@ -187,7 +187,7 @@ def main():
     #（\b 收紧：evaluation / retrieval / medieval 等词不触发）
     for md in sorted(SKILLS_ROOT.rglob("*.md")):
         for i, line in enumerate(md.read_text().splitlines(), 1):
-            if re.search(r"\beval/", line):
+            if re.search(r"\beval/", line, re.IGNORECASE):
                 errors.append(f"{md.relative_to(REPO)}:{i}: 引用本地评测链路路径 eval/"
                                "（skills 必须自包含，评测依赖不得进产品）")
 

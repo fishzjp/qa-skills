@@ -2,7 +2,7 @@
 name: requirement-analysis
 slug: requirement-analysis
 displayName: 需求分析
-version: 0.6.0
+version: 0.7.0
 description: 系统性建模某个需求/系统时使用——从 PRD、设计/API 文档、Bug、Issue、代码中提炼目标、范围、角色、规则、异常、依赖与不明确项，产出结构化需求模型（含澄清记录与用户裁决）。不用于：已有需求模型直接写用例（test-case-writing）、"怎么测"的策略决策（test-strategy）、端到端流水线（qa）。
 ---
 

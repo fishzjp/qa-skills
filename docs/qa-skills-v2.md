@@ -1,6 +1,8 @@
 # QA Skills v2 产品与架构规划文档
 
-> **文档状态**：v2.4（2026-08-20）
+> **文档状态**：v2.5（2026-08-27）
+>
+> **v2.5 变更**（第四轮全库审查校准）：§3 与 §4 风险示例 YAML 的 `status` 值对齐本文档自身声明的五值枚举（`needs_verification` → `hypothesis`）。
 >
 > **v2.4 变更**（第三轮审查修复，冻结基线）：① Test Case Schema 落盘路径定为 `{项目}/测试用例.schema.yaml`（7.4 补存放约定，5.3 落盘表同步，审查修订后重新抽取）；② exploratory-testing 补输入 / 输出定义与落盘行（`探索笔记_{主题}.md`），补齐第 8 章统一模板；③ 5.4 会话模型补降级路径——宿主不支持子会话时退化为顺序会话 + 文件衔接，正确性不变；④ Phase 1 显式列入 `core/executability.md` 落地时点；⑤ 风险 ↔ 用例双向引用声明主从（`case.risk_ref` 权威、`risk.anchors` 派生）；⑥ 第 11 章点明执行策略裁决与 `automation_plan` 的提案 / 确认关系；⑦ 12.4 补 Skill 版本纪律（PR + 版本号 + 质量门合入）。
 >
@@ -144,7 +146,7 @@ finding:
     level: E2                    # E0–E4
     source: user_service.go:124
   confidence: medium             # high / medium / low
-  status: needs_verification     # fact / inference / risk / hypothesis / verified
+  status: hypothesis             # fact / inference / risk / hypothesis / verified
 ```
 
 禁止不加标注直接输出"这里存在 Bug"——这是证据体系要消灭的幻觉式结论。
@@ -205,7 +207,7 @@ risk:
     level: E2
     source: user_service.go:124
   confidence: medium
-  status: needs_verification
+  status: hypothesis
   anchors: [TC-07-02]            # 覆盖此风险的用例编号（派生索引，主从规则见下）
 ```
 
@@ -919,3 +921,5 @@ QA Agent
 6. **Eval / QA-Skills-Bench**（黄金集 Phase 1 起步，量化 Skill On / Off）
 
 这六项加编排入口完成后，QA Skills 不再是几个"测试 Prompt"，而是一套完整的 **Agentic QA 方法论 + Skills + Benchmark**。
+
+> **维护注记**（2026-08-27 第四轮全库审查）：本规划文档为演进蓝图快照，落地现状以产品本体为准——失败分流的聚簇坍缩闭环见 `skills/core/triage.md`（§0.5 / §5 D 类升级机制），非交互与 CI 集成三约定见 `skills/core/pipeline-integration.md`，AI 应用特有失效模式战略储备见 `docs/decision-layer-design.md` §10.6。

@@ -227,7 +227,8 @@ skills/                  产品本体（10 个 skill + core 共享知识库）
   core/                  共享知识库（SKILL.md 仅作安装依赖单元，不参与任务触发）：evidence / risk-model /
                          executability / testing-principles / report-template / case-format /
                          coverage / schema-extraction / clarify-pattern / test-type-matrix
-                         （类型决策矩阵）/ triage（失败分流规范）+ methods/（4 篇设计方法细则）+ scripts/
+                         （类型决策矩阵）/ triage（失败分流规范）/
+                         pipeline-integration（非交互与 CI 集成约定）+ methods/（4 篇设计方法细则）+ scripts/
                          （Schema 校验器 + 类型信号扫描器）——被多 skill 消费的内容统一在此
   requirement-analysis/  test-strategy/  test-case-writing/
   test-case-review/      automated-e2e-testing/  api-testing/

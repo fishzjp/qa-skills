@@ -320,3 +320,101 @@ reporter: [
     name: playwright-report
     path: playwright/playwright-report/
 ```
+
+## 12. 类型域执行层之一：无障碍扫描（轴 6 accessibility）
+
+类型矩阵轴 6 决策 include 时按本节接入（决策与档位来自 test-strategy 的 type_scope，本节只管执行形态）；报告回收走 report-template §7 表，执行方列如实填 axe-core。
+
+一次性安装：
+
+```bash
+npm i -D @axe-core/playwright
+```
+
+helper 封装（放 `tests/helpers/axe.ts`，一条命令接入的落地形态）：
+
+```typescript
+/**
+ * runAxeScan —— 对当前页面执行 axe 可访问性扫描，
+ * 只返回 critical / serious 阻断级违规的结构化清单，供分流表或 Cx 条目直接引用
+ */
+import AxeBuilder from '@axe-core/playwright';
+import type { Page } from '@playwright/test';
+
+export async function runAxeScan(page: Page, label: string): Promise<string> {
+  const results = await new AxeBuilder({ page }).analyze();
+  const blocking = results.violations.filter(
+    v => v.impact === 'critical' || v.impact === 'serious'
+  );
+  if (!blocking.length) return `${label} — 无阻断级违规`;
+  const lines = blocking.flatMap(v => [
+    `[${v.impact}] ${v.id}: ${v.help}`,
+    ...v.nodes.slice(0, 5).map(n => `    ${n.target.join(' ')}`),
+  ]);
+  return `${label} — ${blocking.length} 类阻断级违规:\n${lines.join('\n')}`;
+}
+```
+
+处置纪律：
+- **分级判定**：critical / serious 计缺陷条目（critical 影响主流程可达性时 Severity 从 S1 起）；moderate / minor 进观察清单不计 Bug——对比度阈值争议、读屏体验等主观项标人工复核（矩阵轴 6 边界条款）
+- light 档只扫 type_scope 给定的 P0 页面集，逐页出违规清单条目（Cx 通道）；standard 档扩展到主要页面全集 + 关键流键盘走查（Tab 遍历、断言焦点态可见）
+- 扫描失败页面本身可渲染才可信——白屏页上的 axe 结果没有意义，先排除环境故障
+
+## 13. 类型域执行层之二：视觉基线（轴 7 visual）
+
+配置增补（playwright.config.ts）：
+
+```typescript
+export default defineConfig({
+  // 截图基线独立目录：便于 CI 工件上传规则通配
+  snapshotPathTemplate: '{testDir}/__screenshots__/{testFileName}/{arg}{ext}',
+  expect: {
+    toHaveScreenshot: { maxDiffPixelRatio: 0.02 },   // 2% 容差起步，按页面校准收紧
+  },
+});
+```
+
+用例形态：
+
+```typescript
+// TC-07-01: 订单列表页视觉基线比对（fullPage 整页基准）
+await expect(page).toHaveScreenshot('TC-07-01-full.png', { fullPage: true });
+```
+
+三条硬纪律（矩阵轴 7 防 flaky 条款同源）：
+- **动态区必须声明 mask**——时间戳、头像、随机推荐位、广告轮播不遮必炸，这是纪律不是技巧：
+
+```typescript
+await expect(page).toHaveScreenshot('dashboard.png', {
+  fullPage: true,
+  mask: [
+    page.locator('[data-testid="timestamp"]'),
+    page.locator('.recommend-feed'),
+  ],
+});
+```
+
+- **未声明遮罩规则的 diff 失败不判 Bug**：先进 S 级复核区分动态内容干扰还是真实回归（走 `../core/triage.md` 个体定性路径后再下结论）
+- 基线更新只能 `npx playwright test --update-snapshots`，且**仅在分流判 B1（预期变更附依据）之后执行**——拿到红灯就重录基线等于把真回归洗白成绿灯；light 档不自动 diff，只截图存档供人比对
+
+## 14. 类型域执行层之三：多浏览器兼容（轴 5 compatibility）
+
+配置增补（playwright.config.ts）。Playwright 原生引擎为 chromium/firefox/webkit，Edge 由 chromium channel 派生——恰好覆盖 light 档「最新 Chrome/Safari/Edge/Firefox 冒烟」定义：
+
+```typescript
+export default defineConfig({
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    { name: 'msedge', use: { channel: 'msedge' } },
+  ],
+});
+```
+
+档位对接（depth 来自 type_scope，不为档位发明新语义）：
+- light → 四 project × P0 冒烟子集：`npx playwright test tests/smoke/ --project=chromium --project=firefox --project=webkit --project=msedge`
+- standard → 需求支持清单对应的 project 子集 × P0 路径（不在支持清单内的浏览器不加 project）
+- full → 浏览器 × 分辨率矩阵逐格，分辨率经 `use: { viewport: {...} }` 维度展开
+
+成本纪律：本地开发固定 `--project=chromium` 收敛反馈环；多浏览器留给流水线夜间档跑（非交互产物与退出码约定见 `../core/pipeline-integration.md`）——单浏览器本地 + 多浏览器 CI 是多浏览器成本的业界默认切分，全量永远并行只会让反馈环烂掉。
