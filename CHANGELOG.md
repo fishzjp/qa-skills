@@ -3,6 +3,12 @@
 本项目所有显著变更都记录在此，格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.6.0] - 2026-08-27
+
+### 新增
+
+- **Triage 失败分流规范**（core/triage.md，2026-08-27）：补齐"一轮执行结束批量失败"的能力空缺——既有 skill 只覆盖单条失败分辨（api-testing 三分法）与 Bug 深挖（bug-analysis），缺少批量分流层。四分类定法：A 真缺陷 / B 资产问题（B1 产品预期变更・B2 用例自身错误）/ C 环境与依赖故障 / D 不稳定 + U 显式未知兜底；先全局后个体的判定树（全局扫描排除环境事件 → 个体原样重跑定性 → 变更基线区分 A/B）；G/S 双级信号表（机械可提取 + agent 语义复核）；两条反吞没条款（B1 必须给出 commit hash / 需求文档 / 用户裁决三选一依据，C 类修复后受影响批次强制原样重跑）；D 类跨轮 ≥3 次升格排期修根因，禁止永久 fixme 化；产出追加式留存文件 `失败分流_{日期}.md`。三处消费钩子接线：automated-e2e-testing 工作流二之前、api-testing §4 运行与结果、regression-testing §4 交付与执行衔接；api-testing 原三分法映射为 A/C/B2 的子集关系说明保留。
+
 ## [0.5.1] - 2026-08-27
 
 ### 变更

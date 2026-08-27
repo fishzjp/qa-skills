@@ -2,7 +2,7 @@
 name: core
 slug: core
 displayName: QA 共享知识库
-version: 0.5.1
+version: 0.6.0
 description: qa-skills 共享知识库，安装依赖单元（非触发 skill）：承载被其余 10 个 skill 以相对路径引用的方法、规则、模板与脚本（可执行性标准、证据分级、风险模型、类型决策矩阵等）。仅在 qa-skills 系列 skill 工作流中被引用读取；任何具体测试任务都不要独立触发本 skill，独立使用无意义。通过 npx skills 等安装器单独安装其他 qa-skills skill 时，必须同时安装本 skill，否则引用路径断裂。
 ---
 
@@ -25,6 +25,7 @@ description: qa-skills 共享知识库，安装依赖单元（非触发 skill）
 | `schema-extraction.md` | schema.yaml 抽取规则 |
 | `clarify-pattern.md` | 澄清检查点模式 |
 | `test-type-matrix.md` | 类型决策矩阵（十轴全轴必答） |
+| `triage.md` | 失败分流规范（四分类判定树 + G/S 信号 + 反吞没条款，失败 ≥3 条触发） |
 | `report-template.md` | 测试报告模板 |
 | `methods/*.md` | 设计方法细则（边界 / 数据驱动 / 权限 / 状态机） |
 | `scripts/*.py` | Schema 校验器、类型信号扫描器 |

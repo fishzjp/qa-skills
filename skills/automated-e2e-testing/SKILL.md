@@ -2,7 +2,7 @@
 name: automated-e2e-testing
 slug: automated-e2e-testing
 displayName: E2E 自动化测试
-version: 0.5.1
+version: 0.6.0
 description: 将手动测试用例转为 Playwright E2E 测试并执行时使用；含写自动化前的业务熟悉踩点、Page Object/Helper 编写、执行中的 Bug 证据收集与报告条目记录。不用于：纯 API 接口测试（api-testing）、以理解系统为目的的独立探索会话（exploratory-testing）、已确认 Bug 的根因分析（bug-analysis）。
 ---
 
@@ -100,6 +100,8 @@ description: 将手动测试用例转为 Playwright E2E 测试并执行时使用
 ## 工作流二：Bug 探索与记录
 
 在已理解业务逻辑的前提下，系统性验证页面功能，发现 Bug 和不一致。
+
+> 批量失败前置分流：一轮执行结束**失败 ≥3 条**时，先加载 `../core/triage.md` 做四分类定类（A 真缺陷 / B 资产问题 / C 环境 / D 不稳定），仅 A 类进入本工作流的证据收集与报告条目；<3 条维持单条流程不变。
 
 > 职责边界：本工作流负责**发现 + 证据收集 + 报告条目**。Bug 被**确认**后的根因定位、影响分析、回归建议移交 `bug-analysis` skill（对应报告条目中根因分析等五个扩展字段留 TODO）。
 

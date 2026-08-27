@@ -44,6 +44,9 @@ eval/results/calibration/
 eval/results/LATEST.md
 eval/
 tests/
+
+# in-situ 评测实验区（fixture 与观测记录只留本地，不进公开仓）
+.in-situ-lab/
 # docs/ 默认本地（新文档防误提交），三个产品级设计文档显式例外跟踪
 docs/*
 !docs/DESIGN.md
