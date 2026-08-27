@@ -40,8 +40,10 @@ TEXT_EXTS = {
     ".py", ".js", ".jsx", ".ts", ".tsx", ".vue", ".svelte", ".java", ".go",
     ".rs", ".rb", ".php", ".cs", ".kt", ".swift", ".scala", ".dart", ".sql",
     ".sh", ".yaml", ".yml", ".json", ".toml", ".xml", ".html", ".proto",
-    ".gradle", ".properties", ".cfg", ".ini", ".j2", ".tf",
+    ".gradle", ".kts", ".properties", ".cfg", ".ini", ".j2", ".tf", ".wxml",
 }
+# 无后缀但有固定文件名的配置文本（如 iOS CocoaPods 清单）
+TEXT_FILE_NAMES = {"Podfile"}
 
 # 每轴 G 级内容信号：(标签, 正则)。正则命中 ≠ 结论成立——预填表仅供 agent 修订。
 AXIS_PATTERNS = {
@@ -71,6 +73,14 @@ AXIS_PATTERNS = {
     "compatibility": [
         ("浏览器特性 API", re.compile(r"\b(IntersectionObserver|ResizeObserver|navigator\.\w+|matchMedia)\b")),
         ("响应式断点", re.compile(r"@media|useBreakpoint|responsive")),
+        # 移动端多端信号：RN/Flutter/小程序的平台分支是"同功能跨端行为可能不一致"的 G 级证据
+        ("多端平台分支", re.compile(
+            r"\b(Platform\.OS\s*[=!<>]=?|kIsWeb|defaultTargetPlatform\b|TargetPlatform\.(?:iOS|android|macOS)"
+            r"|wx\.getSystemInfo\w*|my\.getSystemInfo(?:Sync)?|tt\.getSystemInfo\w*"
+            r"|process\.env\.TARO_ENV|UNI_PLATFORM|#ifdef\s+(?:APP-PLUS|MP-WEIXIN|MP-ALIPAY|H5))", re.I)),
+        ("系统版本门槛", re.compile(
+            r"\b(minSdkVersion|targetSdkVersion|compileSdkVersion|platform\s*:\s*(?:ios|osx)"
+            r"|IPHONEOS_DEPLOYMENT_TARGET|MinimumOSVersion|deployment_target|minifyEnabled)\b", re.I)),
     ],
     "accessibility": [
         ("无障碍线索", re.compile(r"\b(aria-[\w-]+|role=|tabindex|focus-visible|<img[^>]*alt)\b", re.I)),
@@ -94,6 +104,13 @@ AXIS_PATTERNS = {
 
 # 每轴 G 级路径信号：(标签, 相对路径匹配正则)。
 AXIS_PATH_PATTERNS = {
+    "compatibility": [
+        # 移动端/小程序工程标志：存在即意味着跨 OS 版本与设备形态的兼容面（此前扫描器对
+        # RN/Flutter/小程序全盲，移动端项目这三个轴会全部落"无命中"的假阴性）
+        ("移动端工程配置", re.compile(
+            r"(^|/)(android/app/build\.gradle(?:\.kts)?|ios/Podfile|pubspec\.yaml"
+            r"|project\.config\.json|capacitor\.config\.[jt]s|Info\.plist)$", re.I)),
+    ],
     "migration": [
         ("migration 目录", re.compile(r"(^|/)(migrations?|alembic|flyway|liquibase|db/migrate)/", re.I)),
         ("migration 文件", re.compile(r"\.(?:sql)$", re.I)),
@@ -107,9 +124,15 @@ AXIS_PATH_PATTERNS = {
     ],
 }
 
-# 前端存在性（轴 5/6/7 的最低信号）：package.json 含前端框架依赖，或前端源码文件达到阈值。
-FE_DEP_RE = re.compile(r'"(react|vue|angular|svelte|next|nuxt|vite|webpack)"', re.I)
-FE_EXT_RE = re.compile(r"\.(vue|svelte|html|jsx|tsx)$", re.I)
+# 前端/客户端存在性（轴 5/6/7 的最低信号，标签固定为「有前端」——矩阵文档按此引用）：
+# package.json 含 Web 前端或跨端框架依赖 / pubspec.yaml(Flutter/Dart) / 小程序工程配置，
+# 或前端源码文件达到阈值。覆盖 Web、React Native、Flutter、Taro/uni-app 与各系小程序。
+FE_DEP_RE = re.compile(
+    r'"(react|vue|angular|svelte|next|nuxt|vite|webpack|react-native|@tarojs/taro'
+    r'|@dcloudio/[a-z-]+|uni-app|mpvue|wepy)"', re.I)
+FLUTTER_MARKER_NAME = "pubspec.yaml"     # Flutter/Dart 工程唯一入口文件，出现即视作客户端信号
+MINI_PROGRAM_CONFIGS = {"project.config.json"}   # 微信/字节等小程序工程标志配置
+FE_EXT_RE = re.compile(r"\.(vue|svelte|html|jsx|tsx|dart|wxml)$", re.I)
 FE_FILE_THRESHOLD = 3
 
 AXES = ["performance", "security_business", "reliability", "concurrency",
@@ -156,6 +179,8 @@ def scan(root: Path):
     hits = {axis: [] for axis in AXES}          # (label, file, line, text)
     label_counts = {}                            # (axis,label) -> n
     fe_dep_found = False
+    fl_pubspec_found = False
+    mp_config_found = False
     fe_ext_count = 0
     files_scanned = 0
     state = {"truncated": False}
@@ -171,11 +196,16 @@ def scan(root: Path):
                 if rx.search(rel):
                     hits[axis].append((label, rel, 0, "(路径命中)"))
                     label_counts[key] = label_counts.get(key, 0) + 1
-        # 前端存在性
+        # 前端/客户端存在性（文件名级判据：Flutter / 小程序不依赖内容即可判定）
         if FE_EXT_RE.search(rel):
             fe_ext_count += 1
-        # 内容信号
-        if path.suffix.lower() not in TEXT_EXTS:
+        if path.name == FLUTTER_MARKER_NAME:
+            fl_pubspec_found = True
+        if path.name in MINI_PROGRAM_CONFIGS:
+            mp_config_found = True
+        # 内容信号（扩展名白名单之外，再放行 Podfile 这类无后缀固定名配置）
+        if (path.suffix.lower() not in TEXT_EXTS
+                and path.name not in TEXT_FILE_NAMES):
             continue
         try:
             if path.stat().st_size > MAX_FILE_BYTES:
@@ -197,8 +227,12 @@ def scan(root: Path):
                         hits[axis].append((label, rel, no, line))
                         label_counts[key] = label_counts.get(key, 0) + 1
 
-    if fe_dep_found or fe_ext_count >= FE_FILE_THRESHOLD:
-        signal = f"前端存在（package.json 前端依赖={fe_dep_found}, 前端源码文件≥{FE_FILE_THRESHOLD}：{fe_ext_count}）"
+    if (fe_dep_found or fl_pubspec_found or mp_config_found
+            or fe_ext_count >= FE_FILE_THRESHOLD):
+        signal = ("前端/客户端存在（NPM 前端/RN/跨端依赖=" + str(fe_dep_found)
+                  + ", Flutter(pubspec)=" + str(fl_pubspec_found)
+                  + ", 小程序工程配置=" + str(mp_config_found)
+                  + ", 前端源码文件≥" + str(FE_FILE_THRESHOLD) + "：" + str(fe_ext_count) + "）")
         for axis in ("compatibility", "accessibility", "visual"):
             hits[axis].append(("有前端", "(repo)", 0, signal))
 

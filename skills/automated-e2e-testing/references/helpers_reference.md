@@ -6,6 +6,7 @@
 
 ```typescript
 // tests/helpers.ts
+import * as fs from 'node:fs';
 import { Page, Locator, Request, Browser, BrowserContext, TestInfo } from '@playwright/test';
 import { BASE_URL, ACCOUNTS } from './constants';
 
@@ -76,6 +77,46 @@ export function closeContexts(...contexts: (BrowserContext | null)[]) {
   return Promise.all(
     contexts.filter((c): c is BrowserContext => !!c).map(c => c.close().catch(() => {})),
   );
+}
+
+/** 认证态缓存目录。含登录凭据，务必加入 .gitignore（见 references/playwright-conventions.md 第 10 节） */
+const AUTH_DIR = '.auth';
+
+/** 把当前已登录页面的认证态落盘为 .auth/{role}.json，返回缓存文件路径 */
+export async function saveLoginState(page: Page, role: Role) {
+  fs.mkdirSync(AUTH_DIR, { recursive: true });
+  const file = `${AUTH_DIR}/${role}.json`;
+  await page.context().storageState({ path: file });
+  return file;
+}
+
+/** 创建已登录会话：优先复用 storageState 缓存；缺失/失效时回退 UI 登录并刷新缓存。
+ *  每个用例独立创建会话，替代裸 createMultiSession 的全量 UI 登录，显著缩短执行时长 */
+export async function createSession(browser: Browser, role: Role) {
+  const file = `${AUTH_DIR}/${role}.json`;
+  let session: { page: Page; context: BrowserContext } | null = null;
+
+  if (fs.existsSync(file)) {
+    const context = await browser.newContext({ storageState: file });
+    const page = await context.newPage();
+    // 探测访问首页；被重定向到登录页说明缓存失效（跳转特征按你的系统调整）
+    await page.goto(`${BASE_URL}/`);
+    if (!/login/i.test(page.url())) {
+      session = { page, context };
+    } else {
+      await closeContexts(context);
+      fs.rmSync(file, { force: true }); // 删除过期缓存，走下方 UI 登录分支重建
+    }
+  }
+
+  if (!session) {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    await new LoginPage(page).loginAs(role);
+    await saveLoginState(page, role); // 首次 UI 登录成功后刷新缓存
+    session = { page, context };
+  }
+  return session;
 }
 
 /** 监听 /api/ 请求与响应，返回累积的 API 日志数组 */

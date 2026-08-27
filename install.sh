@@ -30,14 +30,16 @@ SRC_ROOT="$REPO_ROOT/skills"
 
 # 归属校验：目标位置的单元确实是本框架装的才允许覆盖删除——
 # ~/.agents/skills 是多 Agent 共享目录，不能无声吞掉其他框架或用户自己的同名目录。
-# 判据与 uninstall.sh 对齐：软链精确指向本仓库；core 靠特有文件指纹；
+# 判据与 uninstall.sh 对齐：软链精确指向本仓库；core 靠特有文件指纹（通用名两件 +
+# 框架独创命名二选一，双重大幅降低与第三方同名目录碰撞概率）；
 # 其余 skill 要求 SKILL.md 且 frontmatter 的 slug 与目录名一致（本框架特有字段）
 owns_unit() {
   local d="$1" dst="$TARGET/$1"
   if [ -L "$dst" ]; then
     [ "$(readlink "$dst")" = "$SRC_ROOT/$d" ]
   elif [ "$d" = "core" ]; then
-    [ -f "$dst/evidence.md" ] && [ -f "$dst/report-template.md" ]
+    [ -f "$dst/evidence.md" ] && [ -f "$dst/report-template.md" ] \
+      && { [ -f "$dst/test-type-matrix.md" ] || [ -f "$dst/clarify-pattern.md" ]; }
   else
     [ -f "$dst/SKILL.md" ] && grep -q "^slug: ${d}$" "$dst/SKILL.md" 2>/dev/null
   fi

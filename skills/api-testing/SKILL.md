@@ -2,7 +2,7 @@
 name: api-testing
 slug: api-testing
 displayName: API 接口测试
-version: 0.5.0
+version: 0.5.1
 description: 接口级测试时使用——从 OpenAPI/Swagger 文档或用例 Schema 中可自动化的接口用例出发，覆盖参数、边界、鉴权、幂等、并发、错误响应与数据一致性，产出可执行的 API 测试脚本与运行结果。不用于：Web UI 流程（automated-e2e-testing）、手动用例编写（test-case-writing）。
 ---
 
@@ -129,3 +129,4 @@ pytest api-tests/test_coupon_create.py   # 单文件
 | 失败一律记为 Bug | 误报污染报告 | 先归因（系统/环境/用例），歧义问用户 |
 | 无权限/越权只测前端表现 | 后端未拦截的越权漏检 | 直接调接口测鉴权（无 Token/过期/他人 id） |
 | 多参数接口逐值全展开或随手抽样 | 组合爆炸截断 / 参数交互缺陷静默漏测 | 按降档策略显式选档（全组合 → 成对 → 风险挑选），降档留痕 |
+| Schema 用例带占位符/虚构入口仍直接翻成脚本 | 幻觉脚本：能跑通但测的不是真实接口 | 转换前过 `../core/executability.md` 红线闸门，补不了的暂缓进遗留清单 |

@@ -2,7 +2,7 @@
 name: test-strategy
 slug: test-strategy
 displayName: 测试策略
-version: 0.5.0
+version: 0.5.1
 description: 回答"这个功能应该怎么测"时使用——风险评级挂证据（Risk Map），翻译成功能域+类型域两域范围与深度：类型域十轴全轴必答（脚本扫描信号+预填修订），include挂信号、exclude挂理由、full有预算上限。不用于：已有策略直接写用例（test-case-writing）、需求建模（requirement-analysis）、端到端流水线（qa）。
 ---
 
@@ -115,7 +115,7 @@ test_strategy:
 
 1. 写 `{项目}/测试策略.md`（Schema 结构 + Risk Map 内嵌；type_scope 每轴单行 flow 风格 + 足够性声明：逐轴档位动作清单与完成状态；开头一段**范围假设声明**：本策略限于系统级黑盒，单元/集成测试为开发侧职责，结论以此为前提）
 2. handoff 轴 / include+外部执行器 / blocked 轴 → 生成 `{项目}/专项移交_{轴}_{日期}.yaml` 移交包（目标、场景参数、阈值/验收口径）
-3. **校验后交付**：`python3 ../core/scripts/validate_schema.py {项目}/测试策略.md`（V1–V5），错误清零再交付
+3. **校验后交付**：`python3 ../core/scripts/validate_schema.py {项目}/测试策略.md`（V1–V5；有代码仓库时叠加 `--repo-root {仓库根}` 抽查各轴 signals 指涉真实性），错误清零再交付。注意：include 且挂 Critical 风险的轴若最终维持 full 以下档位，校验器要求该轴名出现在 budget_review 文本中——降档裁量必须留一行依据，不许无声消失
 4. 交付索引给下游（`test-case-writing`）：策略路径 + include 轴清单（用例型轴的 type/标签要求见矩阵第 12 节）+ 优先级映射要求
 
 ## Common Mistakes

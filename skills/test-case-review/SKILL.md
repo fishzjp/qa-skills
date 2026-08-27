@@ -2,7 +2,7 @@
 name: test-case-review
 slug: test-case-review
 displayName: 测试用例评审
-version: 0.5.0
+version: 0.5.1
 description: 审查已有测试用例（存量资产、他人编写、AI 产出）的覆盖与可执行性时使用——先建可测点基准，再独立评估覆盖、可执行性与正确性，直接修订用例文件并留审查记录。不用于：从零写用例（test-case-writing）、写时自审（其阶段四）、端到端流水线（qa）。
 ---
 

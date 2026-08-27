@@ -76,8 +76,10 @@ for d in "${SKILL_DIRS[@]}"; do
   if [ -L "$TARGET/$d" ]; then
     [ "$(readlink "$TARGET/$d")" = "$SRC_ROOT/$d" ] || { echo "  跳过 ${d}（软链不指向本仓库）"; continue; }
   elif [ "$d" = "core" ]; then
-    # SKILL.md 人人不缺、无区分度，用本框架特有文件指纹识别，防误删同名无关目录
-    if [ ! -f "$TARGET/$d/evidence.md" ] || [ ! -f "$TARGET/$d/report-template.md" ]; then
+    # 用本框架特有文件指纹识别，防误删同名无关目录：通用名两件缺一不可，
+    # 且需含框架独创命名（test-type-matrix / clarify-pattern）至少其一
+    if [ ! -f "$TARGET/$d/evidence.md" ] || [ ! -f "$TARGET/$d/report-template.md" ] \
+       || { [ ! -f "$TARGET/$d/test-type-matrix.md" ] && [ ! -f "$TARGET/$d/clarify-pattern.md" ]; }; then
       echo "  跳过 ${d}（非本框架 core 目录）"; continue
     fi
   elif [ -f "$TARGET/$d/SKILL.md" ] && grep -q "^slug: ${d}$" "$TARGET/$d/SKILL.md" 2>/dev/null; then

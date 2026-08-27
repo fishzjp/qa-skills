@@ -2,7 +2,7 @@
 name: automated-e2e-testing
 slug: automated-e2e-testing
 displayName: E2E 自动化测试
-version: 0.5.0
+version: 0.5.1
 description: 将手动测试用例转为 Playwright E2E 测试并执行时使用；含写自动化前的业务熟悉踩点、Page Object/Helper 编写、执行中的 Bug 证据收集与报告条目记录。不用于：纯 API 接口测试（api-testing）、以理解系统为目的的独立探索会话（exploratory-testing）、已确认 Bug 的根因分析（bug-analysis）。
 ---
 
@@ -47,6 +47,7 @@ description: 将手动测试用例转为 Playwright E2E 测试并执行时使用
 | 预期行为有歧义 | "预期{结果A}，实际{结果B}，应以哪个为准？" | 不要选择性地相信其中一个 |
 | 业务规则不清楚 | "规则{X}的具体边界是什么？" | 不要用常见默认值代替 |
 | 探索中发现异常 | "发现{异常行为}，这是预期行为还是 Bug？" | 不要自行判定是 Bug 还是特性 |
+| 用例反复超时/不稳定 | "{页面}是否存在长连接或轮询推送（WebSocket/SSE/心跳上报）导致页面永不空闲？" | 不要一律套 networkidle 等待，按等待降级阶梯处理 |
 
 ## 工作流零：业务熟悉（前置必做，为写自动化踩点的小规模探索）
 
@@ -157,7 +158,10 @@ Bug 发现 → 截图操作前 → 操作触发异常 → 截图操作后 → �
 | 网络请求验证 | `page.on('request')` 监听 | 必须在操作之前设置 |
 | 数据持久化验证 | `page.reload()` + 断言 | 确认数据真正保存 |
 | 多用户会话 | `createDualSession(browser, roleA, roleB)` | 两个角色并发 |
-| 等待策略 | `waitForLoadState('networkidle')` | 优于固定 `waitForTimeout` |
+| 登录态复用 | `createSession(browser, role)` | 缓存 storageState 免重复 UI 登录（工程约定第 10 节） |
+| 等待策略 | `waitForLoadState('networkidle')` | 优于固定 `waitForTimeout`；长轮询/心跳页永不空闲时按降级阶梯换用（工程约定第 9 节） |
+| 并行执行 | 默认串行，独立性达标后开 `workers` | 前提：自建数据 + 自清理 + 唯一命名逐项核对（工程约定第 11 节） |
+| flaky 定性 | 首次失败原样重跑通过 → 判 flaky | 重跑只用于定性；定位根因前标 `test.fixme`（工程约定第 11 节） |
 | 截图调试 | `page.screenshot({ fullPage: true })` | 每个关键步骤都截图 |
 | 服务端崩溃检测 | `isServerCrash(bodyText)` | 检测 500/502 错误 |
 | 唯一命名 | `${前缀}-${Date.now()}` | 避免测试间名称冲突 |
@@ -178,6 +182,11 @@ Bug 发现 → 截图操作前 → 操作触发异常 → 截图操作后 → �
 | 遇到疑问自行假设 | 产出不可靠的测试 | 不确定就向用户提问 |
 | Bug 只截图不记录 API/控制台 | 开发无法定位根因 | 用 `setupBugTracking()` + `tracker.collect()` |
 | 硬编码环境地址/账号 | 无法跨环境运行、泄露敏感信息 | 统一放 `constants.ts` / `.env`，代码只引用常量 |
+| 失败重跑变绿就当没事 | flaky 混入主干，CI 随机红 | 按 flaky 定性流程处理：先定性再修根因，禁止调大重试硬压（工程约定第 11 节） |
+| 对长轮询/推送页强套 networkidle | 超时假失败 | 按等待降级阶梯换 `waitForResponse`/断言自动轮询（工程约定第 9 节） |
+| 每个 context 都走一遍登录页 | 执行时长翻倍、缓存认证态形同虚设 | 用 `createSession()` 复用 storageState，失效自动回退 UI 登录（工程约定第 10 节） |
+| 所有用例永久串行不敢并行 | 全量执行时长线性膨胀 | 独立性核对通过后渐进开启 `workers`（工程约定第 11 节） |
+| 手动用例信息不足仍硬造定位器与操作路径 | 幻觉自动化：断言全绿但没测到真实行为 | 先过 `../core/executability.md` 转换闸门 + 工作流零踩点核实页面结构 |
 
 ---
 

@@ -55,8 +55,9 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
-  fullyParallel: false,       // 串行执行，避免状态冲突
+  fullyParallel: false,       // 默认串行（保守起点）；用例独立性达标后按第 11 节渐进开启并行
   timeout: 60_000,            // 单个测试超时 60s
+  retries: process.env.CI ? 1 : 0, // 本地零重试暴露问题；CI 至多重试 1 次，重跑变绿仍要按第 11 节定性 flaky
   use: {
     actionTimeout: 10_000,      // 单个操作超时 10s
     screenshot: 'only-on-failure',
@@ -248,4 +249,74 @@ test('测试中发现 Bug', async ({ page }, testInfo) => {
   // 收集完整证据（截图 + API + 控制台）
   const evidence = await tracker.collect(testInfo, 'BUG-001', '保存失败无提示');
 });
+```
+
+## 9. 等待策略与降级阶梯
+
+Playwright 操作自带 auto-wait，`expect(locator)` 断言自带轮询重试。显式等待手段按下表**自上而下优先**选用：
+
+| 层级 | 手段 | 适用 |
+|------|------|------|
+| ① | auto-wait + `expect(locator).toBeVisible()` 等 | 绝大多数交互与断言 |
+| ② | `page.waitForResponse()` / `waitForURL()` 先注册再操作 | 提交/跳转类操作的确定性收口 |
+| ③ | `waitForLoadState('networkidle')` | 传统 SSR/MPA 页面的聚合加载收尾 |
+| ④ | 固定 `waitForTimeout` | 仅临时调试，禁止提交进正式 spec |
+
+**networkidle 失效场景必须降级**：页面存在 WebSocket/SSE 长连接、轮询心跳（监控上报、IM 未读数、灰度打点）时网络"永不空闲"，等待会一直超时到 test timeout。降级方式：找到该操作真正触发的关键接口改用层级 ②；无确定接口时把验证交给层级 ① 的断言自动轮询。不确定是否存在长连接时，向用户提问而不是套 ④。
+
+## 10. 认证态复用（storageState）
+
+大量用例都从登录页走完整 UI 登录会显著拉长执行时长。做法：首次 UI 登录成功后把上下文认证态落盘为 `.auth/{role}.json`；后续会话优先复用缓存——访问任一路径确认未被踢回登录页即视为有效；被踢回登录页（token 过期、登录流程变更）则删除缓存、回退 UI 登录并刷新缓存。
+
+helper 参考实现（`saveLoginState` / `createSession`）见 `references/helpers_reference.md`。注意两点：
+
+- `.auth/` 目录含登录凭据，**必须加入 `.gitignore`**
+- 多用户并发场景（`createDualSession`）各角色各自走一遍缓存复用即可，互不影响
+
+## 11. flaky 治理与 CI 接入
+
+### flaky 二次确认规则
+
+- **定性**：一条用例首次失败、原样重跑通过 → 判为 first-run-flaky，**不算稳定通过**；原样重跑只用于定性，不得成为常态化通过手段
+- 定性后立即定位：回看 trace（第 3 节配置已开 `retain-on-failure`）、对比失败前后截图与 API 日志；常见根因是竞态等待不足（按第 9 节修正）或数据残留（清理不彻底）
+- 修复前的处置：短期标 `test.fixme` 防止污染主干绿灯，修复后恢复
+- **禁止**靠调大 retries 或调大超时让用例"变绿"
+
+### 并行开启条件
+
+本 skill 核心原则要求每条 test 独立（自建数据 + 自清理）——独立性达标后就没有理由永久串行：
+
+- 开启前逐项核对：动态数据全部 `${前缀}-${Date.now()}` 唯一命名；afterEach 清理齐全；无跨用例共享可变状态；无互斥业务约束（如同一单据只能一人操作）
+- 渐进开启：先以 `npx playwright test tests/{模块目录} --workers=2` 小并发观察一轮，稳定后在配置中上调 `workers`
+- 有顺序依赖的遗留用例：用 `test.describe.configure({ mode: 'serial' })` 局部圈住，不阻塞其余并行
+
+### CI 接入要点
+
+- **报告产物**：HTML 报告供 artifact 下载查看；需平台解析时另配 JUnit 输出：
+
+```typescript
+// playwright.config.ts 增补
+reporter: [
+  ['html', { open: 'never' }],
+  ['junit', { outputFile: 'results.xml' }],
+],
+```
+
+- **触发策略**：合入前流水线只跑受影响模块目录；夜间任务跑全量
+- **变量注入**：环境地址与账号沿用第 2 节约定，CI 上经变量/密钥注入，不入库
+- 最小 GitHub Actions 片段：
+
+```yaml
+# .github/workflows/e2e.yml 关键步骤
+- uses: actions/setup-node@v4
+  with: { node-version: 20 }
+- run: npm ci && npx playwright install --with-deps chromium
+  working-directory: playwright
+- run: npm test
+  working-directory: playwright
+- uses: actions/upload-artifact@v4
+  if: always()
+  with:
+    name: playwright-report
+    path: playwright/playwright-report/
 ```

@@ -72,7 +72,7 @@
 ## 7. 轴 5 兼容性（compatibility）
 
 - **需求信号**：明确支持的浏览器 / 设备清单；企业客户旧环境（旧内核）；跨端一致性要求
-- **代码信号**：有前端（扫描器探测 package.json 前端依赖 / .vue / .svelte / 多 .html）；浏览器特性 API 使用（IntersectionObserver 等）；UA 判断分支；响应式断点
+- **代码信号**：有前端（扫描器探测 package.json 前端依赖 / .vue / .svelte / 多 .html；移动端信号同计为有前端——pubspec.yaml(Flutter)、react-native/@tarojs/@dcloudio 跨端依赖、project.config.json 小程序配置）；浏览器特性 API 使用（IntersectionObserver 等）；UA 判断分支；响应式断点；多端平台分支（Platform.OS / kIsWeb / wx.getSystemInfo / `#ifdef MP-WEIXIN` 等）；系统版本门槛（minSdkVersion / deployment_target 等）
 - **默认档**：软默认——有前端 → light；有明确支持清单 → standard
 - **档位语义**：full = 支持矩阵逐格（浏览器 × 设备 × 分辨率 × P0 路径）；standard = 支持清单矩阵 × P0 路径；light = 最新 Chrome / Safari / Edge / Firefox 冒烟
 - **执行归属**：agent + Playwright 项目矩阵
@@ -117,6 +117,7 @@
 - **代码信号**：DB migration 文件（扫描器探测 migrations / alembic / flyway 目录）；数据回填脚本；双写逻辑〔S〕；API 多版本共存
 - **默认档**：软默认——有 migration 文件 → standard；无 → 存量系统 light / 绿地项目 exclude（记录判断依据）
 - **档位语义**：full = 升级路径矩阵（版本 × 数据形态）+ 回滚验证 + 新旧数据共存探测；standard = 代表性升级用例 + 回滚一例；light = migration 脚本审查（可回滚性 / 兼容性 / 回填幂等）
+- **灰度共存专项（需求信号命中灰度时并入对应档位一并交付）**：新版本自身功能之外覆盖三条链路——① 灰度路由正确性：命中小流量规则的请求进新版、未命中留在旧版（用例各自验证一侧）；② **出界处置**：与用户确认哪些指标越界即触发暂停 / 回滚（错误率 / 资损告警阈值等），并对"越界 → 暂停 → 回滚 → 数据一致"至少演练一次；③ **出界留痕**：每轮灰度的范围、比例、指标快照与出界事件记录落盘，作为下一步扩大灰度的依据——禁止凭印象全量
 - **执行归属**：agent
 - **成本因子**：可重置的存量数据快照
 - **消费方式**：用例型——standard 及以上产 type: functional 用例加标签 [迁移]；light 产脚本审查条目

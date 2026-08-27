@@ -7,6 +7,34 @@
 
 ### 变更
 
+- **第四轮全面审查修复**（缺陷闭环，2026-08-27）：**校验与扫描器**——validate_skills.py 新增
+  risk_ref 引用覆盖率检查、V4 终态预算留痕、信号指涉抽查三类规则（负向自测通过）；
+  scan_signals.py 补 RN / Flutter / 小程序三类跨端技术栈信号词——修"扫描器认得移动端
+  → 执行层却只按浏览器矩阵开策略"的 L6 断链前端缺口。**Schema 契约补全**——tags /
+  容器 meta / 共享前置 / test_data / evidence(code) / module 裁定六类此前未约束的字段
+  进入 validate_schema 契约。**e2e 工程化**——conventions 新增 §9 CI 接入、§10 flaky
+  分级处置、§11 storageState 登录态复用与 networkidle 反模式、串行悖论说明，配套
+  helpers 模板；SKILL.md 四处接线。**产物链路补断点**——qa 流水线阶段 5 补执行分报告
+  规格、阶段 6 补 Bug 条目中转、类型域专项移交跟踪回收（M1/M2/M3）；clarify-pattern
+  九类漏网矩阵补 I 类 NFR 指标空缺 + 裁决重开机制 + requirement 需求模型自检与分支核对
+  （M4/M5/M6/L4）。**执行型 skill 可执行性闸门**（M9）——api-testing 与
+  automated-e2e-testing 把存量用例转脚本 / 代码前逐条过 `core/executability.md` 第 4 节
+  红线（占位符 / 入口虚构 / 前置不可得 / 异步无时限 / 断言超强度），命中不硬转；
+  executability §5 同步声明转换闸门为第二个消费场景——堵"不可执行用例直接翻译成断言
+  全绿的幻觉自动化"。**regression 兜底与降级**（M10）——工作流前置三档资产盘点：
+  全套走完整链路 / 有 markmap 无 Schema 抽取补建 / 零资产不硬编清单，降级为 P0 冒烟
+  建议或先由 test-case-writing 补建再回；code_refs 显式定位为快照而非实时索引，
+  锚点陈旧整批降级为参考信号。**bug-analysis 与决策矩阵**（M11）——概率性 Bug 战术
+  （基线量化 N≥10 + 并发 / 时区边界 / 环境对比三类定向提频）；影响分析三面扩五面
+  （新增安全面 Severity 上浮一级 + 修复波及面作为回归建议直接输入）；Bug 清单 ↔ 回归
+  清单双向互链；test-type-matrix 轴 9 灰度共存专项三条链路（路由正确性 / 出界处置
+  演练 / 出界留痕禁凭印象全量）、域间裁决表补 exception/boundary × contract_integration
+  主从分明一行（同接口不得双计数）、轴 5 补移动端版本化路线（真机矩阵升版候选）。
+  **安装脚本与状态机收尾**——install.sh / uninstall.sh core 归属指纹升级双判据
+  （通用名两件缺一不可 + 框架独创命名二选一），降低共享目录同名碰撞误删风险；
+  Bug 状态"已修复待验证"双进入路径显式化（初验直入 / 回归失败退回），report-template
+  §3 新增复验轮次字段、轮次达 3 提示升级裁决——消除多轮修复退回无法区分与无限重试。
+
 - **全面审查修复**（第三轮审查闭环，2026-08-26）：**对外物料**——落地页 API 行改为复验口径
   100% / 99.2% 并撤下已证伪的"严断言"归因（页面此前仍挂 74% → 52% 旧叙事，与 README
   勘误冲突）；`pages.yml` 随单文件补部署 `og.jpg`（og:image 绝对 URL 指向它、此前分享图必然

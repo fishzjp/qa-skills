@@ -2,7 +2,7 @@
 name: exploratory-testing
 slug: exploratory-testing
 displayName: 探索式测试
-version: 0.5.0
+version: 0.5.1
 description: 需求不完整、系统陌生、文档不足时，发起以理解系统/发现风险为目的的独立探索式测试会话时使用——charter 驱动（目标 → 探索 → 记录），产出探索笔记（系统理解/风险清单/测试想法）作为需求建模输入或独立交付。不用于：为写自动化踩点的小规模探索（automated-e2e-testing 工作流零）、按既有用例执行（执行类 skill）。
 ---
 

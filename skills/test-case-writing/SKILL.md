@@ -2,7 +2,7 @@
 name: test-case-writing
 slug: test-case-writing
 displayName: 测试用例设计
-version: 0.5.0
+version: 0.5.1
 description: 从需求文档、API 文档、Bug 报告或代码仓库产出可执行的手动测试用例（markmap）时使用——代码优先：索取仓库、先代码审查找潜在 bug 再写用例，并抽取机器可读 Schema。不用于：需求建模（requirement-analysis）、测试策略（test-strategy）、独立审查（test-case-review）、自动化脚本（automated-e2e-testing / api-testing）。
 ---
 
@@ -104,7 +104,7 @@ description: 从需求文档、API 文档、Bug 报告或代码仓库产出可�
 
 文档研读完成后，**必须先检查是否存在模糊、不完整或矛盾之处**，不得自行假设。
 
-**触发与扫描的单一权威源在 `../core/clarify-pattern.md`（此时加载）**：基础触发按其「何时必须问」，深度扫描按其「需求歧义八类漏网模式」A–H 逐类过筛（2026-08-23 R2 收敛：本阶段不再维护独立清单）。
+**触发与扫描的单一权威源在 `../core/clarify-pattern.md`（此时加载）**：基础触发按其「何时必须问」，深度扫描按其「需求歧义九类漏网模式」A–I 逐类过筛（2026-08-23 R2 收敛：本阶段不再维护独立清单）。
 
 **代码模式特有触发**（文档模式无此项）：**文档与代码不一致**——数据结构、字段是否提交、流程顺序、默认值——默认以代码为准（测准声明），列出两边原文并询问"偏离是否确认为非缺陷？"
 
@@ -187,7 +187,7 @@ description: 从需求文档、API 文档、Bug 报告或代码仓库产出可�
 ### 阶段五：定稿 + Schema 抽取
 
 1. **可读性自检**：**执行 `../core/executability.md` 全部检查项**（零上下文新人复述、术语表核对、正文零代码自检、执行性确认、判定时限核查），不是可选参考
-2. **Schema 抽取**：从 markmap 单向抽取 `测试用例.schema.yaml`——字段定义、抽取规则与 YAML 转义纪律统一在 `../core/schema-extraction.md`（此时加载）；抽取后运行 `../core/scripts/validate_schema.py` 校验（YAML 合法性 + TC 编号一致性 + 占位符检查）
+2. **Schema 抽取**：从 markmap 单向抽取 `测试用例.schema.yaml`——字段定义、抽取规则与 YAML 转义纪律统一在 `../core/schema-extraction.md`（此时加载）；抽取后运行 `../core/scripts/validate_schema.py 测试用例_markmap.md 测试用例.schema.yaml --strategy {策略路径}/测试策略.md` 校验（YAML 合法性 + TC 编号一致性 + 占位符检查 + **风险覆盖门禁**：Risk Map 中全部 Critical/High 风险须被 ≥1 条用例的 risk_ref 反向覆盖，零覆盖即门禁失败；上游无策略文件则省略该参数。有代码仓库可叠加 `--repo-root` 抽查 code_refs 指涉真实性）
 3. 文件命名：`{项目名}/测试用例_markmap.md` + `{项目名}/测试用例.schema.yaml`
 
 ## Schema 双轨原则

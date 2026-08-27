@@ -2,8 +2,8 @@
 name: bug-analysis
 slug: bug-analysis
 displayName: 缺陷分析
-version: 0.5.0
-description: 对已确认的 Bug 做根因定位、影响分析、回归建议时使用——复现 → 读代码定位根因 → 影响三面分析 → 回归建议，条目（根因/影响/Severity 依据/修复建议）追加进测试报告。不用于：仅收集 Bug 证据（automated-e2e-testing / api-testing）、疑似未定性缺陷（test-case-writing 的 Cx 记录）。
+version: 0.5.1
+description: 对已确认的 Bug 做根因定位、影响分析、回归建议时使用——复现 → 读代码定位根因 → 影响五面分析 → 回归建议，条目（根因/影响/Severity 依据/修复建议）追加进测试报告。不用于：仅收集 Bug 证据（automated-e2e-testing / api-testing）、疑似未定性缺陷（test-case-writing 的 Cx 记录）。
 ---
 
 # Bug 分析（bug-analysis）
@@ -67,7 +67,7 @@ description: 对已确认的 Bug 做根因定位、影响分析、回归建议�
 
 ### 6. 落盘
 
-Bug 条目追加进测试报告对应条目（补根因分析等五个扩展字段）；无报告时新建报告文件（按 `../core/report-template.md`）。
+单阶段独立使用：Bug 条目追加进测试报告对应条目（补根因分析等五个扩展字段）；无报告时可新建报告文件（按 `../core/report-template.md`）。作为流水线 Bug 分析阶段运行：不新建、不改写最终测试报告——条目统一写 `{项目}/Bug条目_{日期}.md` 中转文件，由编排收尾阶段拼装，避免与收尾报告同名双写造成双数据源。
 
 ## Common Mistakes
 
@@ -76,7 +76,7 @@ Bug 条目追加进测试报告对应条目（补根因分析等五个扩展字�
 | 未复现就开始分析 | 根因建立在想象上 | 先复现拿 E3 证据；复现不了先要线索 |
 | 根因推测定性为事实 | 虚假结论传播 | status 标注 Inference/Verified（`../core/evidence.md`） |
 | 现象当根因（"接口超时，根因：接口超时"） | 分析空转 | 追到行为与预期分叉的 `文件:行` |
-| 影响范围只看单点 | 同根因其他路径漏修漏测 | grep 相同模式，功能/数据/用户三面分析 |
+| 影响范围只看单点 | 同根因其他路径漏修漏测 | grep 相同模式，功能/数据/用户/安全/修复波及五面分析 |
 | 越界写补丁代码 | 职责越界、干扰开发 | 给修复方向与验证建议 |
 | 把回归范围选择也做了 | 与 regression-testing 职责重叠 | 本 skill 出回归**建议**，范围选择移交 |
 | 疑似缺陷（未定性）直接进本流程 | 与 Cx 记录职责混淆 | 输入必须是已确认 Bug；未定性先走裁决 |
