@@ -39,7 +39,7 @@
 
     --strategy 测试策略.md   仅模式一生效：从策略正文的 Risk Map 提取 Critical/High 风险编号，
                              校验每条均被至少一条用例的 risk_ref 反向覆盖（证据链最后一环，
-                             Critical 风险零覆盖 = 报错）；risk_ref 指涉未知编号则告警（疑似笔误）
+                             Critical/High 风险零覆盖 = 报错）；risk_ref 指涉未知编号则告警（疑似笔误）
     --repo-root <仓库路径>   抽查指涉真实性：axis signals 与用例 code_refs 中形如
                              "path.ext:行号" 的文件必须在指定仓库下真实存在（缺失告警，
                              防"格式合规的幻觉证据"穿过 V2/V3 形式闸门）

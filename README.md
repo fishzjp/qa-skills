@@ -95,7 +95,7 @@ Skill 是纯 Markdown 指令文件（frontmatter + 相对路径引用），不�
 | "这个功能应该怎么测" | Risk Map（评级挂证据）→ 功能域 + 类型域两域决策（十轴全轴必答） | `测试策略.md`（含 type_scope 与专项移交包） |
 | "审一下这份存量用例" | 独立审查：可测点基准分母 + 覆盖 + 可执行性双线 | 直接修订用例文件 + 审查记录 |
 | "把用例转成自动化" | Page Object 规范、监听先于操作、自建数据自清理 | 可运行的 Playwright / pytest 代码 |
-| "这个 Bug 帮我定位一下" | 复现 → 读代码到行 → 影响三面分析 → 回归建议 | Bug 条目（根因 / 证据 / 回归） |
+| "这个 Bug 帮我定位一下" | 复现 → 读代码到行 → 影响五面分析 → 回归建议 | Bug 条目（根因 / 证据 / 回归） |
 
 `exploratory-testing`（charter 驱动探索）、`api-testing`（接口级）、`bug-analysis`、`regression-testing`（diff → 回归范围）各自独立可用。
 
