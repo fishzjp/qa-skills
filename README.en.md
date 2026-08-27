@@ -229,6 +229,7 @@ skills/        the product (10 skills + shared core/)
                + methods/ (4 design-method guides) + scripts/ (schema validator + type-signal scanner)
   requirement-analysis/  test-strategy/  test-case-writing/  test-case-review/
   automated-e2e-testing/  api-testing/  exploratory-testing/  bug-analysis/  regression-testing/
+.dsh/          dsh plugin trio (cordis.patch.yml + plugins/qa-skills.js; manifest in package.json's dsh.bundle)
 docs/          design documents (DESIGN / decision-layer / v2 blueprint)
 examples/      Skill On/Off output comparison
 ```

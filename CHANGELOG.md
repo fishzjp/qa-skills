@@ -3,18 +3,31 @@
 本项目所有显著变更都记录在此，格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
-## [Unreleased]
+## [0.5.1] - 2026-08-27
 
 ### 变更
+
+- **第五轮全面审查修复（实体补落）**（2026-08-27）：第四轮条目所列的部分修复在实际
+  落盘时静默丢失——发布文案已宣称、实体文件缺失（名实分离），本轮逐项 grep 回验补齐，
+  并确立"同文件串行编辑 + 每批写盘即回验"写入协议防复发：矩阵域间裁决表补
+  exception/boundary × contract_integration 主从分明行（同接口不得双计数）；bug-analysis
+  正文落地概率性 Bug 战术（基线量化 N≥10 + 并发 / 时区 / 环境三类定向提频）、影响分析
+  五面化（安全面 Severity 上浮一级 + 修复波及面接回归建议）与 Bug 清单 ↔ 回归清单双向
+  互链标注；report-template 影响范围提示语对齐五面口径；regression-testing 工作流前置
+  升级为启动前三档资产盘点（全套 / 抽取补建 / 零资产冒烟降级）、code_refs 显式定位为
+  快照而非实时索引（锚点陈旧整批降级为参考信号）；clarify-pattern 标题「八类」订正为
+  九类（A–I 表格与下游消费者早已一致）；decision-layer-design 矩阵行数快照回写实测值；
+  README 双语仓库结构树补 `.dsh/` 插件单元；CHANGELOG e2e 工程化段的 conventions
+  章节号配对订正（§9 等待策略 / §10 storageState / §11 flaky 治理与 CI 接入）。
 
 - **第四轮全面审查修复**（缺陷闭环，2026-08-27）：**校验与扫描器**——validate_skills.py 新增
   risk_ref 引用覆盖率检查、V4 终态预算留痕、信号指涉抽查三类规则（负向自测通过）；
   scan_signals.py 补 RN / Flutter / 小程序三类跨端技术栈信号词——修"扫描器认得移动端
   → 执行层却只按浏览器矩阵开策略"的 L6 断链前端缺口。**Schema 契约补全**——tags /
   容器 meta / 共享前置 / test_data / evidence(code) / module 裁定六类此前未约束的字段
-  进入 validate_schema 契约。**e2e 工程化**——conventions 新增 §9 CI 接入、§10 flaky
-  分级处置、§11 storageState 登录态复用与 networkidle 反模式、串行悖论说明，配套
-  helpers 模板；SKILL.md 四处接线。**产物链路补断点**——qa 流水线阶段 5 补执行分报告
+  进入 validate_schema 契约。**e2e 工程化**——conventions 新增 §9 等待策略与降级阶梯
+  （含 networkidle 反模式）、§10 认证态复用（storageState）、§11 flaky 治理与 CI
+  接入、串行悖论说明，配套 helpers 模板；SKILL.md 四处接线。**产物链路补断点**——qa 流水线阶段 5 补执行分报告
   规格、阶段 6 补 Bug 条目中转、类型域专项移交跟踪回收（M1/M2/M3）；clarify-pattern
   九类漏网矩阵补 I 类 NFR 指标空缺 + 裁决重开机制 + requirement 需求模型自检与分支核对
   （M4/M5/M6/L4）。**执行型 skill 可执行性闸门**（M9）——api-testing 与
@@ -386,7 +399,8 @@ v2 改造：从两个 skill 升级为全生命周期 QA Agent Skills 框架。
 - 双轨产物：markmap（人执行）+ Test Case Schema（机器消费）
 - 早期迭代：test-case-writing 代码驱动增强、两层审查架构、二阶交叉覆盖
 
-[Unreleased]: https://github.com/fishzjp/qa-skills/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/fishzjp/qa-skills/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/fishzjp/qa-skills/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/fishzjp/qa-skills/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/fishzjp/qa-skills/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/fishzjp/qa-skills/compare/v0.2.0...v0.3.0

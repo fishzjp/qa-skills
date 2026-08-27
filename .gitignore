@@ -52,3 +52,6 @@ docs/*
 .github/workflows/benchmark.yml
 *.bak
 *.bak2
+
+# 本地 smoke 测试备份包（不入库）
+.smoke_f*.zip
