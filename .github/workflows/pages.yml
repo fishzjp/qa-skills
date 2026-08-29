@@ -1,11 +1,11 @@
-# 宣传落地页部署：index.html 变更合入 main 后自动发布到 GitHub Pages
-# 产物打包 index.html + og.jpg 两个文件，不携带仓库其余内容
+# 宣传落地页部署：index.html / 配图 / og.jpg 变更合入 main 后自动发布到 GitHub Pages
+# 产物打包 index.html + og.jpg + assets/landing/ 配图目录，不携带仓库其余内容
 name: pages
 
 on:
   push:
     branches: [main]
-    paths: ['index.html', 'og.jpg', '.github/workflows/pages.yml']
+    paths: ['index.html', 'og.jpg', 'assets/landing/**', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:
@@ -36,6 +36,9 @@ jobs:
           cp index.html _site/
           # og:image 的绝对 URL 指向站点根的 og.jpg，必须随页面一起部署，否则社交分享图 404
           cp og.jpg _site/
+          # 落地页配图为静态资源（assets/landing/），缺失即整站破图
+          mkdir -p _site/assets
+          cp -R assets/landing _site/assets/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5

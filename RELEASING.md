@@ -11,7 +11,7 @@
 | 1 | GitHub 仓 | `main` + tag `vx.y.z` | `git push` | 手动 |
 | 2 | skills 市场（`npx skills add fishzjp/qa-skills`） | GitHub 源，随 tag/release 可见 | 随 #1 自动获得 | ✅ |
 | 3 | **dsh 插件市场**（npm 包 `dsh-qa-skills`） | npmjs.com | `npm publish` | ❌ **必须手动** |
-| 4 | 官网落地页 | GitHub Pages | push 中 `index.html`/`og.jpg` 变更触发 `pages.yml` | 条件自动 |
+| 4 | 官网落地页 | GitHub Pages | push 中 `index.html`/`og.jpg`/`assets/landing/**` 变更触发 `pages.yml` | 条件自动 |
 
 反面实例：v0.5.1、v0.6.0 均只完成了 #1，npm 侧停留在 0.5.0（详见文末踩坑记录）。
 
@@ -118,7 +118,7 @@ npm view dsh-qa-skills version --registry "$NPM_REGISTRY"   # 复验：latest ==
 ```
 
 - \#4 GitHub Release 页：贴 CHANGELOG 对应节原文，并附跨模型增益矩阵快照（README 对外承诺：每版 Release 附快照）
-- \#5 官网：本次若未触碰 `index.html`/`og.jpg` 则 pages 不触发、无需动作；触发了则确认 pages workflow 部署成功
+- \#5 官网：本次若未触碰 `index.html`/`og.jpg`/`assets/landing/` 则 pages 不触发、无需动作；触发了则确认 pages workflow 部署成功
 
 ### §6 发布后自证
 

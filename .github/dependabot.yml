@@ -1,6 +1,6 @@
 version: 2
 updates:
-  # npm 生态随 eval/harness 本地维护，公开仓库无 package.json——不配置
+  # npm 插件包（dsh-qa-skills）声明零运行时依赖，无可更新项——不配置 npm 生态
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

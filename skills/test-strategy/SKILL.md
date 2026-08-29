@@ -61,7 +61,7 @@ test_strategy:
 
 字段口径：`signals` 引用需求章节 / `文件:行` / 矩阵内部信号；`scanned` 为 exclude 的 G+S 双清单（项尾标 (G)/(S)）；`executor` 缺省视为 agent，非 agent（k6 / locust 等）必须带 `handoff_ref`；`execution_status` ∈ ready / blocked / done，exclude 轴省略。深度档位**只取三值**：full（逐格全覆盖）/ standard（主干+重点异常）/ light（抽样+冒烟）——"不测"不是深度而是范围决策：功能域写 `include: false`（挂 rationale），类型域写 `decision: exclude` 或 `handoff`，均须挂理由（校验器会拒绝 depth 里出现其他值）。
 
-> **格式硬约束（弱模型格式锤，2026-08-23 R1）**：type_scope **每轴必须写成一行** flow 风格，形如 `performance: { decision: include, depth: standard, signals: ["..."] }`——**禁止**把一个轴拆成 decision / depth / signals 多行块式（校验器按行解析，块式 = 校验失败 = 该轴视同未决策）。写之前先照抄上一行的形状。依据：首轮最弱模型实测 47% 样本块式漂移致解析失败，决策内容本身无恙——纯格式损耗。
+> **格式硬约束（防弱模型格式漂移）**：type_scope **每轴必须写成一行** flow 风格，形如 `performance: { decision: include, depth: standard, signals: ["..."] }`——**禁止**把一个轴拆成 decision / depth / signals 多行块式（校验器按行解析，块式 = 校验失败 = 该轴视同未决策）。写之前先照抄上一行的形状。依据：弱模型实测近半数样本出现块式漂移致解析失败，决策内容本身无恙——纯格式损耗。
 
 ## 工作流
 

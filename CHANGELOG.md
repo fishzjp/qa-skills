@@ -3,6 +3,14 @@
 本项目所有显著变更都记录在此，格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [Unreleased]
+
+### 变更
+
+- **落地页配图静态化**：13 张配图预生成本地化（`assets/landing/`），页面改为普通 `<img>` 引用——移除对第三方生图端点的运行时依赖（此前每位访客打开页面都实时触发生图请求：加载慢、可用性受制于外部端点、提示词明文暴露在 HTML 属性中）；`pages.yml` 产物清单与触发路径同步纳入 `assets/landing/**`。
+- **skills/ 对外文本去内部化**：清除 11 处内部迭代轮次标注（"2026-08-23 Rn"——轮次沿革归 CHANGELOG，不留在产品文本）；内部黑话改为自明表述（"格式锤"→"格式硬约束 / 防弱模型格式漂移"，中英 README 与 docs 同步；"GT 错标让飞轮"等评测内部表述改写为平实语言；删除 "exec 0.5"、"净收益 −13.5pp" 等对外未定义指标的裸引用，保留机制性结论）；`test-type-matrix` 的 V1–V5 权威定义指针修正为 `core/scripts/validate_schema.py`（原指 test-strategy SKILL.md，但该文件只使用编号、从未定义）；`api-testing` 四分类括注病句订正（B1/B2 口径对齐 triage）；`regression-testing` 夜间档口径与 `pipeline-integration` 精确对齐（P1 全量 + P2 抽样）；`qa` frontmatter description "Bug分析" 补空格。
+- **脚本与工程配置小修**：`scan_signals.py` 去内部设计代号"决策层方案 B"（docstring + argparse description）；`validate_schema.py` 删除模式二的不可达分支（死代码）；`dependabot.yml` 注释更正（仓库已有 npm 插件包 `package.json`，因声明零运行时依赖而不配置 npm 生态，原注释"公开仓库无 package.json"已过时）。
+
 ## [0.7.0] - 2026-08-27
 
 ### 新增

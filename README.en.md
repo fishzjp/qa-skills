@@ -186,7 +186,7 @@ Evaluated on 12 tasks: same model, same evaluation pipeline; the only difference
 > **Decision layer, first round (2026-08-23, category-level readout, not yet in the formal gain table)** — test-type decision tasks (5 tasks, reference answers dual-annotated), weakest model deepseek-v4-flash (n=3, injection upper-bound):
 >
 > - Without the skill: **zero explicit type decisions** — even under lenient parsing. The prose *mentions* the right types but never makes per-axis include/exclude calls; the blind spot is decision discipline, not type knowledge.
-> - With the skill: type recall **0 → 0.88** (format-hammer validation round); code-signal-only axes (absent from the PRD) 0 → 8/9.
+> - With the skill: type recall **0 → 0.88** (format-hard-constraint validation round); code-signal-only axes (absent from the PRD) 0 → 8/9.
 >
 > Both numbers enter the formal table after task-pool growth and cross-model gradient rounds.
 

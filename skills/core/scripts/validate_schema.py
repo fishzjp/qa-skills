@@ -469,8 +469,6 @@ def main(argv=None):
     # ---------- 模式二：测试策略类型域校验（单文件参数） ----------
     if len(paths) == 1:
         p = paths[0]
-        if strategy_md is not None:
-            print("提示: --strategy 仅模式一生效，本次调用已忽略")
         errors, warnings = validate_strategy(p, repo_root=repo_root)
         for e in errors:
             print(f"  ✗ {e}")

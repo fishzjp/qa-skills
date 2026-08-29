@@ -1,8 +1,8 @@
 # 测试类型决策矩阵（test-type-matrix）
 
-> 类型域测试决策的**唯一真相源**：test-strategy 全轴扫描时**按组加载**本文件对应小节，产出 type_scope；test-case-writing 消费 type_scope 时按第 12 节映射产出。决策原则（全轴必答 / include 挂信号 / exclude 挂理由 / depth 与 execution 分离 / 单一真相 / 弱模型优先）与 Schema、V1–V5 校验规则见 test-strategy 的 SKILL.md。
+> 类型域测试决策的**唯一真相源**：test-strategy 全轴扫描时**按组加载**本文件对应小节，产出 type_scope；test-case-writing 消费 type_scope 时按第 12 节映射产出。决策原则（全轴必答 / include 挂信号 / exclude 挂理由 / depth 与 execution 分离 / 单一真相 / 弱模型优先）见 test-strategy 的 SKILL.md；type_scope 的 Schema 结构与 V1–V5 校验规则以 `core/scripts/validate_schema.py` 的 docstring 与实现为权威定义，工作流落地见 test-strategy 的 SKILL.md。
 
-**矩阵版本**：v1（2026-08-23）。轴集合增删必须升版本号；评测任务的标注须记录所用矩阵版本。
+**矩阵版本**：v1（2026-08-23）。轴集合增删必须升版本号。
 
 ## 0. 组索引（分轴组推进，按组加载）
 
@@ -149,7 +149,7 @@
 
 ### 升降档规则（R1–R6；唯一声明的冲突裁决：R6 > R1）
 
-> 编号区分：本表 R1–R6 是**升降档规则**编号；各文档中「2026-08-23 Rn 修复/收敛」的 Rn 是内部迭代轮次编号；Risk Map 中的 R1、R2… 是**风险条目**编号——三者同名不同义，以上下文为准。
+> 编号区分：本表 R1–R6 是**升降档规则**编号；Risk Map 中的 R1、R2… 是**风险条目**编号——两者同名不同义，以上下文为准。
 
 | 规则 | 触发条件 | 动作 |
 |---|---|---|

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""类型域 G 级信号扫描器 + 决策预填表生成器（决策层方案 B）.
+"""类型域 G 级信号扫描器 + 决策预填表生成器.
 
 配套 core/test-type-matrix.md：G 级（greppable）信号由本脚本机械扫描产出；
 S 级（semantic）信号（矩阵各轴清单中标〔S〕的项）由 agent 读代码复核，
@@ -326,7 +326,7 @@ def render_yaml(hits, files_scanned, repo: str, truncated: bool) -> str:
 
 
 def main():
-    ap = argparse.ArgumentParser(description="类型域 G 级信号扫描（决策层方案 B）")
+    ap = argparse.ArgumentParser(description="类型域 G 级信号扫描")
     ap.add_argument("repo", help="被测仓库路径")
     ap.add_argument("--out", help="结果落盘路径（缺省打印到 stdout）")
     args = ap.parse_args()
