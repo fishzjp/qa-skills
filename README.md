@@ -234,6 +234,7 @@ skills/                  产品本体（10 个 skill + core 共享知识库）
   test-case-review/      automated-e2e-testing/  api-testing/
   exploratory-testing/   bug-analysis/  regression-testing/
 .dsh/                    dsh 插件三件套（cordis.patch.yml + plugins/qa-skills.js，清单见 package.json 的 dsh.bundle）
+assets/                  视觉资产（README hero 图、官网落地页配图 landing/、社交预览图）
 docs/                    设计文档（DESIGN / 决策层设计 / v2 规划）
 examples/                Skill On / Off 产出对照
 ```

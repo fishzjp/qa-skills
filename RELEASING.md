@@ -79,7 +79,7 @@ git diff --stat                                                  # 复验：每�
 ### §3 测试关
 
 ```bash
-python3 scripts/validate_skills.py            # 九项架构红线全绿，退出码 0（与 CI 同一校验）
+python3 scripts/validate_skills.py            # 架构红线全绿，退出码 0（与 CI 同一校验）
 node --check .dsh/plugins/qa-skills.js       # 仅插件单元有改动时：语法通过
 bash -n install.sh && bash -n uninstall.sh  # 仅安装器有改动时：语法通过
 npm pack --dry-run                           # 触达发包范围时必跑：清单里不得出现 __pycache__/*.pyc 等运行时产物（踩坑 6）

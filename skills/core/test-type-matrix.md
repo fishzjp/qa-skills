@@ -1,6 +1,6 @@
 # 测试类型决策矩阵（test-type-matrix）
 
-> 类型域测试决策的**唯一真相源**：test-strategy 全轴扫描时**按组加载**本文件对应小节，产出 type_scope；test-case-writing 消费 type_scope 时按第 12 节映射产出。决策原则（全轴必答 / include 挂信号 / exclude 挂理由 / depth 与 execution 分离 / 单一真相 / 弱模型优先）见 test-strategy 的 SKILL.md；type_scope 的 Schema 结构与 V1–V5 校验规则以 `core/scripts/validate_schema.py` 的 docstring 与实现为权威定义，工作流落地见 test-strategy 的 SKILL.md。
+> 类型域测试决策的**唯一真相源**：test-strategy 全轴扫描时**按组加载**本文件对应小节，产出 type_scope；test-case-writing 消费 type_scope 时按第 12 节映射产出。决策原则（全轴必答 / include 挂信号 / exclude 挂理由 / depth 与 execution 分离 / 单一真相 / 弱模型优先）与工作流落地见 test-strategy 的 SKILL.md；type_scope 的 Schema 结构与 V1–V5 校验规则以 `../core/scripts/validate_schema.py` 的 docstring 与实现为权威定义。
 
 **矩阵版本**：v1（2026-08-23）。轴集合增删必须升版本号。
 
