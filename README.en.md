@@ -48,22 +48,19 @@ npx skills add fishzjp/qa-skills            # interactive selection; install eve
 dsh plugin --profile web add dsh-qa-skills
 ```
 
-dsh natively supports this repo's format, so a file-based install works too (see install details below); both paths verified end-to-end on dsh 0.1.0-rc.8 + deepseek-v4-flash.
-
 > `core/` is the shared knowledge base dependency unit (not an executable skill): it must be installed alongside any skill, or the relative-path references break.
 
 <details>
-<summary><strong>Manual install, verification & uninstall</strong></summary>
+<summary><strong>Manual install, upgrade & uninstall</strong></summary>
 
 - Manual install: `cp -r skills/* <your skills directory>/` — **`core/` must be copied along**, every skill references it by relative path.
 - Verify: `ls <your skills directory>` should show 10 skill directories + `core/` + `qa-skills.VERSION`.
-- dsh file-based install: copy to `~/.agents/skills/` (`./install.sh --target ~/.agents/skills`) or `~/.dsh/skills/`, then restart dsh.
-- Upgrade: `./install.sh --target <dir> --link` installs symlinks instead of copies — `git pull` updates in place.
+- Upgrade: `./install.sh --target <dir> --link` installs symlinks — `git pull` updates in place.
 - Uninstall: `./uninstall.sh`.
 </details>
 
 <details>
-<summary><strong>Host compatibility & fallback path</strong></summary>
+<summary><strong>Host compatibility</strong></summary>
 
 Skills are plain Markdown (frontmatter + relative-path references) with no host-specific dependencies:
 
@@ -71,11 +68,11 @@ Skills are plain Markdown (frontmatter + relative-path references) with no host-
 |------|------------------|--------|
 | Claude Code | `~/.claude/skills/` or `<project>/.claude/skills/` | ✅ primary target; evaluations run on it |
 | Shared directory | `~/.agents/skills/` | ✅ one copy for many agents (install.sh default) |
-| DeepSeek Harness (dsh) | `~/.agents/skills/`, `~/.dsh/skills/`, or `<project>/.agents/skills/` | ✅ verified end-to-end (dsh natively implements the Anthropic Skills spec; tested on deepseek-v4-flash: discovery / trigger / output) |
-| Codex CLI | `~/.codex/skills/` | 🔶 should work by convention; not systematically evaluated |
+| DeepSeek Harness (dsh) | `~/.agents/skills/`, `~/.dsh/skills/`, or `<project>/.agents/skills/` | ✅ verified end-to-end |
+| Codex CLI | `~/.codex/skills/` | 🔶 not systematically evaluated |
 | Other Skills-capable agents | their skills directory | 🔶 same |
 
-The pipeline's per-stage context isolation relies on host sub-session/sub-agent support; hosts without it degrade to sequential sessions joined by files — correctness is unaffected (see the "编排会话模型" / orchestration-session-model section in [DESIGN.md](./docs/DESIGN.md)).
+The pipeline's per-stage context isolation relies on host sub-agent support; hosts without it degrade to sequential sessions joined by files — correctness is unaffected.
 </details>
 
 ### First run
@@ -84,7 +81,7 @@ Tell your agent:
 
 > **Test this requirement: {description + repo URL}**
 
-The complete pipeline runs from requirement understanding through risk and test-type decisions to the test report. For a single stage only (write cases / review / convert to automation / regression scope), just describe the need — no full pipeline required.
+The full pipeline runs from requirement understanding through risk and test-type decisions to the test report. For a single stage only (write cases / review / convert to automation / regression scope), just describe the need.
 
 ## What it does
 
@@ -105,11 +102,11 @@ Also usable standalone: `exploratory-testing` (charter-driven), `api-testing`, `
 `测试用例_markmap.md` is plain Markdown (markmap syntax): the [VS Code Markmap extension](https://marketplace.visualstudio.com/items?itemName=gera2ld.markmap-vscode), `npx markmap-cli`, or [markmap.js.org/repl](https://markmap.js.org/repl) render it.
 </details>
 
-## Written to be executed.
+## Design
 
-AI-written cases often look professional but cannot be executed — vague verdicts, placeholders, no time bounds, invented entry points.
+### Executable cases
 
-The same requirement, from this framework:
+AI-written cases often look professional but cannot be executed — vague verdicts, placeholders, no time bounds, invented entry points. The single output standard: **a person who has never read the requirements, with no walkthrough, can start working from the file alone.** The same requirement, from this framework:
 
 ```markdown
 > Precondition: operator logged in, at 「营销中台 → 券工场 → 活动列表」
@@ -119,9 +116,9 @@ The same requirement, from this framework:
   - Expected: status becomes 「已结束」 within 1 hour; past 1 hour = fail
 ```
 
-**The single output standard: a person who has never read the requirements, with no walkthrough, can start working from the file alone.** Backed by 8 hard rules in `skills/core/executability.md`; a veto metric in evaluation — a non-executable case scores zero no matter its coverage.
+Backed by 8 hard rules in `skills/core/executability.md`; a veto metric in evaluation — a non-executable case scores zero no matter its coverage.
 
-## Fewer instructions, stronger agent.
+### Three-layer architecture: fewer instructions, stronger following
 
 Stuffing methodology, templates, and rules into one SKILL.md reduces the rules an agent actually follows (per [Red Hat's ACE practice notes](https://next.redhat.com/2026/07/28/building-skills-for-ai-agents-pitfalls-and-best-practices/), performance degrades beyond ~500 lines). The fix is a three-layer architecture:
 
@@ -133,11 +130,11 @@ L3  references/ + core/  Methods/rules/templates: loaded on demand, explicitly r
 
 SKILL.md keeps only the workflow; everything else is pushed down and loaded on demand — the agent faces only the instructions it needs at each step.
 
-## Testing is deciding what not to test.
+### Test-type decision matrix: deciding what not to test
 
-Without the skill, models produced **zero explicit type decisions** across 30 evaluated samples (two model tiers) — prose that *mentions* performance and security but never decides which types to include, how deep, or what to explicitly exclude. Mentioning is not deciding; an unauditable strategy is no strategy.
+Without the skill, models produced **zero explicit type decisions** across 30 evaluated samples (two model tiers) — prose that *mentions* performance and security but never decides which types to include, how deep, or what to exclude. Mentioning is not deciding.
 
-The fix is the **test-type decision matrix (decision layer)**: ten test types, **every axis must be answered** — include requires signals (greppable ones scanned by script into a prefill table), exclusion leaves a G+S trace, full-depth has a budget cap; every decision lands in a machine-checkable `type_scope` (validators V1–V5). Measured: type recall on the weakest model 0 → **0.88**; code-signal-only axes (reliability/contract, absent from the PRD) 0 → 8/9 (see [measured results](#measured-results)).
+The fix is the **test-type decision matrix**: ten test types, **every axis must be answered** — include requires signals, exclusion leaves an auditable trace, full depth has a budget cap; every decision lands in a machine-checkable `type_scope`. Measured: type recall on the weakest model 0 → **0.88** (see [measured results](#measured-results)).
 
 ## How it works
 
@@ -164,15 +161,13 @@ Execution artifacts + bug evidence → bug-analysis → regression-testing
 回归清单.md → 测试报告.md
 ```
 
-- **Evidence & risk models** — every finding carries an evidence level (E0–E4) and status; risk ratings without evidence are invalid. The chain evidence → risk → strategy → cases is traceable end to end.
-- **Test-type decision matrix** — ten axes, every one answered; include/exclude decisions leave an auditable trace with a budget cap; greppable signals are scanned into a prefill so weak models revise instead of generating from blank.
+- **Evidence & risk models** — every finding carries an evidence level (E0–E4); risk ratings without evidence are invalid, and the chain evidence → risk → strategy → cases is traceable end to end.
+- **Test-type decision matrix** — ten axes, every one answered; include/exclude decisions leave an auditable trace; greppable signals are scanned into a prefill so weak models revise instead of generating from blank.
 - **Human-in-the-loop checkpoints** — clarifications, execution strategy, bug triage, and budget calls are *your* decisions; the agent proposes, never decides. Once recorded, later stages cannot overturn them.
-
-> Design rationale (why 10 narrow skills, why markmap is the single human-maintained source, why evaluation precedes feature growth): [DESIGN.md](./docs/DESIGN.md) (Chinese).
 
 ## Measured results
 
-Evaluated on 12 tasks: same model, same evaluation pipeline; the only difference is whether this framework is injected. Numbers come from the heterogeneous-judge re-evaluation and are reported as measured, including the adverse ones. Full methodology, raw data, and study reports live in the locally maintained evaluation pipeline and are not distributed with this repo; each release ships a cross-model gain-matrix snapshot ([Releases](https://github.com/fishzjp/qa-skills/releases)), and the On/Off output comparison is in [examples/](./examples/):
+Evaluated on 12 tasks: same model, same evaluation pipeline; the only difference is whether this framework is injected. Numbers come from the heterogeneous-judge re-evaluation and are reported as measured, including the adverse ones. Full methodology and raw data live in the locally maintained evaluation pipeline and are not distributed with this repo; each release ships a cross-model gain-matrix snapshot ([Releases](https://github.com/fishzjp/qa-skills/releases)), and the On/Off output comparison is in [examples/](./examples/):
 
 | Metric | Without | With |
 |--------|:---:|:---:|
@@ -183,22 +178,17 @@ Evaluated on 12 tasks: same model, same evaluation pipeline; the only difference
 | API real-execution pass rate † | 100% | 99.2% |
 | Token cost | 1× | 3.3× |
 
-> **Decision layer, first round (2026-08-23, category-level readout, not yet in the formal gain table)** — test-type decision tasks (5 tasks, reference answers dual-annotated), weakest model deepseek-v4-flash (n=3, injection upper-bound):
->
-> - Without the skill: **zero explicit type decisions** — even under lenient parsing. The prose *mentions* the right types but never makes per-axis include/exclude calls; the blind spot is decision discipline, not type knowledge.
-> - With the skill: type recall **0 → 0.88** (format-hard-constraint validation round); code-signal-only axes (absent from the PRD) 0 → 8/9.
->
-> Both numbers enter the formal table after task-pool growth and cross-model gradient rounds.
+> **Decision layer, first round (2026-08-23, category-level readout, not yet in the formal gain table)** — 5 test-type decision tasks (reference answers dual-annotated), weakest model deepseek-v4-flash (n=3): without the skill, **zero explicit type decisions** (0 even under lenient parsing — the blind spot is decision discipline, not type knowledge); with the skill, type recall **0 → 0.88**, and code-signal-only axes absent from the PRD 0 → 8/9. Both numbers enter the formal table after task-pool growth and cross-model rounds.
 
 <details>
 <summary><strong>Per-metric calibers</strong></summary>
 
-- **Case-conformance score** (formerly "executability"): format × content-rubric composite, no judge. The gap is primarily format adoption; both groups near ceiling on content red lines; format-free samples score 0 (same caliber; the earlier 0.77 was pre-fix — errata recorded in the [CHANGELOG](./CHANGELOG.md)); replicated across two generator models (0.20→0.99).
-- **E2E real execution**: real browser + real app, no judge; the same failing test reproduces stably across two with-skill samples; the without-skill group mixes no-code and failing-code outcomes.
-- **Planted-bug detection**: code-review tasks; heterogeneous-judge caliber (100% under same-family judge).
+- **Case-conformance score**: format × content-rubric composite, no judge; format-free samples score 0 (same caliber), the gap is driven primarily by format adoption; replicated across two generator models (0.20→0.99); the earlier 0.77 was pre-fix — errata in the [CHANGELOG](./CHANGELOG.md).
+- **E2E real execution**: real browser + real app, no judge; the without-skill group mixes no-code and failing-code outcomes.
+- **Planted-bug detection**: heterogeneous-judge caliber (100% under same-family judge).
 - **Quality**: heterogeneous judge; Δ +6.1pp (95%CI includes zero; significant under same-family judging).
-- **API real-execution pass rate †**: clean re-verification caliber (task-contract and truncation fixes, main model glm-5.2, n=3): **100% without vs 99.2% with the skill** — a 0.8pp gap, within the noise band, effectively at parity; weak-model tier same direction (0.30 without vs 0.67 with, skill better). The table shows these re-verified numbers; the earlier historical adverse result (74% vs 52%, 3-sample caliber; a still-earlier 87% was a 2-sample mean) was established by the 2026-08-24 per-failure triage as evaluation-side defects, not skill defects: dominated by a broken state machine in the eval task contract (creation always returns unpublished, claiming requires published, yet the contract exposed no publish path — a task defect), plus output truncation, a degenerate sample, and a missing login-response contract; the earlier "strict assertions fail more visibly" explanation was falsified point by point (only 4 of 46 failures were assertion-related, all over-strict beyond the written contract). Reversal eliminated — errata recorded in the [CHANGELOG](./CHANGELOG.md).
-- **Token cost**: better but more expensive; basis is total-token ratio (per-task mean, skill fully injected): 3.3× on the glm-5.2 main-model round, up to 9.5× on the weak-model (mimo) round where reasoning overhead counts toward output; a single-file ablation shows the gains cannot be obtained by taking just the core standards document.
+- **API real-execution pass rate †**: clean re-verification caliber (main model glm-5.2, n=3): 100% without vs 99.2% with — within the noise band, at parity; weak-model tier same direction (0.30 / 0.67, skill better). The earlier adverse result was traced failure-by-failure to evaluation-side defects, not skill defects — errata in the [CHANGELOG](./CHANGELOG.md).
+- **Token cost**: better but more expensive — total-token ratio (per-task mean, skill fully injected): 3.3× on the main-model round, up to 9.5× on the weak-model round; a single-file ablation shows the gains cannot be obtained by taking just the core standards document.
 </details>
 
 <details>
@@ -211,12 +201,10 @@ Pre-registered gates: 4/7 under the same-family judge, 5/8 under the heterogeneo
 
 ## Documentation
 
-- [DESIGN.md](./docs/DESIGN.md) (Chinese) — design rationale and key decisions
-- [Decision-layer design](./docs/decision-layer-design.md) (Chinese) — the test-type decision matrix in full
-- [v2 blueprint](./docs/qa-skills-v2.md) (Chinese) — evolution plan and historical decision records
 - [examples/](./examples/) — Skill On/Off output comparison on the same PRD
 - [CHANGELOG.md](./CHANGELOG.md) — release history (each release ships a gain-matrix snapshot)
-- [RELEASING.md](./RELEASING.md) (Chinese) — release rules and checklist (four-channel sync / versioning / test gates)
+- [RELEASING.md](./RELEASING.md) (Chinese) — release rules and checklist
+- Design & planning documents (DESIGN / decision-layer design / v2 blueprint) — maintainer-local, not distributed with this repo
 
 <details>
 <summary><strong>Repository layout</strong></summary>
@@ -224,20 +212,17 @@ Pre-registered gates: 4/7 under the same-family judge, 5/8 under the heterogeneo
 ```text
 skills/        the product (10 skills + shared core/)
   qa/          orchestration entry (thin, no domain knowledge)
-  core/        shared knowledge base (no task triggering): evidence / risk-model / executability /
-               testing-principles / report-template / case-format / coverage /
+  core/        shared knowledge base (install dependency unit, no task triggering): evidence / risk-model /
+               executability / testing-principles / report-template / case-format / coverage /
                schema-extraction / clarify-pattern / test-type-matrix (decision matrix) /
-               triage (failure-triage rules) / pipeline-integration (headless & CI conventions)
+               triage (failure triage) / pipeline-integration (headless & CI conventions)
                + methods/ (4 design-method guides) + scripts/ (schema validator + type-signal scanner)
   requirement-analysis/  test-strategy/  test-case-writing/  test-case-review/
   automated-e2e-testing/  api-testing/  exploratory-testing/  bug-analysis/  regression-testing/
-.dsh/          dsh plugin trio (cordis.patch.yml + plugins/qa-skills.js; manifest in package.json's dsh.bundle)
-assets/        visual assets (README hero images, landing-page artwork in landing/, landing share image og.jpg, social preview)
-docs/          design documents (DESIGN / decision-layer / v2 blueprint)
+.dsh/          dsh plugin trio (manifest in package.json's dsh.bundle)
+assets/        visual assets (hero images, landing-page artwork in landing/, share image og.jpg, social preview)
 examples/      Skill On/Off output comparison
 ```
-
-The evaluation pipeline (golden set / harness / unit tests / study reports) is maintained locally and not distributed with this repo; each release ships a cross-model gain-matrix snapshot ([Releases](https://github.com/fishzjp/qa-skills/releases)).
 </details>
 
 ## Community

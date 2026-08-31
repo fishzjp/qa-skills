@@ -24,6 +24,6 @@
 
 ## 这些差异在评测中意味着什么
 
-该任务在验证轮（run 20260820_1429_v2，3 采样）的实测：有效覆盖 On 99.6% vs Off 97.1%，规格符合度（旧称"可执行性"）On 0.996——但**单任务不构成统计结论**。全套指标、置信区间与门判定见各版 Release 附带的增益矩阵快照（[Releases](https://github.com/fishzjp/qa-skills/releases)），方法学与诚实声明见 [DESIGN.md](../docs/DESIGN.md) 第 10 节。
+该任务在验证轮（run 20260820_1429_v2，3 采样）的实测：有效覆盖 On 99.6% vs Off 97.1%，规格符合度（旧称"可执行性"）On 0.996——但**单任务不构成统计结论**。全套指标、置信区间与门判定见各版 Release 附带的增益矩阵快照（[Releases](https://github.com/fishzjp/qa-skills/releases)）。
 
 > 产出基于黄金集的虚构业务域（图券商城），不含真实系统信息；评测生成的原始环境说明均为占位 TODO。

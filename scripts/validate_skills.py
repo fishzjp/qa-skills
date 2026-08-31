@@ -43,15 +43,13 @@ MD_EXTS = (".md", ".json", ".py", ".ts", ".tsx", ".yml", ".yaml")
 # 红线 10 白名单：白名单制而非黑名单关键词——临时文件命名不可枚举，
 # 且 test-case-writing、report-template 等合法文件名含 test/report 字样会被关键词误杀。
 # 新增合法产品路径时：同步扩展此处常量并登记 CONTRIBUTING.md 架构红线 8
-# docs/ 准入标准：仅限正式对外文档（须已被 README 延伸阅读区链接）；故意不列入
-# ALLOWED_DIR_PREFIXES，临时文档 / 开发文档 / 开发计划一律走下方精确文件白名单拦截
+# docs/ 整目录本地维护（规划文档与设计稿不入库，.gitignore 隔离），不设白名单
 ALLOWED_ROOT_FILES = {
     ".gitignore", ".npmignore", "AGENTS.md", "CHANGELOG.md", "CONTRIBUTING.md",
     "LICENSE", "README.en.md", "README.md", "RELEASING.md", "index.html",
     "install.sh", "og.jpg", "package.json", "uninstall.sh",
 }
 ALLOWED_DIR_PREFIXES = ("skills/", "scripts/", ".github/", ".dsh/", "assets/", "examples/")
-ALLOWED_DOCS = {"docs/DESIGN.md", "docs/decision-layer-design.md", "docs/qa-skills-v2.md"}
 
 
 def skill_dirs():
@@ -190,7 +188,7 @@ def check_tracked_files(errors):
         f = f.strip()
         if not f:
             continue
-        if f in ALLOWED_ROOT_FILES or f in ALLOWED_DOCS or f.startswith(ALLOWED_DIR_PREFIXES):
+        if f in ALLOWED_ROOT_FILES or f.startswith(ALLOWED_DIR_PREFIXES):
             continue
         errors.append(f"{f}: 不在跟踪面白名单内——临时文件 / 测试数据 / 实验报告 / 开发报告 / 开发计划"
                       "等与 skills 无关内容禁止入库（确属产品内容：扩展 validate_skills.py 白名单常量"

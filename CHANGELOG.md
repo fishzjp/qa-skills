@@ -7,6 +7,9 @@
 
 ### 变更
 
+- **README 双语精简改版**：三节设计论述（可执行性 / 三层架构 / 类型决策矩阵）归并为「核心设计」小节、标题由口号式改为自明式；安装指引去重（dsh 版本验证细节并入宿主兼容表，手装折叠区补齐升级说明）；实测效果逐项口径与门判定块压缩，勘误沿革细节收敛为 CHANGELOG 指针；仓库结构树保持穷举、`docs/` 延伸阅读三链接不动；全部数字、事实与对外承诺未变。
+- **规划文档与设计稿移出跟踪面**：`docs/`（DESIGN / 决策层设计稿 / v2 规划）整目录转为维护者本地资料——`git rm --cached` 退跟踪、`.gitignore` 整目录隔离（删除三文件例外放行），沿用评测链路"本地维护、不随仓库分发"先例；同步改写：`validate_skills.py` 白名单清除 docs 精确登记、CONTRIBUTING 红线 8、双语 README 摘除全部 docs 链接（工作原理 DESIGN 指针 / 延伸阅读三条 / 结构树 docs 行 / 宿主兼容性注）、`examples/README.md` DESIGN 链接摘除、`labeler.yml` 去 `docs/**` 通配。文件本体保留本地；git 历史不重写。
+
 - **落地页配图静态化**：13 张配图预生成本地化（`assets/landing/`），页面改为普通 `<img>` 引用——移除对第三方生图端点的运行时依赖（此前每位访客打开页面都实时触发生图请求：加载慢、可用性受制于外部端点、提示词明文暴露在 HTML 属性中）；`pages.yml` 产物清单与触发路径同步纳入 `assets/landing/**`。
 - **skills/ 对外文本去内部化**：清除 11 处内部迭代轮次标注（"2026-08-23 Rn"——轮次沿革归 CHANGELOG，不留在产品文本）；内部黑话改为自明表述（"格式锤"→"格式硬约束 / 防弱模型格式漂移"，中英 README 与 docs 同步；"GT 错标让飞轮"等评测内部表述改写为平实语言；删除 "exec 0.5"、"净收益 −13.5pp" 等对外未定义指标的裸引用，保留机制性结论）；`test-type-matrix` 的 V1–V5 权威定义指针修正为 `core/scripts/validate_schema.py`（原指 test-strategy SKILL.md，但该文件只使用编号、从未定义）；`api-testing` 四分类括注病句订正（B1/B2 口径对齐 triage）；`regression-testing` 夜间档口径与 `pipeline-integration` 精确对齐（P1 全量 + P2 抽样）；`qa` frontmatter description "Bug分析" 补空格。
 - **脚本与工程配置小修**：`scan_signals.py` 去内部设计代号"决策层方案 B"（docstring + argparse description）；`validate_schema.py` 删除模式二的不可达分支（死代码）；`dependabot.yml` 注释更正（仓库已有 npm 插件包 `package.json`，因声明零运行时依赖而不配置 npm 生态，原注释"公开仓库无 package.json"已过时）。
