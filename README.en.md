@@ -178,7 +178,7 @@ Evaluated on 12 tasks: same model, same evaluation pipeline; the only difference
 | API real-execution pass rate † | 100% | 99.2% |
 | Token cost | 1× | 3.3× |
 
-> **Decision layer, first round (2026-08-23, category-level readout, not yet in the formal gain table)** — 5 test-type decision tasks (reference answers dual-annotated), weakest model deepseek-v4-flash (n=3): without the skill, **zero explicit type decisions** (0 even under lenient parsing — the blind spot is decision discipline, not type knowledge); with the skill, type recall **0 → 0.88**, and code-signal-only axes absent from the PRD 0 → 8/9. Both numbers enter the formal table after task-pool growth and cross-model rounds.
+> **Test-type decision matrix, first round (2026-08-23, not yet in the formal gain table)** — 5 test-type decision tasks (reference answers dual-annotated), weakest model deepseek-v4-flash (n=3): without the skill, **zero explicit type decisions** (0 even under lenient parsing — the blind spot is decision discipline, not type knowledge); with the skill, type recall **0 → 0.88**, and code-signal-only axes absent from the PRD 0 → 8/9. Both numbers enter the formal table after task-pool growth and cross-model rounds.
 
 <details>
 <summary><strong>Per-metric calibers</strong></summary>
@@ -212,7 +212,7 @@ Pre-registered gates: 4/7 under the same-family judge, 5/8 under the heterogeneo
 ```text
 skills/        the product (10 skills + shared core/)
   qa/          orchestration entry (thin, no domain knowledge)
-  core/        shared knowledge base (install dependency unit, no task triggering): evidence / risk-model /
+  core/        shared knowledge base (installed as a dependency alongside skills, no task triggering): evidence / risk-model /
                executability / testing-principles / report-template / case-format / coverage /
                schema-extraction / clarify-pattern / test-type-matrix (decision matrix) /
                triage (failure triage) / pipeline-integration (headless & CI conventions)
