@@ -1,3 +1,5 @@
+
+
 [简体中文](./README.md) | [English](./README.en.md)
 
 <p align="center">
@@ -47,6 +49,8 @@ npx skills add fishzjp/qa-skills            # 交互式勾选，全装用 --skil
 ```bash
 dsh plugin --profile web add dsh-qa-skills
 ```
+
+该 npm 插件包声明 `engines.node >= 18`，安装前请确认 Node.js 版本 ≥18。
 
 dsh 原生兼容本仓库格式，走文件路径安装亦可（见下方安装细节）；已在 dsh 0.1.0-rc.8 + deepseek-v4-flash 上完成两条安装路径的端到端验证。
 
