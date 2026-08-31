@@ -232,7 +232,7 @@ skills/        the product (10 skills + shared core/)
   requirement-analysis/  test-strategy/  test-case-writing/  test-case-review/
   automated-e2e-testing/  api-testing/  exploratory-testing/  bug-analysis/  regression-testing/
 .dsh/          dsh plugin trio (cordis.patch.yml + plugins/qa-skills.js; manifest in package.json's dsh.bundle)
-assets/        visual assets (README hero images, landing-page artwork in landing/, social preview)
+assets/        visual assets (README hero images, landing-page artwork in landing/, landing share image og.jpg, social preview)
 docs/          design documents (DESIGN / decision-layer / v2 blueprint)
 examples/      Skill On/Off output comparison
 ```
