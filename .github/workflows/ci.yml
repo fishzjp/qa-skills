@@ -22,6 +22,10 @@ jobs:
       - name: Skills 架构红线校验（frontmatter / ≤500 行 / When NOT to Use / 引用完整性 / JSON）
         run: python3 scripts/validate_skills.py
 
+      # validate_schema 仅在装有 PyYAML 时做全量解析（零用例检查依赖它）；runner 默认不带，不装则该测试必挂
+      - name: 安装测试依赖
+        run: python3 -m pip install --quiet pyyaml
+
       - name: 产品脚本单测（validate_schema / scan_signals / validate_skills）
         run: python3 -m unittest discover -s tests -p "test_product_scripts.py" -v
 
