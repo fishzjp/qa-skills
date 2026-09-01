@@ -27,6 +27,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      # 部署前守门：index.html 引用的配图与门面文档链接必须真实存在（下方 stage 只做 cp，
+      # 不校验引用完整性，引用了不存在的图 = 部署成功、线上破图）。
+      # PyYAML 未装时 validate_repo 的 YAML 门降级跳过并明示，语法面由同 commit 的 CI 全量覆盖
+      - name: 落地页与门面守门（资产引用 / 文档链接）
+        run: python3 scripts/validate_repo.py
+
       - name: Configure Pages
         uses: actions/configure-pages@v6
 

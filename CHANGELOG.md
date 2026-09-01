@@ -7,6 +7,9 @@
 
 ### 新增
 
+- **CI 守门扩面（仓库面守门）**：新增 `scripts/validate_repo.py`，补上五个此前无人机查、坏了照绿的面——git 跟踪全部 .py 语法（此前仅被单测导入的脚本被覆盖，新增脚本写错语法 CI 照绿）、全部 .yml/.yaml 合法性（ci/pages workflow、labeler、ISSUE 模板、cordis 补丁——paths 触发的 workflow 语法坏了会静默不跑且无红叉）、全部 .json 合法性、根目录门面文档（README 双语 / CONTRIBUTING / RELEASING / CHANGELOG / AGENTS）相对链接与 `<img src>` / `<source srcset>` 目标存在性（README 是仓库门面，404 直接面向访客）、落地页 index.html 引用资产存在性（部署 stage 只做 cp 不校验引用，引用不存在的配图 = CI 绿、线上破图）；新增 `tests/test_repo_gates.py`（提取形态正负例 + 对本仓库实跑全绿的自锚定契约）。
+- **安装器行为冒烟**：新增 `tests/install_smoke.sh` 接入 CI——copy/link 双方式安装、重装幂等、防误删拒绝覆盖外来同名目录、双向卸载干净（期望单元以首次安装实际产物为准 + 单元数下限，防清单缺损时冒烟安静变绿）；此前安装器门仅 `bash -n` 语法检查，与步骤名"零成本回归"名实不符。
+- **CI 硬化**：job 级 `timeout-minutes` 与同 ref 并发去重（concurrency）；单测发现模式从写死 `test_product_scripts.py` 扩为 `test_*.py`（新增测试文件自动被发现）；pages.yml 部署前跑同一仓库面守门（部署自身挡破图，不依赖 CI 时序）；单测步补装 PyYAML（validate_schema 零用例防骗绿检查依赖全量解析，runner 默认无 PyYAML 时按设计降级返回 0，测试必挂——本地有 PyYAML 故仅 CI 失败）。
 - **接口压测承接**（api-testing）：新增 `references/k6-conventions.md`——类型矩阵轴 1 执行层（原十轴中唯一无执行片段的脚本型轴）：移交包字段→k6 options 逐项映射、单接口阶梯加压模板、thresholds 退出码与流水线四值语义对接（阈值失败默认 S 级复核归因，不自动定性为缺陷）、触发分层（夜间 standard / 发布卡点 full）、结果按 report-template §7 回收；frontmatter 与 When to Use 补性能触发面。
 - **e2e 断言强度自检与冒烟卡点**（automated-e2e-testing）：工作流内联"断言三问"（区分度前置 / 触发方式保真 / 环境区分度）+ 工程约定 §15 完整版（反向断言示例、UI 断言三件套、弱断言黑名单）+ 工作流"基线零通过禁交付"卡点（全部测试失败视为流程认知错误，回工作流零重踩后才可交付）——X19 门同通道 On−Off 杀伤差 +0.55 实证。
 - **契约与 schema 一致性**（api-testing）：类型矩阵轴 10 执行层落地——schema 一致性校验（Schemathesis / jsonschema）与结构级负向 fuzzing 两层形态、与参数矩阵的分工、"schema 校验 ≠ 消费者契约"概念边界。

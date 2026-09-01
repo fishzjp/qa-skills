@@ -8,10 +8,16 @@ on:
 permissions:
   contents: read
 
+# 同一 ref 的新推送取消未完成的旧 run（push + PR 双触发时省去重复执行）
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
     name: 架构红线与语法校验
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
 
@@ -22,18 +28,25 @@ jobs:
       - name: Skills 架构红线校验（frontmatter / ≤500 行 / When NOT to Use / 引用完整性 / JSON）
         run: python3 scripts/validate_skills.py
 
-      # validate_schema 仅在装有 PyYAML 时做全量解析（零用例检查依赖它）；runner 默认不带，不装则该测试必挂
+      # validate_repo 的 YAML 门与产品单测的零用例防骗绿检查都依赖 PyYAML（runner 默认不带；
+      # validate_schema 无 PyYAML 时按设计降级为基础 lint，零用例测试会必挂）
       - name: 安装测试依赖
         run: python3 -m pip install --quiet pyyaml
 
-      - name: 产品脚本单测（validate_schema / scan_signals / validate_skills）
-        run: python3 -m unittest discover -s tests -p "test_product_scripts.py" -v
+      - name: 仓库面守门（py 语法 / yml 合法性 / json 合法性 / 门面文档链接 / 落地页资产）
+        run: python3 scripts/validate_repo.py
 
-      - name: 安装器与插件语法门（三大安装路径零成本回归）
+      - name: 产品脚本与守门脚本单测
+        run: python3 -m unittest discover -s tests -p "test_*.py" -v
+
+      - name: 安装器门（语法 + 行为冒烟：copy/link 安装 / 重装幂等 / 防误删 / 卸载干净）
         run: |
           bash -n install.sh
           bash -n uninstall.sh
-          node --check .dsh/plugins/qa-skills.js
+          bash tests/install_smoke.sh
+
+      - name: 插件语法门
+        run: node --check .dsh/plugins/qa-skills.js
 
       # eval 评测 harness 的单测与语法检查随 eval/ 一并留本地（2026-08-22 起公开仓库只含 skills 产品内容）
 

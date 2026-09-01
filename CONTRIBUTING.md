@@ -21,7 +21,7 @@
 ## 开发环境
 
 - Python 3.9+（运行校验脚本与产品脚本单测；`validate_skills.py` 等脚本显式兼容 3.9 的 `relative_to` 写法）
-- 本地校验与 CI 使用同一入口：`python3 scripts/validate_skills.py`；产品脚本单测 `python3 -m unittest discover -s tests -p "test_product_scripts.py"`（eval 评测 harness 与其单测在维护者本地环境，不在公开仓库）
+- 本地校验与 CI 使用同一入口：`python3 scripts/validate_skills.py`（skills 内容红线）+ `python3 scripts/validate_repo.py`（仓库面守门：py 语法 / yml 合法性 / json / 门面文档链接 / 落地页资产）；单测 `python3 -m unittest discover -s tests -p "test_*.py"`；安装器行为冒烟 `bash tests/install_smoke.sh`（eval 评测 harness 与其单测在维护者本地环境，不在公开仓库）
 
 ## 架构红线（改 skill 前必读）
 
@@ -32,12 +32,14 @@
 5. **description ≤ 300 字符**：description 常驻宿主每个会话的上下文，只装正触发话术 + 一句产出 + 反触发指向；机制细节写进 SKILL.md 正文（When to Use 等）
 6. **风险等级（Critical / High / Medium / Low）与用例优先级（P0 / P1 / P2）是两套体系**，不得混用命名；Bug 严重程度用 **S0/S1/S2**（缺陷影响等级，口径说明见 `skills/core/report-template.md` §3），与用例优先级的 P 系词汇分离
 7. **产出落盘**：skill 的阶段产物必须落盘为文件（落盘清单见各 SKILL.md 的「落盘产物」行与 `skills/qa/SKILL.md` 的流水线表），Skill 间只通过文件衔接
-8. **跟踪面白名单，与 skills 无关的内容禁止入库**：临时文件、测试数据、实验报告、开发报告、开发计划等一律不得提交（此类内容属维护者本地评测链路，`.gitignore` 已隔离 `eval/`、`tests/test_harness.py`、`.in-situ-lab/`、`docs/` 等）；仓库跟踪面为白名单制——git 跟踪的每个文件必须落在白名单内（根目录既有文件 + `skills/`、`scripts/`、`.github/`、`.dsh/`、`assets/`、`examples/`、`tests/` 前缀；`tests/` 仅放随产品分发脚本的回归测试，如 `test_product_scripts.py`），由 `scripts/validate_skills.py` 红线 10 机器强制；`docs/` 整目录本地维护（规划文档与设计稿不入库）；新增合法产品路径须同步扩展脚本中的白名单常量并更新本条
+8. **跟踪面白名单，与 skills 无关的内容禁止入库**：临时文件、测试数据、实验报告、开发报告、开发计划等一律不得提交（此类内容属维护者本地评测链路，`.gitignore` 已隔离 `eval/`、`tests/test_harness.py`、`.in-situ-lab/`、`docs/` 等）；仓库跟踪面为白名单制——git 跟踪的每个文件必须落在白名单内（根目录既有文件 + `skills/`、`scripts/`、`.github/`、`.dsh/`、`assets/`、`examples/`、`tests/` 前缀；`tests/` 仅放随产品脚本与守门脚本的回归测试及安装器冒烟，如 `test_product_scripts.py`、`test_repo_gates.py`、`install_smoke.sh`），由 `scripts/validate_skills.py` 红线 10 机器强制；`docs/` 整目录本地维护（规划文档与设计稿不入库）；新增合法产品路径须同步扩展脚本中的白名单常量并更新本条
 
 ## 提交前自检
 
 - [ ] 未引入任何真实环境地址、账号、密钥、内部系统名
 - [ ] `python3 scripts/validate_skills.py` 通过（与 CI 同一校验：frontmatter / description ≤300 字符 / SKILL.md ≤500 行 / When NOT to Use / core 依赖单元声明 / 引用完整含 md 链接 / 无跨 skill 引用 / 版本一致 / JSON 合法 / 无 eval 越界引用 / 跟踪面白名单）
+- [ ] `python3 scripts/validate_repo.py` 通过（仓库面守门：py 语法 / yml 合法性 / json / README 双语等门面文档链接 / 落地页资产引用）
+- [ ] 改动 install.sh / uninstall.sh 的，`bash tests/install_smoke.sh` 通过（copy/link 安装、重装幂等、防误删、卸载干净）
 - [ ] 改动后的 skill 仍符合 [Agent Skill 规范](https://docs.claude.com/en/docs/claude-code/skills)：每个 skill 有 `SKILL.md`，frontmatter 含 `name` 与 `description`
 - [ ] 改动影响用例产出的，在 PR 中说明预期影响（正式 Benchmark 复验由维护者在本地黄金集执行，判定标准以冻结的 EXPECTED 门为准；外部贡献者无需自行运行）
 - [ ] 客观指标（可执行性 / 编译 / 真实执行 / 植入 Bug 检出）不依赖 LLM judge，回退即拦截；judge 类指标回退需先排除同源宽容偏差（成对评审大量平局是信号）
