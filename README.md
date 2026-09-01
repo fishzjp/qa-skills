@@ -91,7 +91,7 @@ Skill 是纯 Markdown（frontmatter + 相对路径引用），不依赖宿主特
 | "根据这份 PRD 写用例" | 代码优先：索取仓库、读实现、审出潜在 Bug 再写 | 双轨用例：markmap（人）+ schema.yaml（机器） |
 | "这个功能应该怎么测" | Risk Map（每个评级必须给出证据）→ 功能域 + 类型域两域决策（十个测试类型逐一必答） | `测试策略.md`（含 type_scope 与专项移交包） |
 | "审一下这份存量用例" | 独立审查：先立可测点清单作分母，再查覆盖与可执行性 | 直接修订用例文件 + 审查记录 |
-| "把用例转成自动化" | Page Object 规范、监听先于操作、自建数据自清理 | 可运行的 Playwright / pytest 代码 |
+| "把用例转成自动化" | Page Object 规范、监听先于操作、自建数据自清理 | 可运行的 Playwright / pytest / k6 代码 |
 | "这个 Bug 帮我定位一下" | 复现 → 读代码到行 → 影响五面分析 → 回归建议 | Bug 条目（根因 / 证据 / 回归） |
 
 `exploratory-testing`（探索式测试，charter 驱动）、`api-testing`（接口级）、`bug-analysis`、`regression-testing`（diff → 回归范围）各自独立可用。
@@ -100,6 +100,19 @@ Skill 是纯 Markdown（frontmatter + 相对路径引用），不依赖宿主特
 <summary><strong>测试用例脑图怎么渲染</strong></summary>
 
 `测试用例_markmap.md` 是标准 Markdown（markmap 语法）：[VS Code Markmap 扩展](https://marketplace.visualstudio.com/items?itemName=gera2ld.markmap-vscode)、`npx markmap-cli 测试用例_markmap.md` 生成交互式 HTML、或粘贴到 [markmap.js.org/repl](https://markmap.js.org/repl)。
+</details>
+
+<details>
+<summary><strong>范围边界（当前不做）</strong></summary>
+
+本框架聚焦系统级黑盒测试的决策与执行。以下能力显式不做，各有明确理由：
+
+- **单元 / 集成测试**——开发侧职责；测试策略的风险评级与"已覆盖"结论以该层已有保障为假设前提（未验证时在报告中标注）
+- **移动端真机自动化**——兼容性矩阵暂限桌面浏览器，云真机是候选扩容方向
+- **前端组件测试 / 前端性能自动化**——候选扩容方向，决策层验证后立项
+- **渗透测试 / SAST 与依赖扫描**——渗透依赖专业人工与授权环境（右移安全专项）；SAST 是开发侧 CI 工具，只作业务安全轴的信号来源
+- **混沌工程工具链**——故障注入提供设计方法与执行前提约定，专业工具链不随本框架分发
+
 </details>
 
 ## 核心设计

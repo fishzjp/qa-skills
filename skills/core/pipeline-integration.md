@@ -103,6 +103,38 @@ jobs:
 3. prompt 模板中显式写入「遵循 core/pipeline-integration.md 非交互约定」，
    弱模型靠这句话找到三约定，而不是临场发挥
 
+### 3.1 大套件分片与门禁汇聚
+
+全量套件超出单机时长预算（>30 分钟量级）时按文件分片并行，汇聚后统一进门禁：
+
+```yaml
+# 分片：matrix 3 台 runner 各跑 1/3（GitLab CI 用 parallel:3，语义相同）
+jobs:
+  e2e-shard:
+    strategy:
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - run: npx playwright test --shard=${{ matrix.shard }}/3
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: blob-report-${{ matrix.shard }}, path: playwright/test-results/ }
+  e2e-gate:                       # required checks 只指向这个 job——分片 job 名带序号不稳定
+    needs: [e2e-shard]
+    if: always()
+    steps:
+      - uses: actions/download-artifact
+        with: { path: blob/ }
+      - run: npx playwright merge-reports --reporter=html,junit blob/
+      # 汇聚后退出码仍按约定三（2>1>3>0）判定；分片内部红绿不直接进门禁
+```
+
+三条分片纪律：
+1. 分片运行时 config reporter 增补 `['blob', { outputFileDir: 'blob/' }]`；
+   本地开发永远单机不分片——收敛反馈环
+2. gate job 必须 `if: always()` 收齐全部分片再汇聚——任一分片被取消不能静默绿灯
+3. 不为分而分：夜间套件 <15 分钟不分片，省 runner 也省汇聚开销
+
 ## 4. 失败回流闭环
 
 夜间/卡点的批量失败不是终点，回流分流完成「红墙 → 少量根因」的坍缩

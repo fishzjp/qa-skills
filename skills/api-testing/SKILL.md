@@ -3,29 +3,30 @@ name: api-testing
 slug: api-testing
 displayName: API 接口测试
 version: 0.7.0
-description: 接口级测试时使用——从 OpenAPI/Swagger 文档或用例 Schema 中可自动化的接口用例出发，覆盖参数、边界、鉴权、幂等、并发、错误响应与数据一致性，产出可执行的 API 测试脚本与运行结果。不用于：Web UI 流程（automated-e2e-testing）、手动用例编写（test-case-writing）。
+description: 接口级测试时使用——从 OpenAPI/Swagger 文档或用例 Schema 中可自动化的接口用例出发，覆盖参数、边界、鉴权、幂等、并发、错误响应与数据一致性，产出可执行的 API 测试脚本与运行结果；含接口压测承接（k6，类型矩阵轴 1 执行层）。不用于：Web UI 流程（automated-e2e-testing）、手动用例编写（test-case-writing）。
 ---
 
 # API 测试（api-testing）
 
 接口级测试——E2E 之外的另一条执行路径。
 
-- **输入**：API 文档（OpenAPI/Swagger）、用例 Schema 中 `execution_model` 可自动化的接口用例、被测环境信息（base URL、账号/Token）
-- **输出（落盘）**：API 测试脚本（pytest + requests，或项目既定技术栈）+ 运行结果（报告条目按 `../core/report-template.md` 对齐）
-- **边界**：Web UI 流程 → `automated-e2e-testing`；接口手动用例设计 → `test-case-writing`；性能压测 → 专项工具（k6/locust，见 `test-strategy` 的 handoff）
+- **输入**：API 文档（OpenAPI/Swagger）、用例 Schema 中 `execution_model` 可自动化的接口用例、被测环境信息（base URL、账号/Token）；性能轴（类型矩阵轴 1）移交包 `专项移交_性能_*.yaml`
+- **输出（落盘）**：API 测试脚本（pytest + requests，或项目既定技术栈）+ 运行结果（报告条目按 `../core/report-template.md` 对齐）；性能承接时另产 k6 压测脚本与压测报告（`references/k6-conventions.md`）
+- **边界**：Web UI 流程 → `automated-e2e-testing`；接口手动用例设计 → `test-case-writing`
 
 ## When to Use
 
 - 给定 OpenAPI/Swagger 文档，需要产出并运行接口自动化测试
 - 从用例 Schema 中筛出接口级可自动化用例，转换为 API 脚本执行
 - 需要覆盖鉴权/越权、幂等、并发写、错误响应等接口层专项
+- 给定性能移交包或接口清单，需要生成并运行压测脚本（k6）——按 `references/k6-conventions.md`
 
 ## When NOT to Use
 
 - Web UI 交互流程（点击 / 页面状态）→ `automated-e2e-testing`
 - 编写接口的手动测试用例 → `test-case-writing`
 - 端到端流水线 → `qa` 编排
-- 接口压测 / 限流摸底 → k6 / locust 专项
+- 独立压测环境搭建与容量保障 → 运维/专项协作（agent 侧压测承接见 `references/k6-conventions.md`；外部执行场景按 `test-strategy` 的移交包）
 - Mock Server 搭建 → 开发协作事项，不在本 skill 范围
 
 ## 脚手架（默认 pytest + requests，可替换为项目既定栈）
@@ -101,7 +102,7 @@ def client():
 - **输出预算纪律（防空截断）**：同类边界/参数校验用 `@pytest.mark.parametrize` 合并为一条参数化测试，禁止逐值展开重复的 test 函数或超长重复断言——单文件超过 ~250 行即应参数化收敛（生成通道有输出上限，超限会截断产生不可编译代码）
 - 断言三件套：状态码 + 业务码 + 响应体关键字段（不写"只断言 200"的弱断言）
 - 测试数据自建自清理（setup 创建 / teardown 删除），不依赖执行顺序；数据模板（唯一名等）先核对材料字段约束（maxLength/枚举/格式），模板总长（前缀+随机段）≤ 约束上限 −2——顶格即数据自建缺陷（实测自伤案例：唯一名模板 22 字符撞契约 maxLength 20）；**参数矩阵逐格回检跨字段业务规则**（如"使用门槛不能低于面额"）——违反规则的组合改取合法值或拆为显式负向用例，不做隐式非法组合（实测自伤案例：金额顶格 1000 配低于面额的门槛 → 400 THRESHOLD_INVALID 而用例期望 201）
-- 依赖前序状态的用例显式在前置里造数，不假设库里有数据
+- 依赖前序状态的用例显式在前置里造数，不假设库里有数据（造数模式：`../core/methods/data-factory.md`——makeX 构造器 / 造数通道三选一 / 前缀隔离）
 
 ### 4. 运行与结果
 
@@ -122,6 +123,28 @@ pytest api-tests/test_coupon_create.py   # 单文件
 
 脚本路径 + 运行统计（§2 执行统计：P0/P1/P2 × 通过/失败/阻塞/未执行，按 `../core/report-template.md`）+ Bug 条目 + 遗留问题清单 + （有插桩时）结构覆盖摘要：零覆盖/低覆盖接口清单。
 
+## 契约与 schema 一致性（类型矩阵轴 10 执行层）
+
+轴 10 决策 include 时按本节执行（决策与档位来自 test-strategy 的 type_scope，本节只管执行形态）；报告回收走 report-template §7 表，执行方列如实填写。
+
+### 两层形态（分工不互替）
+
+| 层 | 对象 | 做法 |
+|---|---|---|
+| schema 一致性 | 响应体 vs OpenAPI 定义逐字段（类型/必填/枚举） | Schemathesis 一条命令接入：`schemathesis run openapi.yaml --base-url $API_BASE_URL`；或手写 jsonschema 断言并入现有 test 文件 |
+| 结构级负向 fuzzing | 结构鲁棒性（类型错位 / 超长 / 格式畸变） | Schemathesis 自动生成非法输入。与 §2 参数矩阵分工：**矩阵管业务语义组合，fuzzing 管结构鲁棒性** |
+
+### 概念边界
+
+- schema 校验 ≠ 消费者契约：schema 只验"响应符合定义"，契约验"消费者-提供者允许的交互集合"
+- Pact 式消费者驱动契约的启用判据：多消费者微服务且字段演进频繁——单系统项目 schema 一致性即可，不上契约框架
+- 契约执行物按 type_scope 进执行策略裁决（脚本型消费方式）；mock/沙箱依赖不可得按矩阵 R5 记 blocked
+
+### 执行纪律
+
+- fuzzing 发现的 5xx / 未定义错误码视为候选缺陷，逐条归因（与 §4 失败分辨同流程），不自动记 Bug
+- schema 校验全过 ≠ 契约没问题：字段语义变更（结构未变）schema 层不可见，语义回归靠业务用例
+
 ## Common Mistakes
 
 | 错误 | 后果 | 正确做法 |
@@ -134,3 +157,4 @@ pytest api-tests/test_coupon_create.py   # 单文件
 | 无权限/越权只测前端表现 | 后端未拦截的越权漏检 | 直接调接口测鉴权（无 Token/过期/他人 id） |
 | 多参数接口逐值全展开或随手抽样 | 组合爆炸截断 / 参数交互缺陷静默漏测 | 按降档策略显式选档（全组合 → 成对 → 风险挑选），降档留痕 |
 | Schema 用例带占位符/虚构入口仍直接翻成脚本 | 幻觉脚本：能跑通但测的不是真实接口 | 转换前过 `../core/executability.md` 红线闸门，补不了的暂缓进遗留清单 |
+| schema 校验全过就当契约没问题 | 字段语义变更（结构未变）漏检 | schema 只验结构；语义回归靠业务用例（见「契约与 schema 一致性」节） |

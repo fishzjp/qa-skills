@@ -91,7 +91,7 @@ The full pipeline runs from requirement understanding through risk and test-type
 | "Write test cases from this PRD" | Code-first: requests the repo, reads the implementation, finds latent bugs, then writes | Dual-track cases: markmap (human) + schema.yaml (machine) |
 | "How should we test this?" | Risk Map (evidence-backed ratings) → two-domain decisions: functional + 10 test types | `测试策略.md` (incl. type_scope + handoff packages) |
 | "Review these existing cases" | Independent review: testable-point denominator + coverage + executability | Revised case file + review record |
-| "Convert cases to automation" | Page Object conventions, listeners-before-actions, self-built data & cleanup | Runnable Playwright / pytest code |
+| "Convert cases to automation" | Page Object conventions, listeners-before-actions, self-built data & cleanup | Runnable Playwright / pytest / k6 code |
 | "Root-cause this bug" | Reproduce → read code to the line → 5-dimension impact analysis → regression advice | Bug entry (root cause / evidence / regression) |
 
 Also usable standalone: `exploratory-testing` (charter-driven), `api-testing`, `bug-analysis`, `regression-testing` (diff → regression scope).
@@ -100,6 +100,19 @@ Also usable standalone: `exploratory-testing` (charter-driven), `api-testing`, `
 <summary><strong>Rendering the case mind map</strong></summary>
 
 `测试用例_markmap.md` is plain Markdown (markmap syntax): the [VS Code Markmap extension](https://marketplace.visualstudio.com/items?itemName=gera2ld.markmap-vscode), `npx markmap-cli`, or [markmap.js.org/repl](https://markmap.js.org/repl) render it.
+</details>
+
+<details>
+<summary><strong>Scope boundary (explicitly out of scope)</strong></summary>
+
+This framework focuses on decision-making and execution for system-level black-box testing. The following are explicitly out of scope, each for a stated reason:
+
+- **Unit / integration testing** — a development-side responsibility; the risk ratings and "covered" conclusions in test strategy assume existing safeguards at that layer (flagged in reports when unverified)
+- **Real-device mobile automation** — the compatibility matrix currently covers desktop browsers; cloud device farms are a candidate for future expansion
+- **Frontend component testing / frontend performance automation** — candidate directions, pending decision-layer validation
+- **Penetration testing / SAST & dependency scanning** — pentesting requires professional hands-on expertise and authorized environments (moved to security specials); SAST is a dev-side CI tool, used only as a signal source for the business-security axis
+- **Chaos-engineering toolchains** — fault injection ships as design method plus execution prerequisites; specialized toolchains are not bundled
+
 </details>
 
 ## Design

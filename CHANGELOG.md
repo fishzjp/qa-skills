@@ -5,6 +5,13 @@
 
 ## [Unreleased]
 
+### 新增
+
+- **接口压测承接**（api-testing）：新增 `references/k6-conventions.md`——类型矩阵轴 1 执行层（原十轴中唯一无执行片段的脚本型轴）：移交包字段→k6 options 逐项映射、单接口阶梯加压模板、thresholds 退出码与流水线四值语义对接（阈值失败默认 S 级复核归因，不自动定性为缺陷）、触发分层（夜间 standard / 发布卡点 full）、结果按 report-template §7 回收；frontmatter 与 When to Use 补性能触发面。
+- **契约与 schema 一致性**（api-testing）：类型矩阵轴 10 执行层落地——schema 一致性校验（Schemathesis / jsonschema）与结构级负向 fuzzing 两层形态、与参数矩阵的分工、"schema 校验 ≠ 消费者契约"概念边界。
+- **测试数据工厂**（core/methods/data-factory.md）：执行层造数工程模式——makeX 构造器（TS/Python 双形态）、造数通道三选一决策表（API 造数默认 > DB 快照 > UI 造数）、前缀隔离与清理三道防线。
+- **分片与门禁汇聚**（core/pipeline-integration.md §3.1）：`--shard` + blob reporter + merge-reports 的分片范式与 gate job 稳定 check name（GitHub required checks 不支持 matrix job 的标准解法）。
+
 ### 变更
 
 - **守门脚本扩面与产品测试面建立**：`validate_skills.py` 引用校验从「SKILL.md + core/」扩展到 `skills/` 下全部 .md（references/、templates/ 此前为盲区，死链 CI 抓不到），并按框架既有路径约定（相对消费方 SKILL.md 所在目录，见 core/test-type-matrix.md 口径注）机器化强制——仅按文件自身可解析的写法判「路径基准违反约定」，两套互斥基准并存的解析歧义从源头堵住；markdown 链接形态复用跨 skill 归属判定（堵住链接绕过）；docstring 清除"docs 三例外"陈旧描述，白名单清除死项 `og.jpg`；显式 `encoding="utf-8"`、`Path.relative_to` 3.8 兼容实现、`git ls-files -z` 关闭中文路径八进制转义（Windows / 老 Python 本地可跑）。新增 `tests/test_product_scripts.py`（12 例：validate_schema 退出码契约 / scan_signals YAML 转义顺序 / 引用解析基准三形态），`tests/` 入跟踪面白名单并接入 CI——此前三份随产品分发的脚本零单测；CI 同时补安装器与 dsh 插件语法门（`bash -n` / `node --check`，三大安装路径的零成本回归）。

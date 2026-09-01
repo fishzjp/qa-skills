@@ -36,7 +36,7 @@
 - **代码信号**：无分页全量查询；循环内远程调用（N+1）〔S〕；缓存依赖（Redis 命中率假设）；锁竞争热点〔S〕；消息积压消费逻辑
 - **默认档**：软默认——无信号 exclude（记录扫描结果）；有 SLA 或容量信号 → include
 - **档位语义**：full = 压测模型设计（用户旅程 × 到达率阶梯）+ 执行 + 瓶颈归因报告；standard = 核心接口基准（单接口阶梯加压）+ 阈值判定；light = 代码级性能审查（分页 / 缓存 / N+1 / 锁，逐项出 E2 证据清单）
-- **执行归属**：include + executor=agent 时 light 可闭环；压测执行走外部工具（k6 / locust，带移交包）
+- **执行归属**：三分——① agent 直接承接：executor 记 agent，standard 起步按 api-testing 的 k6-conventions 工程约定生成并运行压测脚本（light 代码级审查可闭环不变）；② 移交外部执行：executor 记 k6 / locust + handoff_ref（V5 强制），承接方可附脚本草稿；③ 执行前提不可得：R5 记 blocked + todo
 - **成本因子**：独立压测环境、可重置数据、基准噪音控制
 - **消费方式**：脚本型——standard 及以上不产手动用例，产压测模型与执行物进执行策略裁决；light 产代码审查清单条目（Cx 通道）
 
@@ -131,7 +131,7 @@
 - **代码信号**：外部 HTTP / gRPC 调用；消息契约；OpenAPI 定义变更；回调处理
 - **默认档**：软默认——有外部依赖 → standard；无 → exclude（记录扫描结果）
 - **档位语义**：full = 消费者驱动契约（Pact 式）+ 依赖故障矩阵（超时 / 错误码 / 格式变化 / 限流）；standard = 关键依赖 mock 与真实双跑 + 异常分支用例；light = 调用面清单 + 错误处理审查
-- **执行归属**：agent；契约测试框架执行为移交候选
+- **执行归属**：agent（schema 一致性 / 负向 fuzzing 按 api-testing「契约与 schema 一致性」节）；契约测试框架（Pact 式多消费者场景）执行为移交候选
 - **成本因子**：mock / 沙箱可用性
 - **消费方式**：用例型——standard 及以上产 type: functional 用例加标签 [集成]；契约执行物进执行策略裁决
 
