@@ -8,6 +8,7 @@
 ### 新增
 
 - **接口压测承接**（api-testing）：新增 `references/k6-conventions.md`——类型矩阵轴 1 执行层（原十轴中唯一无执行片段的脚本型轴）：移交包字段→k6 options 逐项映射、单接口阶梯加压模板、thresholds 退出码与流水线四值语义对接（阈值失败默认 S 级复核归因，不自动定性为缺陷）、触发分层（夜间 standard / 发布卡点 full）、结果按 report-template §7 回收；frontmatter 与 When to Use 补性能触发面。
+- **e2e 断言强度自检与冒烟卡点**（automated-e2e-testing）：工作流内联"断言三问"（区分度前置 / 触发方式保真 / 环境区分度）+ 工程约定 §15 完整版（反向断言示例、UI 断言三件套、弱断言黑名单）+ 工作流"基线零通过禁交付"卡点（全部测试失败视为流程认知错误，回工作流零重踩后才可交付）——X19 门同通道 On−Off 杀伤差 +0.55 实证。
 - **契约与 schema 一致性**（api-testing）：类型矩阵轴 10 执行层落地——schema 一致性校验（Schemathesis / jsonschema）与结构级负向 fuzzing 两层形态、与参数矩阵的分工、"schema 校验 ≠ 消费者契约"概念边界。
 - **测试数据工厂**（core/methods/data-factory.md）：执行层造数工程模式——makeX 构造器（TS/Python 双形态）、造数通道三选一决策表（API 造数默认 > DB 快照 > UI 造数）、前缀隔离与清理三道防线。
 - **分片与门禁汇聚**（core/pipeline-integration.md §3.1）：`--shard` + blob reporter + merge-reports 的分片范式与 gate job 稳定 check name（GitHub required checks 不支持 matrix job 的标准解法）。

@@ -223,7 +223,7 @@ export class XxxPage {
 
 - **常量数据**：放 `constants.ts`（账号、URL、状态枚举）
 - **CSV 数据**：放 `test-data/` 目录
-- **动态数据**：在测试中用 `Date.now()` 生成唯一名称
+- **动态数据**：在测试中用 `Date.now()` 生成唯一名称；造数通道选择与 makeX 构造器模式见 `../core/methods/data-factory.md`
 
 | 类型 | 命名 | 示例 |
 |------|------|------|
@@ -420,3 +420,75 @@ export default defineConfig({
 - full → 浏览器 × 分辨率矩阵逐格，分辨率经 `use: { viewport: {...} }` 维度展开
 
 成本纪律：本地开发固定 `--project=chromium` 收敛反馈环；多浏览器留给流水线夜间档跑（非交互产物与退出码约定见 `../core/pipeline-integration.md`）——单浏览器本地 + 多浏览器 CI 是多浏览器成本的业界默认切分，全量永远并行只会让反馈环烂掉。
+## 15. 断言强度自检
+
+> SKILL.md 工作流一第 3 步"断言三问"的完整版。原则：断言强度 = 变异杀伤能力——
+> 把任一断言换成"恒真"后测试若仍通过，该断言不构成验证。实测教训（2026-08-29 变异门基线）：
+> 搜索过滤逻辑与回车触发被删两个缺陷，On 臂三轮生成全部未杀——根因是前置只造了一条
+> 匹配数据，单元素列表上"过滤"语义不可观察，任何断言都无区分度。
+
+### 三问完整版
+
+1. **区分度（前置与反向断言）**：过滤 / 搜索 / 删除类操作，前置必须含**"不应匹配 / 应被排除"**的数据，断言必须覆盖"不在"：
+
+   ```typescript
+   // 弱：前置只造一条匹配数据——过滤逻辑被删、搜索永不触发，toHaveCount(1) 照样全绿
+   await projectsPage.createProject(matching);
+   await projectsPage.searchProject(matching);
+   await expect(projectsPage.getProjectCards()).toHaveCount(1);
+
+   // 强：前置造一匹配一不匹配，断言反向——过滤被删（列表恒为全集）立即失败
+   await projectsPage.createProject(matching);
+   await projectsPage.createProject(other);            // 不应出现在搜索结果里
+   await projectsPage.searchProject(matching);
+   await expect(projectsPage.getProjectCardByName(matching)).toBeVisible();
+   await expect(projectsPage.getProjectCardByName(other)).toHaveCount(0);
+   ```
+
+2. **触发方式保真**：被测行为步骤的触发方式是用例规格的一部分——用例写"回车触发搜索"就用
+   `keyboard.press('Enter')` 驱动；为绕开元素不稳定改用 input / blur / 直接调函数等替代路径
+   = 没测被测行为。不稳定走第 9 节等待降级阶梯；降不动按 SKILL.md 提问纪律问用户，不改触发路径。
+   **作用域限定**：仅约束被测行为步骤——前置准备是合法捷径（登录态 storageState 复用见
+   第 10 节、造数走 API），不受本条约束。
+
+3. **环境区分度**：断言失败时能区分"功能坏了"和"环境/页面没加载"吗——服务端崩溃 / 白屏
+   先经 `isServerCrash` 与环境判定（pipeline-integration C 类），不带病定性。
+   **基线不稳的测试没有验证资格**：一条测试自身时好时坏时，先按第 11 节定性 flaky 修稳定性，
+   再谈它能不能发现缺陷。
+
+### UI 断言三件套（对齐 api-testing 断言三件套）
+
+| 件 | 断什么 | 手段 |
+|---|---|---|
+| 状态可见变化 | 操作后的 UI 反映 | `expect(locator)` web-first 断言 |
+| 持久化 | 数据真正落库 | `page.reload()` 后重断言 |
+| 关键内容 | 文案 / 数值正确 | 断言具体值，不止元素存在 |
+
+### 弱断言黑名单（出现即改）
+
+- 只断言"无报错 / 页面没崩"
+- 只断言元素存在，不断言内容与状态
+- try/catch 吞异常后测试照常通过
+- 固定 `waitForTimeout` 后断言（掩盖时序，见第 9 节）
+- 断言实现细节（类名 / 内部状态）而非用户可感知行为
+
+
+## 16. 网络拦截边界（route mock）
+
+E2E 只 mock **不可控的外部依赖**（第三方支付 / 短信 / 风控 / 地图等）——被测系统自身的
+API 一律打真实后端，不得 route mock 代替（mock 掉被测系统 = 测的是 mock 不是系统）。
+关键集成按类型矩阵轴 10 standard 口径"mock 与真实双跑"：
+
+```typescript
+// 只拦外部域名；被测域名的请求全部放行
+await page.route('**//api.pay.example.com/**', route => route.fulfill({
+  status: 200,
+  contentType: 'application/json',
+  body: JSON.stringify({ code: 0, msg: 'mock 支付成功' }),
+}));
+```
+
+- mock 响应结构与错误码以被 mock 服务的公开契约为准（契约来源写进测试注释），不自造字段
+- 真实联调环境可用时优先真实双跑：mock 版验证本方分支逻辑，真实版验证集成——
+  只有 mock 一条腿不算集成通过
+- mock 未命中（第三方改版）视为环境问题走 C 类分流，不是被测系统缺陷

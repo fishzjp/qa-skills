@@ -91,7 +91,7 @@ Skill 是纯 Markdown（frontmatter + 相对路径引用），不依赖宿主特
 | "根据这份 PRD 写用例" | 代码优先：索取仓库、读实现、审出潜在 Bug 再写 | 双轨用例：markmap（人）+ schema.yaml（机器） |
 | "这个功能应该怎么测" | Risk Map（每个评级必须给出证据）→ 功能域 + 类型域两域决策（十个测试类型逐一必答） | `测试策略.md`（含 type_scope 与专项移交包） |
 | "审一下这份存量用例" | 独立审查：先立可测点清单作分母，再查覆盖与可执行性 | 直接修订用例文件 + 审查记录 |
-| "把用例转成自动化" | Page Object 规范、监听先于操作、自建数据自清理 | 可运行的 Playwright / pytest / k6 代码 |
+| "把用例转成自动化" | Page Object 规范、监听先于操作、断言三问、基线零通过禁交付、自建数据自清理 | 可运行的 Playwright / pytest / k6 代码 |
 | "这个 Bug 帮我定位一下" | 复现 → 读代码到行 → 影响五面分析 → 回归建议 | Bug 条目（根因 / 证据 / 回归） |
 
 `exploratory-testing`（探索式测试，charter 驱动）、`api-testing`（接口级）、`bug-analysis`、`regression-testing`（diff → 回归范围）各自独立可用。

@@ -91,7 +91,7 @@ The full pipeline runs from requirement understanding through risk and test-type
 | "Write test cases from this PRD" | Code-first: requests the repo, reads the implementation, finds latent bugs, then writes | Dual-track cases: markmap (human) + schema.yaml (machine) |
 | "How should we test this?" | Risk Map (evidence-backed ratings) → two-domain decisions: functional + 10 test types | `测试策略.md` (incl. type_scope + handoff packages) |
 | "Review these existing cases" | Independent review: testable-point denominator + coverage + executability | Revised case file + review record |
-| "Convert cases to automation" | Page Object conventions, listeners-before-actions, self-built data & cleanup | Runnable Playwright / pytest / k6 code |
+| "Convert cases to automation" | Page Object conventions, listeners-before-actions, assertion triple-check, zero-baseline-no-delivery, self-built data & cleanup | Runnable Playwright / pytest / k6 code |
 | "Root-cause this bug" | Reproduce → read code to the line → 5-dimension impact analysis → regression advice | Bug entry (root cause / evidence / regression) |
 
 Also usable standalone: `exploratory-testing` (charter-driven), `api-testing`, `bug-analysis`, `regression-testing` (diff → regression scope).
