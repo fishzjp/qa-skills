@@ -1,5 +1,7 @@
 # Playwright 工程约定与代码模板
 
+> **路径口径**：本文档内 `../core/...`、`references/...` 等相对路径按消费方 SKILL.md 所在目录（`skills/automated-e2e-testing/`）解析书写，不是相对本文件。
+
 > `automated-e2e-testing` 的脚手架、配置与场景代码模板全集。工作流零/一/二需要写代码时**加载本文件**；SKILL.md 只保留工作流与决策点。
 
 ## 1. 项目脚手架

@@ -45,7 +45,8 @@ eval/results/contamination/
 eval/results/calibration/
 eval/results/LATEST.md
 eval/
-tests/
+# 本地 eval harness 测试依赖 eval/（不随仓库分发）；产品脚本回归测试 tests/test_product_scripts.py 入库
+/tests/test_harness.py
 
 # in-situ 评测实验区（fixture 与观测记录只留本地，不进公开仓）
 .in-situ-lab/

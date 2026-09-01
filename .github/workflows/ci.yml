@@ -22,7 +22,16 @@ jobs:
       - name: Skills 架构红线校验（frontmatter / ≤500 行 / When NOT to Use / 引用完整性 / JSON）
         run: python3 scripts/validate_skills.py
 
-      # 评测 harness 的单测与语法检查随 eval/ 一并留本地（2026-08-22 起公开仓库只含 skills 产品内容）
+      - name: 产品脚本单测（validate_schema / scan_signals / validate_skills）
+        run: python3 -m unittest discover -s tests -p "test_product_scripts.py" -v
+
+      - name: 安装器与插件语法门（三大安装路径零成本回归）
+        run: |
+          bash -n install.sh
+          bash -n uninstall.sh
+          node --check .dsh/plugins/qa-skills.js
+
+      # eval 评测 harness 的单测与语法检查随 eval/ 一并留本地（2026-08-22 起公开仓库只含 skills 产品内容）
 
   label:
     name: PR 自动打标

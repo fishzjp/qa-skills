@@ -481,22 +481,37 @@ def main(argv=None):
     # ---------- 模式一：用例 Schema 校验（双文件参数） ----------
     md_path, yaml_path = paths
     errors, warnings = [], []
+    for _p, _label in ((yaml_path, "schema"), (md_path, "markmap")):
+        try:
+            _p.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            print(f"错误: {_label} 文件非 UTF-8 编码（{_p}）。"
+                  "请以 UTF-8 重新保存后重试（Windows 记事本默认 ANSI/GBK）")
+            return 1
     yaml_text = yaml_path.read_text(encoding="utf-8")
     md_text = md_path.read_text(encoding="utf-8")
 
     cases = []
     shared_pres = {}   # {前置原文: 模块名}：顶层 modules 表的共享前置，供去冗余复核
+    parsed_ok = False   # 仅在 PyYAML 真正完成解析时置位（降级 lint 不算，防止误报零用例）
     try:
         import yaml  # type: ignore
         docs = [d for d in yaml.safe_load_all(yaml_text) if d is not None]
         for doc in docs:
             walk_cases(doc, cases)
             shared_pres.update(collect_shared_preconditions(doc))
+        parsed_ok = True
     except ImportError:
         warnings.append("未安装 PyYAML，降级为基础 lint（引号配对 / 裸引号），建议 pip install pyyaml")
         lint_yaml_basic(yaml_text, errors)
     except Exception as e:  # yaml.YAMLError 等
         errors.append(f"YAML 解析失败（检查转义纪律，见 core/schema-extraction.md）: {e}")
+
+    # 零用例骗绿防线：YAML 合法但一条 TC 都没收集到（顶层 key 拼错/结构漂移的典型形态），
+    # 直接判失败——格式合法的空产物是最常见的失败形态，不能让它全绿通过
+    if parsed_ok and not cases:
+        errors.append("schema 中未发现任何 TC 用例（检查顶层 key 是否为 test_cases、"
+                      "结构是否符合 core/schema-extraction.md）")
 
     for case in cases:
         check_case(case, errors, warnings)
@@ -534,7 +549,7 @@ def main(argv=None):
         print(f"  ✗ {e}")
     for w in warnings:
         print(f"  ⚠ {w}")
-    n_ok = len(cases) if cases else "-"
+    n_ok = len(cases)
     verdict = "✅ 校验通过" if not errors else f"✗ {len(errors)} 个错误"
     print(f"{verdict}（用例 {n_ok} 条，错误 {len(errors)}，告警 {len(warnings)}）: {yaml_path.name}")
     return 1 if errors else 0

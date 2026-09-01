@@ -19,6 +19,7 @@ S 级（semantic）信号（矩阵各轴清单中标〔S〕的项）由 agent �
 import argparse
 import os
 import re
+import stat as stat_mod
 import sys
 from pathlib import Path
 
@@ -221,6 +222,7 @@ def scan(root: Path):
     mp_config_found = False
     fe_ext_count = 0
     files_scanned = 0
+    fallback_files = 0     # 非 UTF-8 源文件数（gb18030 回退读取；中文信号可能部分受损，须在 meta 披露）
     state = {"truncated": False}
 
     for path, rel in iter_files(root, state):
@@ -246,9 +248,18 @@ def scan(root: Path):
                 and path.name not in TEXT_FILE_NAMES):
             continue
         try:
-            if path.stat().st_size > MAX_FILE_BYTES:
+            st = path.stat()
+            if not stat_mod.S_ISREG(st.st_mode):
+                continue  # 字符设备/套接字等（如指向 /dev/zero 的符号链接）不可 read_text
+            if st.st_size > MAX_FILE_BYTES:
                 continue
-            text = path.read_text(encoding="utf-8", errors="ignore")
+            try:
+                text = path.read_text(encoding="utf-8")
+            except UnicodeDecodeError:
+                # errors="ignore" 会静默丢弃非 UTF-8 字节——GBK/GB18030 老仓库的中文注释信号
+                # （PII/库存/秒杀等 CJK 模式）将整轴假阴性，故显式回退而非忽略
+                text = path.read_text(encoding="gb18030", errors="replace")
+                fallback_files += 1
         except OSError:
             continue
         if path.name == "package.json" and FE_DEP_RE.search(text):
@@ -258,7 +269,7 @@ def scan(root: Path):
                 key = (axis, label)
                 if label_counts.get(key, 0) >= MAX_HITS_PER_LABEL:
                     continue
-                for no, line in enumerate(text.splitlines(), 1):
+                for no, line in enumerate(text.split("\n"), 1):
                     if label_counts.get(key, 0) >= MAX_HITS_PER_LABEL:
                         break
                     if rx.search(line):
@@ -283,10 +294,10 @@ def scan(root: Path):
                 seen.add(k)
                 uniq.append(h)
         hits[axis] = sorted(uniq, key=lambda h: (h[0], h[1], h[2]))
-    return hits, files_scanned, state["truncated"]
+    return hits, files_scanned, fallback_files, state["truncated"]
 
 
-def render_yaml(hits, files_scanned, repo: str, truncated: bool) -> str:
+def render_yaml(hits, files_scanned, fallback_files: int, repo: str, truncated: bool) -> str:
     out = []
     out.append("# G 级信号扫描结果 + 决策预填表（修订起点，不是决策）")
     out.append("# 配套 core/test-type-matrix.md；exclude 永不预填，需 agent 完成 S 级复核与需求信号判定")
@@ -295,6 +306,7 @@ def render_yaml(hits, files_scanned, repo: str, truncated: bool) -> str:
     out.append(f"  matrix_version: {yq(MATRIX_VERSION)}")
     out.append(f"  files_considered: {files_scanned}")
     out.append(f"  truncated: {'true' if truncated else 'false'}")
+    out.append(f"  decode_fallback_files: {fallback_files}   # 非 UTF-8 以 gb18030 回退读取的文件数（>0 时中文信号可能有损，人工抽查源文件编码）")
     out.append("  notes:")
     out.append("    - 命中是线索不是结论；逐轴按矩阵六字段决策，预填行仅供修订")
     out.append("    - security_business 为硬默认轴（Web/API 一律至少 standard）")
@@ -335,8 +347,8 @@ def main():
     if not root.is_dir():
         print(f"错误: 仓库路径不存在或不是目录 {root}", file=sys.stderr)
         return 1
-    hits, files_scanned, truncated = scan(root)
-    yaml_text = render_yaml(hits, files_scanned, str(root), truncated)
+    hits, files_scanned, fallback_files, truncated = scan(root)
+    yaml_text = render_yaml(hits, files_scanned, fallback_files, str(root), truncated)
     if args.out:
         try:
             Path(args.out).write_text(yaml_text, encoding="utf-8")

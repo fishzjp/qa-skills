@@ -1,5 +1,7 @@
 # 通用 Helper 参考实现（脱敏）
 
+> **路径口径**：本文档内 `../core/...`、`references/...` 等相对路径按消费方 SKILL.md 所在目录（`skills/automated-e2e-testing/`）解析书写，不是相对本文件。
+
 落地 `tests/helpers.ts` 时可直接复制以下代码作为起点，按你的系统调整选择器、登录后跳转规则和 token 存储位置。
 
 > 业务专有的"造数"函数（如创建某类业务实体并灌入测试数据）请基于你的 Page Object 自行实现，不要塞进通用 helpers。
