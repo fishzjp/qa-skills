@@ -48,4 +48,4 @@ bench 的产出是"改哪里"，不是总分。聚合数字（如覆盖 +8.7pp�
 ## 报告与对外发布的定位
 
 评测报告（eval/reports/）是里程碑快照，不是目标本身。对外数字发布前跑零成本污染三件套
-（cutoff 核对 / n-gram 扫描 / canary），见 eval/harness/CONTAMINATION.md。
+（cutoff 核对 / n-gram 扫描 / canary），见本地维护的 eval/harness/CONTAMINATION.md（eval/ 为本地链路，不随公开仓库分发）。

@@ -1,4 +1,0 @@
-# npm 打包排除项：npm 的 files 白名单是目录级，兜不住运行时生成的缓存；
-# 本脚本运行过的机器上可能出现 pyc 编译缓存，入库前按 RELEASING.md §3 用 pack dry-run 核对
-__pycache__/
-*.pyc

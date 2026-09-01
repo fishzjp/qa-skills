@@ -13,7 +13,7 @@ body:
     id: solution
     attributes:
       label: 期望的行为
-      description: 若涉及新方法论，请说明它与 core/ 共享知识库（evidence / risk-model / executability / testing-principles / report-template / case-format / coverage / schema-extraction / clarify-pattern / test-type-matrix + methods/ + scripts/）的关系
+      description: 若涉及新方法论，请说明它与 core/ 共享知识库（evidence / risk-model / executability / testing-principles / case-format / coverage / schema-extraction / clarify-pattern / test-type-matrix / triage / pipeline-integration / report-template + methods/ + scripts/，完整清单见 README 仓库结构）的关系
     validations:
       required: true
   - type: textarea

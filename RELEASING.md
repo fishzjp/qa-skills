@@ -25,7 +25,7 @@
   - 破坏性重构以 minor 位承载并在 CHANGELOG 显式标注（0.x 社区惯例）
 - **tag 一律带前缀 `vx.y.z`**：install.sh 写出的 `qa-skills.VERSION` 经 `git describe --tags` 读取，裸数字会破坏安装溯源
 - **CHANGELOG 工作法**：平时向 `[Unreleased]` 段累积条目；定版时改名 `[x.y.z] - YYYY-MM-DD`（保留各条目原始完成日期于正文）
-- **版本三处同步是红线 7**（validate_skills.py 机械强制）：全部 `skills/*/SKILL.md` frontmatter `version:` ↔ `package.json` `version` ↔ CHANGELOG 存在同名小节
+- **版本三处同步由 validate_skills.py 规则 7 机械强制**（校验器自身的规则编号，非 CONTRIBUTING 架构红线表）：全部 `skills/*/SKILL.md` frontmatter `version:` ↔ `package.json` `version` ↔ CHANGELOG 存在同名小节
 
 ## 分级发版门
 
@@ -58,7 +58,7 @@
 ```bash
 V_NEW="0.7.0"; V_OLD="0.6.0"   # ← 换成本次目标值
 # 函数级说明：锚定 frontmatter 整行做版本替换，避免 sed 撞上正文中的历史版本字样
-grep -rl "^version: ${V_OLD}$" skills/*/SKILL.md | wc -l        # 预检 SYNC COUNT = skill 目录数（当前 11）
+grep -rl "^version: ${V_OLD}$" skills/*/SKILL.md | wc -l        # 预检 SYNC COUNT = SKILL.md 文件数（当前 11：10 个 skill + core 依赖单元）
 sed -i '' "s/^version: ${V_OLD}$/version: ${V_NEW}/" skills/*/SKILL.md
 sed -i '' "s/\"version\": \"${V_OLD}\"/\"version\": \"${V_NEW}\"/" package.json
 git diff --stat                                                  # 复验：每个文件仅 version 行变动
@@ -117,7 +117,7 @@ npm publish --registry "$NPM_REGISTRY" --otp="<验证器当前6位动态码>"   
 npm view dsh-qa-skills version --registry "$NPM_REGISTRY"   # 复验：latest == 本次版本
 ```
 
-- \#4 GitHub Release 页：贴 CHANGELOG 对应节原文，并附跨模型增益矩阵快照（README 对外承诺：每版 Release 附快照）
+- \#4 GitHub Release 页：贴 CHANGELOG 对应节原文，并附跨模型增益矩阵快照（README 对外承诺：快照按里程碑随 Release 附带；非里程碑小版本无新数据时，贴完整表格并标注"数据沿用 vX.Y.Z"或不贴并在 body 说明）
 - \#5 官网：本次若未触碰 `index.html`/`assets/og.jpg`/`assets/landing/` 则 pages 不触发、无需动作；触发了则确认 pages workflow 部署成功
 
 ### §6 发布后自证

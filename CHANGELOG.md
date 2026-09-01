@@ -7,10 +7,13 @@
 
 ### 变更
 
-- **README 双语精简改版**：三节设计论述（可执行性 / 三层架构 / 类型决策矩阵）归并为「核心设计」小节、标题由口号式改为自明式；安装指引去重（dsh 版本验证细节并入宿主兼容表，手装折叠区补齐升级说明）；实测效果逐项口径与门判定块压缩，勘误沿革细节收敛为 CHANGELOG 指针；仓库结构树保持穷举、`docs/` 延伸阅读三链接不动；全部数字、事实与对外承诺未变。
+- **守门脚本扩面与产品测试面建立**：`validate_skills.py` 引用校验从「SKILL.md + core/」扩展到 `skills/` 下全部 .md（references/、templates/ 此前为盲区，死链 CI 抓不到），并按框架既有路径约定（相对消费方 SKILL.md 所在目录，见 core/test-type-matrix.md 口径注）机器化强制——仅按文件自身可解析的写法判「路径基准违反约定」，两套互斥基准并存的解析歧义从源头堵住；markdown 链接形态复用跨 skill 归属判定（堵住链接绕过）；docstring 清除"docs 三例外"陈旧描述，白名单清除死项 `og.jpg`；显式 `encoding="utf-8"`、`Path.relative_to` 3.8 兼容实现、`git ls-files -z` 关闭中文路径八进制转义（Windows / 老 Python 本地可跑）。新增 `tests/test_product_scripts.py`（12 例：validate_schema 退出码契约 / scan_signals YAML 转义顺序 / 引用解析基准三形态），`tests/` 入跟踪面白名单并接入 CI——此前三份随产品分发的脚本零单测；CI 同时补安装器与 dsh 插件语法门（`bash -n` / `node --check`，三大安装路径的零成本回归）。
+- **随产品分发脚本的用户环境加固**：`validate_schema.py` 堵"零用例骗绿"（YAML 合法但一条 TC 未收集到时此前全绿放行——顶层 key 拼错是模型产出最常见的失败形态，现直接判 FAIL 并给出 key 提示）；非 UTF-8 输入（中文 Windows 记事本 GBK 高发）由裸 traceback 改为自解释报错。`scan_signals.py` 文件读取由 `errors="ignore"` 改为 GBK/GB18030 显式回退并新增 `decode_fallback_files` meta 计数——此前非 UTF-8 老仓库的中文信号（PII/库存/秒杀等 CJK 模式）被静默丢弃整轴假阴性；补 `S_ISREG` 守卫（指向字符设备的符号链接可致无限读）；行号口径对齐编辑器（`split("\n")`）。
+- **对外口径对齐批**：落地页"七个环节"改为不与 README"9 阶段流水线"冲突的表述、"类型决策覆盖率"统一为 README 口径"类型查全率"、示例用例时长对齐 examples 真实产物（10 分钟）；双语 README 与 RELEASING 的增益矩阵快照承诺由"每版 Release 附"诚实化为"按里程碑随 Release 附带"（v0.6.0/v0.7.0 实际未附本版快照，名实相符优先）；PR 模板去除已退跟踪的 docs 指引、自检清单对齐 CONTRIBUTING 完整枚举；feature_request 的 core 文档枚举补齐 triage / pipeline-integration；RELEASING "红线 7"指称点名校验器出处、SYNC COUNT 叫法修正（11 = 10 skill + core 依赖单元，core 不是 skill）；AGENTS.md 污染检查指引注明 CONTAMINATION.md 为本地维护。
+- **死资产与配置清理**：删除 `assets/banner.html` / `banner-dark.html`（零引用，git 历史留档）与 `.npmignore`（package.json `files` 白名单存在时对白名单内路径无效，注释却仍宣称兜底——踩坑 6 已实证，真防线是 files 否定模式）；双语 README 结构树补齐 `scripts/`、`tests/`、`index.html` 行（穷举纪律）；`labeler.yml` 拆出 engineering 标签（CI / 工程配置 / 安装器 / 产品脚本改动不再误归 documentation），`index.html` 归 documentation。
 - **README 文案通读润色（说人话）**：翻译腔与评测内部行话改写为平实中文——"人在环路的检查点"→"关键决策归你拍板"、"零显式类型决策"→"没有一次给出显式的类型决策"、"挂信号 / 挂证据"→"给出信号依据 / 给出证据"、"G 级信号"→"能机械扫描的信号"、"in-situ 探针"→"真实宿主抽查"，"类别性判读 / 宽容口径 / 梯度轮 / 噪声带 / 消融 / LLM judge"等行话改写或补白话释义（异构裁判首现处补"裁判模型与被评模型不同源"、预注册门槛补"防事后挑指标"目的注）；能力总览两处压缩表述展开（可测点清单作分母、评级必须给出证据）；数字、口径与事实全部未动。
+- **README 双语精简改版**：三节设计论述（可执行性 / 三层架构 / 类型决策矩阵）归并为「核心设计」小节、标题由口号式改为自明式；安装指引去重（dsh 版本验证细节并入宿主兼容表，手装折叠区补齐升级说明）；实测效果逐项口径与门判定块压缩，勘误沿革细节收敛为 CHANGELOG 指针；仓库结构树保持穷举；全部数字、事实与对外承诺未变。
 - **规划文档与设计稿移出跟踪面**：`docs/`（DESIGN / 决策层设计稿 / v2 规划）整目录转为维护者本地资料——`git rm --cached` 退跟踪、`.gitignore` 整目录隔离（删除三文件例外放行），沿用评测链路"本地维护、不随仓库分发"先例；同步改写：`validate_skills.py` 白名单清除 docs 精确登记、CONTRIBUTING 红线 8、双语 README 摘除全部 docs 链接（工作原理 DESIGN 指针 / 延伸阅读三条 / 结构树 docs 行 / 宿主兼容性注）、`examples/README.md` DESIGN 链接摘除、`labeler.yml` 去 `docs/**` 通配。文件本体保留本地；git 历史不重写。
-
 - **落地页配图静态化**：13 张配图预生成本地化（`assets/landing/`），页面改为普通 `<img>` 引用——移除对第三方生图端点的运行时依赖（此前每位访客打开页面都实时触发生图请求：加载慢、可用性受制于外部端点、提示词明文暴露在 HTML 属性中）；`pages.yml` 产物清单与触发路径同步纳入 `assets/landing/**`。
 - **skills/ 对外文本去内部化**：清除 11 处内部迭代轮次标注（"2026-08-23 Rn"——轮次沿革归 CHANGELOG，不留在产品文本）；内部黑话改为自明表述（"格式锤"→"格式硬约束 / 防弱模型格式漂移"，中英 README 与 docs 同步；"GT 错标让飞轮"等评测内部表述改写为平实语言；删除 "exec 0.5"、"净收益 −13.5pp" 等对外未定义指标的裸引用，保留机制性结论）；`test-type-matrix` 的 V1–V5 权威定义指针修正为 `core/scripts/validate_schema.py`（原指 test-strategy SKILL.md，但该文件只使用编号、从未定义）；`api-testing` 四分类括注病句订正（B1/B2 口径对齐 triage）；`regression-testing` 夜间档口径与 `pipeline-integration` 精确对齐（P1 全量 + P2 抽样）；`qa` frontmatter description "Bug分析" 补空格。
 - **脚本与工程配置小修**：`scan_signals.py` 去内部设计代号"决策层方案 B"（docstring + argparse description）；`validate_schema.py` 删除模式二的不可达分支（死代码）；`dependabot.yml` 注释更正（仓库已有 npm 插件包 `package.json`，因声明零运行时依赖而不配置 npm 生态，原注释"公开仓库无 package.json"已过时）。
@@ -18,6 +21,9 @@
 
 ### 修复
 
+- **`markmap_template.md` 路径基准违规**：附录 B 的 `../../core/risk-model.md` 按"相对消费方 SKILL.md"约定应为 `../core/risk-model.md`——与 playwright-conventions.md 的约定写法并存构成两套互斥基准（新校验器上线后首个被揪出的违规，已修正）；三个子目录资产（playwright-conventions / helpers_reference / markmap_template）头部补路径口径声明，agent 直接读文件时不再有解析歧义。
+- **README.md 病句与示例编号错位**（润色批次引入，英文版完整）："只要其中某一步……时，直接说需求就行"补全谓语；README 示例用例编号 TC-02-05 与 examples 实际产物错位（到期自动结束实为 TC-03-05），双语对齐。
+- **CHANGELOG [Unreleased] 段内矛盾与乱序**："docs/ 延伸阅读三链接不动"与随后条目"摘除全部 docs 链接"相反陈述（删前者）；条目按提交时间新前旧后重排；截断空行清除。
 - **第八轮复审追补**：`test-type-matrix` 头部 V1–V5 指针的路径基准对齐框架约定（补 `../` 前缀，与同文件 §0 的脚本引用及"路径相对消费 SKILL.md 所在目录"注记一致）；RELEASING §3 的"九项架构红线"陈旧计数去除（红线已扩至 10 项）；CONTRIBUTING 提交前自检的校验器枚举补登记第 10 项"跟踪面白名单"；双语 README 仓库结构树补 `assets/` 行（结构树穷举纪律，landing 配图入库后该目录成为产品相邻资产）。
 
 ## [0.7.0] - 2026-08-27

@@ -111,8 +111,8 @@ AI-written cases often look professional but cannot be executed — vague verdic
 ```markdown
 > Precondition: operator logged in, at 「营销中台 → 券工场 → 活动列表」
 
-- **TC-02-05 Auto-close on expiry** [P1]
-  - Steps: 1. Pick a published coupon ending in 2 minutes 2. wait for expiry
+- **TC-03-05 Auto-close at end time** [P1]
+  - Steps: 1. Pick a published coupon ending in 10 minutes 2. wait for expiry
   - Expected: status becomes 「已结束」 within 1 hour; past 1 hour = fail
 ```
 
@@ -167,7 +167,7 @@ Execution artifacts + bug evidence → bug-analysis → regression-testing
 
 ## Measured results
 
-Evaluated on 12 tasks: same model, same evaluation pipeline; the only difference is whether this framework is injected. Numbers come from the heterogeneous-judge re-evaluation and are reported as measured, including the adverse ones. Full methodology and raw data live in the locally maintained evaluation pipeline and are not distributed with this repo; each release ships a cross-model gain-matrix snapshot ([Releases](https://github.com/fishzjp/qa-skills/releases)), and the On/Off output comparison is in [examples/](./examples/):
+Evaluated on 12 tasks: same model, same evaluation pipeline; the only difference is whether this framework is injected. Numbers come from the heterogeneous-judge re-evaluation and are reported as measured, including the adverse ones. Full methodology and raw data live in the locally maintained evaluation pipeline and are not distributed with this repo; milestone releases ship a cross-model gain-matrix snapshot ([Releases](https://github.com/fishzjp/qa-skills/releases)), and the On/Off output comparison is in [examples/](./examples/):
 
 | Metric | Without | With |
 |--------|:---:|:---:|
@@ -202,7 +202,7 @@ Pre-registered gates: 4/7 under the same-family judge, 5/8 under the heterogeneo
 ## Documentation
 
 - [examples/](./examples/) — Skill On/Off output comparison on the same PRD
-- [CHANGELOG.md](./CHANGELOG.md) — release history (each release ships a gain-matrix snapshot)
+- [CHANGELOG.md](./CHANGELOG.md) — release history (milestone releases ship a gain-matrix snapshot)
 - [RELEASING.md](./RELEASING.md) (Chinese) — release rules and checklist
 - Design & planning documents (DESIGN / decision-layer design / v2 blueprint) — maintainer-local, not distributed with this repo
 
@@ -222,6 +222,9 @@ skills/        the product (10 skills + shared core/)
 .dsh/          dsh plugin trio (manifest in package.json's dsh.bundle)
 assets/        visual assets (hero images, landing-page artwork in landing/, share image og.jpg, social preview)
 examples/      Skill On/Off output comparison
+scripts/       CI architecture-redline validator (validate_skills.py)
+tests/         regression tests for shipped scripts (validate_schema / scan_signals / validate_skills)
+index.html     website landing page (GitHub Pages build source)
 ```
 </details>
 

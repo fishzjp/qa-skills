@@ -81,7 +81,7 @@ Skill 是纯 Markdown（frontmatter + 相对路径引用），不依赖宿主特
 
 > **帮我测试这个需求：{需求描述 + 仓库地址}**
 
-一句话，流水线就从需求理解一路跑到测试报告。只要其中某一步（写用例 / 审查 / 转自动化 / 回归范围）时，直接说需求就行。
+一句话，流水线就从需求理解一路跑到测试报告。只需要其中某一步的产出（写用例 / 审查 / 转自动化 / 回归范围）时，直接说需求就行。
 
 ## 能力总览
 
@@ -111,8 +111,8 @@ AI 写出的用例常常看似专业、实则无法执行——判定模糊、�
 ```markdown
 > 前置:运营账号已登录,进入「营销中台 → 券工场 → 活动列表」
 
-- **TC-02-05 到期自动结束** [P1]
-  - 操作步骤: 1. 选一张结束时间为 2 分钟后的已发布券「满100减20-测试」 2. 等待到期
+- **TC-03-05 到达结束时间后优惠券自动变为已结束** [P1]
+  - 操作步骤: 1. 选一张结束时间为 10 分钟后的已发布券「满100减20-测试」 2. 等待到期
   - 预期结果: 到期后 1 小时内状态自动变为「已结束」,超过 1 小时未变判失败
 ```
 
@@ -167,7 +167,7 @@ PRD / 代码
 
 ## 实测效果
 
-12 个评测任务：同一模型、同一评测链路，唯一差别是有没有装本框架。数字以异构裁判复评轮为准（裁判模型与被评测的模型不同源），如实披露、包括不利结果。完整方法学与原始数据在本地评测链路维护、不随仓库分发；每版 Release 附跨模型增益矩阵快照（[Releases](https://github.com/fishzjp/qa-skills/releases)），Skill On / Off 产出对照见 [examples/](./examples/)：
+12 个评测任务：同一模型、同一评测链路，唯一差别是有没有装本框架。数字以异构裁判复评轮为准（裁判模型与被评测的模型不同源），如实披露、包括不利结果。完整方法学与原始数据在本地评测链路维护、不随仓库分发；跨模型增益矩阵快照按里程碑随 Release 附带（[Releases](https://github.com/fishzjp/qa-skills/releases)），Skill On / Off 产出对照见 [examples/](./examples/)：
 
 | 指标 | 无 Skill | 有 Skill |
 |------|:---:|:---:|
@@ -202,7 +202,7 @@ PRD / 代码
 ## 更多文档
 
 - [examples/](./examples/) —— 同一 PRD 的 Skill On / Off 产出对照
-- [CHANGELOG.md](./CHANGELOG.md) —— 版本历史（各版本附增益矩阵快照）
+- [CHANGELOG.md](./CHANGELOG.md) —— 版本历史（里程碑版本附增益矩阵快照）
 - [RELEASING.md](./RELEASING.md) —— 发版规则与检查单（四面分发同步 / 版本策略 / 测试门）
 - 设计文档与规划（DESIGN / 决策层设计稿 / v2 规划）—— 维护者本地资料，不随仓库分发
 
@@ -223,6 +223,9 @@ skills/                  产品本体（10 个 skill + core 共享知识库）
 .dsh/                    dsh 插件三件套（清单见 package.json 的 dsh.bundle）
 assets/                  视觉资产（hero 图、落地页配图 landing/、分享图 og.jpg、社交预览图）
 examples/                Skill On / Off 产出对照
+scripts/                 CI 架构红线校验器（validate_skills.py）
+tests/                   随产品分发脚本的回归测试（validate_schema / scan_signals / validate_skills）
+index.html               官网落地页（GitHub Pages 构建源）
 ```
 </details>
 

@@ -1,11 +1,20 @@
-# PR 按改动路径自动打标(与已建 label 对齐)
+# PR 按改动路径自动打标(与仓库已建 label 对齐)
 "skill:方法论":
   - changed-files:
       - any-glob-to-any-file:
-          - "skills/*/SKILL.md"
-          - "skills/core/**"
-          - "skills/*/references/**"
-          - "skills/*/templates/**"
+          - "skills/**"
+
+engineering:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**"
+          - "scripts/**"
+          - "tests/**"
+          - ".dsh/**"
+          - "install.sh"
+          - "uninstall.sh"
+          - "package.json"
+          - ".gitignore"
 
 documentation:
   - changed-files:
@@ -13,4 +22,4 @@ documentation:
           - "*.md"
           - "examples/**"
           - "assets/**"
-          - ".github/**"
+          - "index.html"
