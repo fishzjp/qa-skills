@@ -11,7 +11,7 @@ description: 代码变更（diff/Bug 修复/需求变更）后判断应回归哪
 代码变更 → 自动判断应该回归哪些测试。
 
 - **输入**：Code Diff（`git diff <base>...<head>`）、Bug 修复说明、需求变更说明、已有用例（markmap + `测试用例.schema.yaml`）、（可选）需求模型
-- **输出（落盘）**：`{项目}/回归清单_{日期}.md`——必须回归（P0）/ 建议回归（P1）/ 可选回归（P2）三级，逐条给依据
+- **输出（落盘）**：`{项目}/回归清单_{日期}.md`——必须回归（P0）/ 建议回归（P1）/ 可选回归（P2）三级，逐条给依据。**档名沿用 P 系记号，但归档规则是影响直接程度，与用例自身优先级是两套口径**：直连改动 → 必须回归，同模块间接受影响 → 建议回归；一条 [P2] 用例因 code_refs 直连改动同样进「必须回归」档（流水线分层消费按本档位执行，见 `../core/pipeline-integration.md`）
 - **前置依赖**：持久的"用例 ↔ 代码 ↔ 功能"追溯映射，v0 三层全部来自落盘产物，不依赖会话记忆：
   1. **代码级锚点**：用例附录「代码证据清单（TC ↔ 文件:行）」，由 Schema 的 `code_refs` 结构化
   2. **功能层**：需求模型 + Schema 的 `module` / `risk_ref`
@@ -32,7 +32,7 @@ description: 代码变更（diff/Bug 修复/需求变更）后判断应回归哪
 
 - 用例文件的增量修改本身（标记/新增/废弃用例）→ `test-case-writing` 增量更新流程
 - 长期回归策略（锚点用例、回归节奏）→ `test-strategy` 的 regression_plan
-- 判断某次失败是不是 Bug → `bug-analysis` / `automated-e2e-testing` 工作流二
+- 单条失败的分辨与定性 → 执行类 skill 单条流程（`automated-e2e-testing` 工作流二 / `api-testing` §4）；一轮失败 ≥3 条先走 `../core/triage.md` 分流；Bug 经用户定性裁决后才进 `bug-analysis`（其输入必须是已确认 Bug）
 - 端到端流水线 → `qa` 编排
 
 ## 分析链
@@ -71,6 +71,8 @@ git diff <base>...<head> -U3             # 逐文件读改动内容，定位改�
 
 ### 3. 生成分级回归清单
 
+有关联 Bug 时，**修复验证用例并入「必须回归」档**：取 bug-analysis「回归建议」给出的修复验证用例（无既有用例则给新增 TC 编号建议，落文件归 `test-case-writing`），并与该 Bug 条目「回归建议」双向互链。
+
 ```markdown
 # 回归清单 — {日期}
 
@@ -82,6 +84,7 @@ git diff <base>...<head> -U3             # 逐文件读改动内容，定位改�
 | 用例 | 依据 |
 |------|------|
 | TC-01-01（SMOKE-1） | 改动文件 code_refs 直连 + Critical 风险 R1 锚点 |
+| TC-03-01（修复验证） | Bug-001 修复验证，来源 bug-analysis「回归建议」（新增编号归 test-case-writing） |
 
 ## 建议回归（P1）
 | 用例 | 依据 |

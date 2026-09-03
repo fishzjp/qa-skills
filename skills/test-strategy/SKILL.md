@@ -33,15 +33,15 @@ description: 回答"这个功能应该怎么测"时使用——风险评级挂�
 ```yaml
 test_strategy:
   feature:
-  functional_scope:            # 功能域：范围+深度+理由（含 state / data_consistency 两轴）
+  functional_scope:            # 功能域：范围+深度+理由（含 state / data_consistency 两轴；rationale 每轴必带，示例仅演示写法）
     functional:        { include: true, depth: full,     rationale: "核心资损路径", risk_refs: [R3] }
-    boundary:          { include: true, depth: standard }
+    boundary:          { include: true, depth: standard, rationale: "入参边界密集（金额/时限）" }
     permission:        { include: true, depth: full,     rationale: "越权高危", risk_refs: [R2] }
-    state:             { include: true, depth: standard }
-    data_consistency:  { include: true, depth: standard }
-    regression:        { include: true, depth: standard }
+    state:             { include: true, depth: standard, rationale: "券状态流转多分支" }
+    data_consistency:  { include: true, depth: standard, rationale: "库存与订单跨表一致" }
+    regression:        { include: true, depth: standard, rationale: "存量功能回归基线" }
   type_scope:                  # 类型域：十轴全轴必答，每轴单行 flow 风格（校验器按行解析）
-    performance:        { decision: include, depth: full,     signals: ["PRD-4.2 SLA", "order_service.go:88"], risk_refs: [R3], executor: k6, execution_status: blocked, todo: "向运维索取独立压测环境", handoff_ref: "专项移交_performance_{日期}.yaml" }
+    performance:        { decision: include, depth: full,     signals: ["PRD-4.2 SLA", "order_service.go:88"], risk_refs: [R3], executor: k6, execution_status: blocked, todo: "向运维索取独立压测环境", handoff_ref: "专项移交_性能_{日期}.yaml" }
     security_business:  { decision: include, depth: standard, signals: ["多角色", "内部信号:permission≥standard"] }
     reliability:        { decision: include, depth: standard, signals: ["retry: pay_service.go:41"] }
     concurrency:        { decision: include, depth: standard, signals: ["库存扣减", "S级复核: check-then-write 命中 cart_service.go:41"] }
@@ -114,7 +114,7 @@ test_strategy:
 ### 8. 落盘与交付
 
 1. 写 `{项目}/测试策略.md`（Schema 结构 + Risk Map 内嵌；type_scope 每轴单行 flow 风格 + 足够性声明：逐轴档位动作清单与完成状态；开头一段**范围假设声明**：本策略限于系统级黑盒，单元/集成测试为开发侧职责，结论以此为前提）
-2. handoff 轴 / include+外部执行器 / blocked 轴 → 生成 `{项目}/专项移交_{轴}_{日期}.yaml` 移交包（目标、场景参数、阈值/验收口径）
+2. handoff 轴 / include+外部执行器 / blocked 轴 → 生成 `{项目}/专项移交_{轴}_{日期}.yaml` 移交包（目标、场景参数、阈值/验收口径）。**文件名中的 {轴} 用以下轴中文短名**（与矩阵轴一一对应；轴 1 全名"性能效率"文件名取"性能"）：性能 / 业务安全 / 可靠性 / 并发一致性 / 兼容性 / 无障碍 / 视觉一致性 / 国际化 / 迁移与升级 / 契约与集成，如 `专项移交_性能_20260901.yaml`——执行侧（api-testing 等）按中文名 glob 消费，用英文轴 id 会断链
 3. **校验后交付**：`python3 ../core/scripts/validate_schema.py {项目}/测试策略.md`（V1–V5；有代码仓库时叠加 `--repo-root {仓库根}` 抽查各轴 signals 指涉真实性），错误清零再交付。注意：include 且挂 Critical 风险的轴若最终维持 full 以下档位，校验器要求该轴名出现在 budget_review 文本中——降档裁量必须留一行依据，不许无声消失
 4. 交付索引给下游（`test-case-writing`）：策略路径 + include 轴清单（用例型轴的 type/标签要求见矩阵第 12 节）+ 优先级映射要求
 

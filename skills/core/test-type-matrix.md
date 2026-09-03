@@ -33,7 +33,7 @@
 ## 3. 轴 1 性能效率（performance）
 
 - **需求信号**：SLA / P95 响应时间承诺；大促、秒杀、抢购场景；预计并发用户数；性能验收指标
-- **代码信号**：无分页全量查询；循环内远程调用（N+1）〔S〕；缓存依赖（Redis 命中率假设）；锁竞争热点〔S〕；消息积压消费逻辑
+- **代码信号**：无分页全量查询；循环内远程调用（N+1）〔S〕；缓存依赖（Redis 命中率假设）；锁竞争热点〔S〕；消息积压消费逻辑〔S〕（积压 / 消费速率为语义判断项，扫描器不扫，照单读代码复核）
 - **默认档**：软默认——无信号 exclude（记录扫描结果）；有 SLA 或容量信号 → include
 - **档位语义**：full = 压测模型设计（用户旅程 × 到达率阶梯）+ 执行 + 瓶颈归因报告；standard = 核心接口基准（单接口阶梯加压）+ 阈值判定；light = 代码级性能审查（分页 / 缓存 / N+1 / 锁，逐项出 E2 证据清单）
 - **执行归属**：三分——① agent 直接承接：executor 记 agent，standard 起步按 api-testing 的 k6-conventions 工程约定生成并运行压测脚本（light 代码级审查可闭环不变）；② 移交外部执行：executor 记 k6 / locust + handoff_ref（V5 强制），承接方可附脚本草稿；③ 执行前提不可得：R5 记 blocked + todo
@@ -53,7 +53,7 @@
 ## 5. 轴 3 可靠性（reliability）
 
 - **需求信号**：可用性承诺（9x%）；降级预案；容灾要求；"不能丢消息"类硬约束
-- **代码信号**：重试逻辑与重试上限；超时配置；消息队列消费与 ack；断路器；事务边界〔S〕；补偿 / 回滚逻辑
+- **代码信号**：重试逻辑与重试上限；超时配置；消息队列消费与 ack；断路器；事务边界；补偿 / 回滚逻辑
 - **默认档**：软默认——有异步 / 第三方依赖信号 → standard；无 → light
 - **档位语义**：full = 故障注入矩阵（依赖宕机 / 超时 / 拒绝 / 脏数据）+ 恢复验证；standard = 超时 / 重试 / 幂等 / 降级专项用例（"失败 → 重试 → 恢复"原则的类型化落地）；light = 清单审查（超时有无 / 重试上限 / 幂等键 / 消息 ack 语义）
 - **执行归属**：standard 及以下 agent；故障注入 = agent 设计 + 可控环境执行
@@ -73,7 +73,7 @@
 ## 7. 轴 5 兼容性（compatibility）
 
 - **需求信号**：明确支持的浏览器 / 设备清单；企业客户旧环境（旧内核）；跨端一致性要求
-- **代码信号**：有前端（扫描器探测 package.json 前端依赖 / .vue / .svelte / 多 .html / 样式族（.css/.scss/.less）；移动端信号同计为有前端——pubspec.yaml(Flutter)、react-native/@tarojs/@dcloudio 跨端依赖、project.config.json 小程序配置）；浏览器特性 API 使用（IntersectionObserver 等）；UA 判断分支；响应式断点；多端平台分支（Platform.OS / kIsWeb / wx.getSystemInfo / `#ifdef MP-WEIXIN` 等）；系统版本门槛（minSdkVersion / deployment_target 等）
+- **代码信号**：有前端（前端源码文件计数 ≥3 即命中——扩展名清单与阈值以 `scripts/scan_signals.py` 实现为准，含 .vue/.jsx/.tsx/样式族等；package.json 前端依赖、移动端信号同计为有前端——pubspec.yaml(Flutter)、react-native/@tarojs/@dcloudio 跨端依赖、project.config.json 小程序配置）；浏览器特性 API 使用（IntersectionObserver 等）；UA 判断分支；响应式断点；多端平台分支（Platform.OS / kIsWeb / wx.getSystemInfo / `#ifdef MP-WEIXIN` 等）；系统版本门槛（minSdkVersion / deployment_target 等）
 - **默认档**：软默认——有前端 → light；有明确支持清单 → standard
 - **档位语义**：full = 支持矩阵逐格（浏览器 × 设备 × 分辨率 × P0 路径）；standard = 支持清单矩阵 × P0 路径；light = 最新 Chrome / Safari / Edge / Firefox 冒烟
 - **执行归属**：agent + Playwright 项目矩阵（现成接入片段：automated-e2e-testing 工程约定第 14 节）

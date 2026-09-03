@@ -31,7 +31,7 @@ export class LoginPage {
 
   async goto() {
     await this.page.goto(`${BASE_URL}/<登录页路由>`);
-    await this.page.waitForLoadState('networkidle');
+    // 表单元素由后续 fill/keyboard 的 auto-wait 兜底（阶梯①）；勿在此套 networkidle
   }
 
   /** 按角色登录，角色名对应 constants.ts 中 ACCOUNTS 的 key */

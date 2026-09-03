@@ -164,7 +164,7 @@ Bug 发现 → 截图操作前 → 操作触发异常 → 截图操作后 → �
 | 数据持久化验证 | `page.reload()` + 断言 | 确认数据真正保存 |
 | 多用户会话 | `createDualSession(browser, roleA, roleB)` | 两个角色并发 |
 | 登录态复用 | `createSession(browser, role)` | 缓存 storageState 免重复 UI 登录（工程约定第 10 节） |
-| 等待策略 | `waitForLoadState('networkidle')` | 优于固定 `waitForTimeout`；长轮询/心跳页永不空闲时按降级阶梯换用（工程约定第 9 节） |
+| 等待策略 | ① auto-wait + `expect` 断言 → ② `waitForResponse` → ③ `networkidle`（仅传统 SSR/MPA） | 自上而下优先（工程约定第 9 节）；固定 `waitForTimeout` 仅临时调试；长轮询/心跳页对 networkidle 永不空闲 |
 | 并行执行 | 默认串行，独立性达标后开 `workers` | 前提：自建数据 + 自清理 + 唯一命名逐项核对（工程约定第 11 节） |
 | flaky 定性 | 首次失败原样重跑通过 → 判 flaky | 重跑只用于定性；定位根因前标 `test.fixme`（工程约定第 11 节） |
 | 截图调试 | `page.screenshot({ fullPage: true })` | 每个关键步骤都截图 |
@@ -180,7 +180,7 @@ Bug 发现 → 截图操作前 → 操作触发异常 → 截图操作后 → �
 | 受控组件值不生效仍反复 `fill()` | 测试卡死或断言失败 | `fill` 失效时改用 `keyboard.type()`（见速查表） |
 | 网络监听放在 click 之后 | 捕捉不到请求 | 先注册 listener，再执行操作 |
 | 不清理测试数据 | 后续测试受影响 | afterEach 中删除创建的资源 |
-| 用固定 timeout 等待 | 时序不稳定 | 优先用 `waitForLoadState` / `waitForResponse` |
+| 用固定 timeout 等待 | 时序不稳定 | 按等待降级阶梯换用：① auto-wait+expect 断言 → ② `waitForResponse` → ③ `networkidle`（工程约定第 9 节） |
 | 不验证持久化 | 数据可能只存在内存 | reload 后重新断言 |
 | 正式测试不使用 Page Object | 代码重复，难以维护 | 所有页面交互封装在 Page Object 中 |
 | explore 文件不删除 | 上下文污染，AI 每次读大量废代码 | 知识提取后立即删除 |

@@ -134,7 +134,7 @@ Bug 条目）；B1 没有 G 表以外的独立变更依据不得判 B（见下�
 | # | TC | 类别 | G 信号摘要 | S 级复核 | evidence | status | 去向 |
 |---|----|------|-----------|---------|----------|--------|------|
 | 1 | TC-02-03 | A | 断言 stable diff，无聚集 | 截图核对：优惠金额确实双扣 | level: E3, source: bug-001-02.png | fact | 报告§3 BUG-001 → bug-analysis 五字段 TODO |
-| 2 | TC-04-01 | B1 | expected=新版文案；关联 commit a1b2c3 | 响应体字段与新需求一致 | level: E3+E1, source: 需求 v2.3 §4.2 | fact | test-case-writing 增量修订（附依据） |
+| 2 | TC-04-01 | B1 | expected=新版文案；关联 commit a1b2c3 | 响应体字段与新需求一致 | level: E4, source: report.txt [5] + 需求 v2.3 §4.2（运行 + 文档双来源印证） | fact | test-case-writing 增量修订（附依据） |
 | 3 | TC-05-02 | U | 无聚集 | trace 缺失无法复核 | level: E0, source: 仅用户口述 | hypothesis | 报告§6 未闭环，找{谁}要 {什么} |
 ```
 

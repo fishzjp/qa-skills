@@ -83,7 +83,7 @@ test('业务熟悉：探索{功能名}页面结构', async ({ page }) => {
 
   await new LoginPage(page).loginAs('admin');
   await page.goto('/<你的页面路由>');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('networkidle');  // 阶梯③：仅为让整页截图前网络静默，仅 SSR/MPA 页适用；SPA/长连接页改 waitForResponse（工程约定第 9 节）
 
   // 全页截图
   await page.screenshot({ path: 'debug-{功能}-landing.png', fullPage: true });
@@ -125,9 +125,9 @@ test.describe('{模块名}', () => {
     createdName = `{前缀}-${Date.now()}`;
     await xxxPage.createXxx(createdName);
 
-    const row = await xxxPage.getXxxByName(createdName);
-    expect(row).not.toBeNull();
-    await expect(row!).toBeVisible();
+    // getXxxByName 返回 Locator（见 §6 XxxPage）——web-first 断言自带轮询重试，
+    // 不要先 await 再 not.toBeNull()（对 Locator 恒真，等于没断言）
+    await expect(xxxPage.getXxxByName(createdName)).toBeVisible();
   });
 });
 ```
@@ -201,7 +201,7 @@ export class XxxPage {
 
   async goto() {
     await this.page.goto(`${BASE_URL}/xxx/list`);
-    await this.page.waitForLoadState('networkidle');
+    // 列表交互由首个断言/操作的 auto-wait 兜底（阶梯①）；确需等列表接口时用 waitForResponse（②）
   }
 
   async createXxx(name: string) {
@@ -210,9 +210,15 @@ export class XxxPage {
     await this.page.keyboard.type(name, { delay: 30 });
   }
 
+  // 行定位：返回 Locator 供 web-first 断言（toBeVisible 等）直接消费，勿 await 后判空
+  getXxxByName(name: string): Locator {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');  // 唯一名含特殊字符时先转义
+    return this.page.getByRole('row', { name: new RegExp(escaped) }).first();
+  }
+
   async deleteXxx(name: string) {
-    const row = await this.getXxxByName(name);
-    if (!row) return;
+    const row = this.getXxxByName(name);
+    if (!await row.isVisible().catch(() => false)) return;  // 行未渲染/已删除则跳过
     await row.locator('[aria-label="delete"]').first().click();
     await this.page.getByRole('button', { name: /确\s*定/ }).click();
   }
@@ -297,10 +303,11 @@ helper 参考实现（`saveLoginState` / `createSession`）见 `references/helpe
 - **报告产物**：HTML 报告供 artifact 下载查看；需平台解析时另配 JUnit 输出：
 
 ```typescript
-// playwright.config.ts 增补
+// playwright.config.ts 增补（outputFile 对齐 core/pipeline-integration.md 约定二的
+// 产物路径 {项目}/results/results.xml，供流水线 G 级信号聚合与机读摘要解析）
 reporter: [
   ['html', { open: 'never' }],
-  ['junit', { outputFile: 'results.xml' }],
+  ['junit', { outputFile: '../results/results.xml' }],  // 相对 playwright/ 工作目录
 ],
 ```
 
@@ -364,16 +371,16 @@ export async function runAxeScan(page: Page, label: string): Promise<string> {
 
 ## 13. 类型域执行层之二：视觉基线（轴 7 visual）
 
-配置增补（playwright.config.ts）：
+配置增补（playwright.config.ts）——**只增补以下键，合并进既有 `defineConfig`**，勿整块替换（会丢掉 §3 的 timeout / retries / screenshot / trace 配置）：
 
 ```typescript
-export default defineConfig({
+{
   // 截图基线独立目录：便于 CI 工件上传规则通配
   snapshotPathTemplate: '{testDir}/__screenshots__/{testFileName}/{arg}{ext}',
   expect: {
     toHaveScreenshot: { maxDiffPixelRatio: 0.02 },   // 2% 容差起步，按页面校准收紧
   },
-});
+}
 ```
 
 用例形态：
@@ -401,17 +408,15 @@ await expect(page).toHaveScreenshot('dashboard.png', {
 
 ## 14. 类型域执行层之三：多浏览器兼容（轴 5 compatibility）
 
-配置增补（playwright.config.ts）。Playwright 原生引擎为 chromium/firefox/webkit，Edge 由 chromium channel 派生——恰好覆盖 light 档「最新 Chrome/Safari/Edge/Firefox 冒烟」定义：
+配置增补（playwright.config.ts）——**在既有 `defineConfig` 中增补 `projects` 键**，勿整块替换；文件顶部 import 改为 `import { defineConfig, devices } from '@playwright/test'`（`devices` 由本节引入）。Playwright 原生引擎为 chromium/firefox/webkit，Edge 由 chromium channel 派生——恰好覆盖 light 档「最新 Chrome/Safari/Edge/Firefox 冒烟」定义：
 
 ```typescript
-export default defineConfig({
-  projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
-    { name: 'msedge', use: { channel: 'msedge' } },
-  ],
-});
+projects: [
+  { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+  { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+  { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+  { name: 'msedge', use: { channel: 'msedge' } },
+],
 ```
 
 档位对接（depth 来自 type_scope，不为档位发明新语义）：

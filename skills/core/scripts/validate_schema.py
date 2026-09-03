@@ -85,7 +85,11 @@ REPO_FILE_LOC_RE = re.compile(
 
 
 def extract_markmap_tcs(md_text):
-    """markmap 用例编号：剔除删除线段（~~TC-xx~~ 已废弃，同行的存活编号保留）与引用块外的附录。"""
+    """markmap 用例编号：剔除删除线段（~~TC-xx~~ 已废弃，同行的存活编号保留）。
+
+    附录中的编号交叉引用不剔除（无可靠的附录起点判定）——正文已删而附录残留
+    的不一致场景交由 test-case-review 独立审查发现，不在本函数硬猜边界。
+    """
     ids = []
     for line in md_text.splitlines():
         line = re.sub(r"~~[^~]+~~", "", line)  # 删除线段不算遗漏，整行丢弃会漏提同行存活编号
@@ -179,29 +183,74 @@ def as_list(val):
     return []
 
 
-def extract_risk_levels(md_text):
-    """从策略/风险正文中提取 {风险编号: 等级}，同号取最高级（Critical > High > 其余忽略）。
+def extract_risk_levels_detailed(md_text):
+    """提取（{风险编号: 等级}, 有等级依据的编号集合），同号取最高级（Critical > High > 其余忽略）。
 
-    只认 Critical / High 两个门禁相关等级；扫描逐行进行，行内同时出现编号与等级词
-    才建立映射——宽松启发式，误报只会让门禁偏严而非偏松。
+    只认 Critical / High 两个门禁相关等级。识别两种书写形态（取并集）：
+    1. 行内同现——同一行同时出现 Rn 与等级词（markdown 表格行、行内散文）；
+    2. 跨行记录——yaml 风险块中 `id: Rn` 行与其后最近的等级词行（risk-model.md §4
+       权威格式的 id 与 level 即分行书写，此前逐行启发式对它整块失效 → 门禁静默放行）。
+       记录边界为下一个 id 行 / 代码围栏 / 标题 / 空行；嵌套块（如 evidence.level）按
+       缩进深于 id 行排除，不充当记录自身的等级依据。
+    第二返回值 = 出现过等级依据的编号：已映射 Critical/High，或记录/行内存在任意值的
+    level: 字段或 Medium/Low 等级词（仅 Medium/Low 属正常不入门禁，不算提取缺口）。
+    供"部分记录提取失败"的缺口告警使用——只看映射为空会在混合形态下继续 fail-open。
     """
     levels = {}
+    leveled = set()
+    id_line_re = re.compile(r"^\s*(?:-\s*)?id:\s*[\"']?(R\d{1,3})\b")
+    level_field_re = re.compile(r"\blevel\s*[:：]", re.I)
+    medium_word_re = re.compile(r"\bMedium\b", re.I)
+    low_word_re = re.compile(r"\bLow\b", re.I)
+
+    def _raise(rid, lv):
+        old = levels.get(rid)
+        if old == "Critical" or (old == "High" and lv != "Critical"):
+            return
+        levels[rid] = lv
+
+    current = None
+    id_indent = 0
     for line in md_text.splitlines():
-        rids = set(RISK_ID_RE.findall(line))
-        if not rids:
-            continue
+        m = id_line_re.match(line)
+        if m:
+            current = m.group(1)  # 进入新风险记录
+            # id token 的列位置作为记录基准缩进：映射式 `  id:` 为行首缩进；列表式
+            # `  - id:` 需把列表标记宽度计入（否则其同缩进 level: 会被误判为嵌套）
+            id_indent = line.find("id:")
+        stripped = line.strip()
+        if current and (not stripped or stripped.startswith("```")
+                        or stripped.startswith("#")):
+            current = None  # 记录边界：空行 / 围栏 / 标题（这些行也不会携带等级词）
         if CRITICAL_WORD_RE.search(line):
             lv = "Critical"
         elif HIGH_WORD_RE.search(line):
             lv = "High"
         else:
-            continue
-        for rid in rids:
-            old = levels.get(rid)
-            if old == "Critical" or (old == "High" and lv != "Critical"):
-                continue
-            levels[rid] = lv
-    return levels
+            lv = None
+        rids = set(RISK_ID_RE.findall(line))
+        has_level_field = level_field_re.search(line) is not None
+        has_subgate_level = (medium_word_re.search(line) is not None
+                             or low_word_re.search(line) is not None)
+        if rids:
+            for rid in rids:  # 形态 1：行内同现
+                if lv:
+                    _raise(rid, lv)
+                    leveled.add(rid)
+            if lv is None and (has_subgate_level or has_level_field):
+                leveled.update(rids)  # 行内有 Medium/Low 词或 level: 字段 → 有依据
+        elif current:
+            if lv:  # 形态 2：跨行记录内的等级行
+                _raise(current, lv)
+                leveled.add(current)
+            elif has_level_field and (len(line) - len(line.lstrip())) <= id_indent:
+                leveled.add(current)  # 记录自身缩进层的 level: 字段（Medium/Low 等）
+    return levels, leveled
+
+
+def extract_risk_levels(md_text):
+    """风险等级映射（单返回值兼容形式；提取缺口告警用 extract_risk_levels_detailed）。"""
+    return extract_risk_levels_detailed(md_text)[0]
 
 
 def check_path_refs(items, repo_root, ctx, warnings):
@@ -235,7 +284,14 @@ def check_risk_coverage(cases, strategy_md_path, errors, warnings):
     except OSError as e:
         errors.append(f"--strategy 文件不可读: {e}")
         return
-    levels = extract_risk_levels(text)
+    levels, leveled = extract_risk_levels_detailed(text)
+    gaps = sorted(set(RISK_ID_RE.findall(text)) - leveled)
+    if gaps:
+        shown = ", ".join(gaps[:8]) + ("…" if len(gaps) > 8 else "")
+        warnings.append(
+            f"--strategy 风险编号 {shown} 无门禁等级依据（未提取到 Critical/High，"
+            "记录中也无 level 字段）——对应风险不参与风险覆盖门禁，请核对 Risk Map "
+            "书写格式（支持 yaml 块 id 与 level 分行、表格行内同现两种形态）")
     known_ids = set(levels)
     covered = set()
     for case in cases:
@@ -308,8 +364,15 @@ def validate_strategy(path, repo_root=None):
         errors.append("未找到含 type_scope:/functional_scope: 的 yaml 代码块——测试策略必须包含类型域十轴决策（V1）")
         return errors, warnings
     # Risk Map 等级抽取：供 V4-终态留痕判定哪些轴挂着 Critical 风险；
-    # 仅行内同现 Rn 与等级词才建立映射，全文提不出等级则该检查自动失效（偏松方向，不误伤正常流）
-    risk_levels = extract_risk_levels(text)
+    # 同时支持 yaml 块 id/level 分行（risk-model.md §4 权威格式）与行内同现（表格/散文）
+    risk_levels, leveled = extract_risk_levels_detailed(text)
+    gaps = sorted(set(RISK_ID_RE.findall(text)) - leveled)
+    if gaps:
+        shown = ", ".join(gaps[:8]) + ("…" if len(gaps) > 8 else "")
+        warnings.append(
+            f"风险编号 {shown} 无门禁等级依据（未提取到 Critical/High，记录中也无 "
+            "level 字段）——对应风险不参与 V4-终态留痕与风险覆盖门禁，请核对 "
+            "Risk Map 书写格式（支持 yaml 块 id 与 level 分行、表格行内同现两种形态）")
 
     def has_mark(items, marks):
         return any(mk in s for s in items for mk in marks)
@@ -376,9 +439,9 @@ def validate_strategy(path, repo_root=None):
         kv = parse_flow_map(inner)
         depth = scalar(kv, "depth")
         decision = kv.get("decision", "")
-        # depth 缺省警示：类型域轴必须显式声明档位，否则绕过 full_axes/预算审计链；
-        # functional_scope 行无 depth 属常态，仅对类型域轴名告警防误伤
-        if name in TYPE_AXES and not depth:
+        # depth 缺省警示：类型域 include 轴必须显式声明档位，否则绕过 full_axes/预算审计链；
+        # exclude/handoff 轴按 schema 约定本就不写 depth（"不测"是范围决策），不告警防误伤
+        if name in TYPE_AXES and not depth and decision not in ("exclude", "handoff"):
             warnings.append(
                 f"V4 {name}: depth 缺省——档位未声明则不参与 full_axes/预算审计，"
                 "请显式写入 full/standard/light（'不测'应表达为 exclude/handoff 并挂理由）")
@@ -510,8 +573,8 @@ def main(argv=None):
     # 零用例骗绿防线：YAML 合法但一条 TC 都没收集到（顶层 key 拼错/结构漂移的典型形态），
     # 直接判失败——格式合法的空产物是最常见的失败形态，不能让它全绿通过
     if parsed_ok and not cases:
-        errors.append("schema 中未发现任何 TC 用例（检查顶层 key 是否为 test_cases、"
-                      "结构是否符合 core/schema-extraction.md）")
+        errors.append("schema 中未发现任何 TC 用例（检查顶层 key 是否为 cases、"
+                      "结构是否符合 core/schema-extraction.md 的三层形态：strategy_ref / modules / cases）")
 
     for case in cases:
         check_case(case, errors, warnings)
@@ -522,6 +585,24 @@ def main(argv=None):
                 warnings.append(
                     f"{cid}: 前置 '{pre}' 与模块级共享前置重复"
                     f"（module={shared_pres[pre]}），应只写该条特有部分")
+
+    # 代码模式弱断言（schema-extraction「模式相关必填」）：markmap 顶部带测准声明即为
+    # 代码模式，code_refs 与 evidence 三件套必填——字段留有"注明实现形态"的豁免出口，
+    # 无法机械判定豁免是否成立，故为告警级，不做门禁
+    if "测准声明" in md_text:
+        for case in cases:
+            cid = str(case.get("id", "?"))
+            refs = case.get("code_refs")
+            refs_items = refs if isinstance(refs, list) else ([refs] if refs else [])
+            if not refs_items:
+                warnings.append(
+                    f"{cid}: 代码模式但 code_refs 为空——无代码位置即没有被审查资格"
+                    "（确无一比一对应实现时注明实现形态，见 core/schema-extraction.md）")
+            ev = case.get("evidence")
+            if not isinstance(ev, dict) or not all(ev.get(k) for k in ("level", "source", "confidence")):
+                warnings.append(
+                    f"{cid}: 代码模式但 evidence 三件套（level/source/confidence）不全"
+                    "（代码模式必填，见 core/schema-extraction.md）")
 
     if cases:
         yaml_ids = [c["id"] for c in cases]

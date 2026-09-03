@@ -68,6 +68,201 @@ class ValidateSchemaCliTests(unittest.TestCase):
             self.assertEqual(self._run([md, yml]), 1)
 
 
+# 风险覆盖门禁（V4-终态留痕）曾对 risk-model.md §4 权威 Risk Map 格式整块失效：
+# id 与 level 分行书写时逐行启发式提取为空 → 门禁静默放行（全绿通过）。
+# 以下用例锚定该失败形态：跨行 yaml 记录、行内同现表格、extract 为空告警、
+# exclude 轴按 schema 约定无 depth 时不得误告警。
+STRATEGY_YAML_BLOCK = """test_strategy:
+  type_scope:
+    performance: { decision: include, depth: standard, signals: ["PRD-4.2 SLA"], risk_refs: [R1] }
+    security_business: { decision: include, depth: light, signals: ["鉴权"] }
+    reliability: { decision: include, depth: light, signals: ["retry"] }
+    concurrency: { decision: include, depth: light, signals: ["秒杀"] }
+    compatibility: { decision: include, depth: light, signals: ["有前端"] }
+    accessibility: { decision: include, depth: light, signals: ["有前端"] }
+    visual: { decision: include, depth: light, signals: ["有前端"] }
+    i18n: { decision: exclude, rationale: "需求信号未命中；无代码仓库", scanned: ["需求信号(G)"] }
+    migration: { decision: include, depth: light, signals: ["migrations/x.sql"] }
+    contract_integration: { decision: include, depth: light, signals: ["外部风控"] }
+  depth_budget:
+    full_axes: []
+"""
+
+
+def _strategy_md(riskmap_block):
+    return f"# 测试策略\n\n{riskmap_block}\n```yaml\n{STRATEGY_YAML_BLOCK}```\n"
+
+
+RISKMAP_YAML_MULTILINE = """## Risk Map
+
+```yaml
+risk:
+  id: R1
+  feature: 用户删除
+  impact: 5
+  likelihood: 3
+  level: Critical                  # 15 = 5 × 3
+  evidence:
+    level: E2
+    source: user_service.go:124
+  confidence: medium
+  status: hypothesis
+```
+"""
+
+RISKMAP_TABLE_INLINE = """## Risk Map
+
+| 风险 | 等级 | 状态 |
+|------|------|------|
+| R1 用户删除 | Critical | 待验证 |
+"""
+
+
+class RiskGateExtractionTests(unittest.TestCase):
+    """风险等级提取双形态 + 门禁对权威格式的实际生效（H1 回归锚）。"""
+
+    def test_yaml_multiline_record_extracted(self):
+        """risk-model.md §4 权威格式（id 与 level 分行）必须能建立映射。"""
+        levels = validate_schema.extract_risk_levels(RISKMAP_YAML_MULTILINE)
+        self.assertEqual(levels.get("R1"), "Critical")
+
+    def test_inline_table_row_extracted(self):
+        levels = validate_schema.extract_risk_levels(RISKMAP_TABLE_INLINE)
+        self.assertEqual(levels.get("R1"), "Critical")
+
+    def test_multiline_record_survives_multiple_risks(self):
+        text = RISKMAP_YAML_MULTILINE + RISKMAP_YAML_MULTILINE.replace(
+            "id: R1", "id: R2").replace("level: Critical", "level: High")
+        levels = validate_schema.extract_risk_levels(text)
+        self.assertEqual(levels.get("R1"), "Critical")
+        self.assertEqual(levels.get("R2"), "High")
+
+    def test_v4_terminal_trace_fires_on_authoritative_format(self):
+        """挂 Critical 风险却降档且 budget_review 无留痕——权威格式下必须报错（曾静默放行）。"""
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "s.md"
+            p.write_text(_strategy_md(RISKMAP_YAML_MULTILINE), encoding="utf-8")
+            errors, _ = validate_schema.validate_strategy(p)
+            self.assertTrue(any("V4-终态" in e and "performance" in e for e in errors))
+
+    def test_mode1_gate_fires_on_authoritative_format(self):
+        """模式一覆盖门禁：Critical 风险零 risk_ref 覆盖必须报错（曾静默放行）。"""
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "s.md"
+            p.write_text(_strategy_md(RISKMAP_YAML_MULTILINE), encoding="utf-8")
+            errors, warnings = [], []
+            validate_schema.check_risk_coverage(
+                [{"id": "TC-01-01"}], p, errors, warnings)  # 用例无 risk_ref
+            self.assertTrue(any("风险覆盖" in e and "R1" in e for e in errors))
+            errors2, _ = [], []
+            validate_schema.check_risk_coverage(
+                [{"id": "TC-01-01", "risk_ref": ["R1"]}], p, errors2, warnings)
+            self.assertEqual(errors2, [])
+
+    def test_no_levels_with_risk_ids_warns(self):
+        """出现 Rn 但两种形态都提取不到等级 → 告警门禁失效，不得安静。"""
+        text = "risk_refs: [R7]，正文无等级词"
+        levels = validate_schema.extract_risk_levels(text)
+        self.assertEqual(levels, {})
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "s.md"
+            p.write_text(_strategy_md(text), encoding="utf-8")
+            _, warnings = validate_schema.validate_strategy(p)
+            self.assertTrue(any("无门禁等级依据" in w and "R7" in w for w in warnings))
+
+    def test_partial_gap_warns_only_missing_id(self):
+        """部分记录可提取、部分无等级 → 只对缺口编号告警，不误伤已提取的。"""
+        text = RISKMAP_YAML_MULTILINE + "另有风险 R9 等级待补\n"
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "s.md"
+            p.write_text(_strategy_md(text), encoding="utf-8")
+            _, warnings = validate_schema.validate_strategy(p)
+            gap_warns = [w for w in warnings if "无门禁等级依据" in w]
+            self.assertEqual(len(gap_warns), 1)
+            self.assertIn("R9", gap_warns[0])
+            self.assertNotIn("R1", gap_warns[0])
+
+    def test_medium_only_record_not_gap_warned(self):
+        """记录 level 为 Medium/Low 属正常不入门禁——不算提取缺口，不告警。"""
+        text = RISKMAP_YAML_MULTILINE.replace("level: Critical", "level: Medium")
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "s.md"
+            p.write_text(_strategy_md(text), encoding="utf-8")
+            _, warnings = validate_schema.validate_strategy(p)
+            self.assertFalse(any("无门禁等级依据" in w for w in warnings))
+
+    def test_list_style_record_medium_not_gap_warned(self):
+        """yaml 列表式记录（`- id: R5` 后深缩进的 level: Medium）不算缺口——
+        缩进基准须取 id token 列位置而非行首，否则与 Critical/High 可提取不对称。"""
+        text = """## Risk Map
+
+```yaml
+risks:
+  - id: R5
+    feature: 数据导出
+    level: Medium
+```
+"""
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "s.md"
+            p.write_text(_strategy_md(text), encoding="utf-8")
+            _, warnings = validate_schema.validate_strategy(p)
+            # 夹具的 type_scope 引用了无记录的 R1，其缺口告警属预期噪音；
+            # 本测试锚定的是：列表式 R5（Medium）不得被误报为缺口
+            self.assertFalse(any("无门禁等级依据" in w and "R5" in w
+                                 for w in warnings))
+
+    def test_nested_evidence_level_not_treated_as_record_level(self):
+        """只有嵌套 evidence.level（缩进深于 id 行）而无记录自身 level → 属缺口，须告警。"""
+        text = """## Risk Map
+
+```yaml
+risk:
+  id: R2
+  feature: 数据导出
+  evidence:
+    level: E2
+    source: export_service.go:88
+```
+"""
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "s.md"
+            p.write_text(_strategy_md(text), encoding="utf-8")
+            _, warnings = validate_schema.validate_strategy(p)
+            self.assertTrue(any("无门禁等级依据" in w and "R2" in w for w in warnings))
+
+    def test_exclude_axis_without_depth_not_warned(self):
+        """exclude 轴按 schema 约定不写 depth——校验器不得反向建议（此前对官方示例也告警）。"""
+        with tempfile.TemporaryDirectory() as td:
+            p = Path(td) / "s.md"
+            p.write_text(_strategy_md(RISKMAP_YAML_MULTILINE), encoding="utf-8")
+            _, warnings = validate_schema.validate_strategy(p)
+            self.assertFalse(any("depth 缺省" in w and "i18n" in w for w in warnings))
+
+    def test_code_mode_missing_refs_warns(self):
+        """代码模式（markmap 带测准声明）code_refs/evidence 缺失 → 告警；纯文档模式不告警。"""
+        code_markmap = "> **测准声明**：本文件以 repo@main 实际实现为唯一功能基线。\n" + MIN_MARKMAP
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            md, yml = td / "case.md", td / "s.yaml"
+            yml.write_text(GOOD_CASES_YAML, encoding="utf-8")
+            md.write_text(code_markmap, encoding="utf-8")
+            import io, contextlib
+            with contextlib.redirect_stdout(io.StringIO()) as fh:
+                rc = validate_schema.main([str(md), str(yml)])
+            out = fh.getvalue()
+            self.assertEqual(rc, 0)
+            self.assertIn("代码模式但 code_refs 为空", out)
+            self.assertIn("evidence 三件套", out)
+            # 纯文档模式（无测准声明）不产生这两类告警
+            md2 = td / "case2.md"
+            md2.write_text(MIN_MARKMAP, encoding="utf-8")
+            with contextlib.redirect_stdout(io.StringIO()) as fh2:
+                rc2 = validate_schema.main([str(md2), str(yml)])
+            self.assertEqual(rc2, 0)
+            self.assertNotIn("代码模式但", fh2.getvalue())
+
+
 class ScanSignalsUnitTests(unittest.TestCase):
     """scan_signals 的 YAML 输出安全性（sanitize 顺序是硬约束，见其注释）。"""
 

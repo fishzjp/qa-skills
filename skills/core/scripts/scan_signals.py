@@ -132,6 +132,9 @@ AXIS_PATTERNS = {
     "contract_integration": [
         ("疑似外部调用", re.compile(r"\b(requests\.(?:get|post|put|delete)|http\.(?:Get|Post)|axios\.(?:get|post)|RestTemplate|WebClient|grpc\.(?:Dial|NewClient))\b")),
         ("契约定义", re.compile(r"\b(openapi|swagger|graphql)\b", re.I)),
+        # 消息契约（矩阵轴 10 G 级信号，此前仅文档声明无实现）：AsyncAPI / Avro(.avsc)
+        # / Pact 契约 / Schema Registry 客户端与配置——按文件内容词匹配
+        ("消息契约", re.compile(r"\b(asyncapi|avro|avsc|pact\b|schema[_\s-]?registry)\b", re.I)),
         ("Webhook/回调", re.compile(r"webhook|callback[_\s-]?url|回调", re.I)),
     ],
 }
@@ -158,6 +161,7 @@ AXIS_PATH_PATTERNS = {
     ],
     "contract_integration": [
         ("proto 契约", re.compile(r"\.proto$", re.I)),
+        ("消息契约文件", re.compile(r"\.avsc$", re.I)),
     ],
 }
 

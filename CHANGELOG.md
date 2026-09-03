@@ -32,6 +32,41 @@
 
 ### 修复
 
+- **发布前盲区终审追补（第五轮，独立定点复核，6 项）**：
+  - **校验器列表式风险记录误告警**：缺口判据的缩进基准原取行首缩进，yaml 列表式记录（`- id: R5` 后深缩进的 `level: Medium`）被误判"记录中也无 level 字段"——而同形态 Critical/High 因等级分支无缩进检查可正常提取，行为不对称且文案失实；改为以 id token 列位置为基准（`line.find("id:")`），映射式/列表式统一，补三态回归测试（Critical 提取 / Medium 不误报 / 嵌套 evidence 仍排除）。
+  - **轴 10「消息契约」矩阵-实现漂移（实质向）**：矩阵将"消息契约"列为 G 级代码信号（未标〔S〕），扫描器却无任何对应检测——契约预填对 avro/Kafka 契约项目恒为"待复核"。扫描器补消息契约检测：内容词匹配（asyncapi / avro / pact / schema registry）+ `.avsc` 文件信号，实现追平矩阵声明。
+  - **轴 3「事务边界〔S〕」标注失实（反向）**：扫描器"事务/补偿"标签实际扫描 @Transactional / begin transaction（实测命中），违反"〔S〕不扫"约定——去除〔S〕标注，恢复与实现的对应。
+  - **qa 跳过标记无落盘载体**：阶段 6/7 的"无已确认 Bug / 无变更"跳过标记此前未指定落盘位置，与硬规则 3"状态全在文件、凭落盘产物即可续跑"冲突（新会话无法区分"已判定跳过"与"未跑到"，会误重跑）——引入 `{项目}/流水线状态.md` 作为跳过标记与 headless 未决项的统一载体，写入两处判据与 headless 段；顺带阶段 2 判据补条件产物检查（handoff/blocked 轴的移交 yaml 应已生成）。
+  - **coverage.md 阶段四职责表述二次校正**："其余核心维度靠阶段四抽查承担（抽查选点即从本清单取）"仍超出实际——阶段四为固定 5 项抽查、不从本清单取点，5 个无内联核心维度实为"设计期方法选择覆盖 + 独立审查全检兜底"；按实际分工改述。
+  - **零星口径**：exploratory:90"可标待证据补强"改为"status 记 risk/inference 并注明补强方向"（不得使用 status 枚举外标记）；api-testing 脚手架树注释"读 .env"改为"环境变量注入，可由 .env 加载"（与示例读 os.environ 一致）。
+
+- **终审追补（第四轮，独立复核 + 遗留定案）**：
+  - **红线 3 单消费文件定案（此前标记待决策的遗留项）**：`core/methods/permission.md` 与 `state-machine.md` 此前 SKILL 级仅 test-case-writing 一个消费方，违反"core 内容需至少两个 skill 消费"；两文件均为与 boundary/data-driven 同性质的通用分析方法，且类型矩阵轴 2 本就声明"方法基线 methods/permission.md"而 api-testing 执行越权抽样却从未加载——补两个真实消费方：api-testing 参数矩阵鉴权行挂 permission.md（Role×Action×Resource 矩阵 + 垂直/水平越权），test-case-review 状态流转维度挂 state-machine.md（逐边核对法）。全类清点：其余 core 文件均为 ≥2 消费（data-factory 为 api-testing SKILL 级 + e2e references 级两级消费，合规）。
+  - **networkidle 示例残留清零**：LoginPage.goto 与 XxxPage.goto 模板中的 `waitForLoadState('networkidle')` 与 §9 阶梯（③ 仅 SSR/MPA）相悖且无必要——移除并注明"交互由 auto-wait 兜底（①）/确需等接口用 ②"；Bug 探索全页截图处保留但标注"③ 仅为截图前网络静默，仅 SSR/MPA 适用"。至此 networkidle 全仓出现点均为阶梯允许形态。
+  - **api-testing 执行分报告断链**：输出只说"运行结果按 report-template 对齐"未给文件名，而 e2e 与 qa 断点判据均按 `测试报告_{来源}_{日期}.md` 核收——补 `测试报告_api_{日期}.md` 命名。
+  - **移交包命名规则措辞自洽**：规则原称"{轴} 用矩阵轴中文名"但矩阵轴 1 全名为"性能效率"、全仓既有约定为短名"性能"——改为"轴中文短名"并显式注明轴 1 全名/短名对应。
+  - **qa 阶段 4 完成判据可被写时自审冒名（独立对抗审查 🔴 项）**：判据"末尾含「审查记录」节"在阶段 3 即满足——test-case-writing 自身写时自审（属 qa 阶段 3）就追加同名节，续跑 agent 会据此把阶段 4 误判已完成而静默跳过独立审查，"不重做已完成阶段"反而固化跳过。改为要求 test-case-review 落款的记录节「## 审查记录（test-case-review …）」，并同步在 case-format §10 注明落款可区分两节。
+  - **风险门禁缺口告警从"全空才报"改为逐号缺口（独立对抗审查 🟡 项）**：原告警仅在一份策略零提取时触发，混合形态下部分记录提取失败、对应 Critical 风险仍无告警逃逸（fail-open 只变窄未根除）。新增 `extract_risk_levels_detailed` 返回"有等级依据的编号集"（已映射 Critical/High，或记录缩进层存在任意值 level 字段 / 行内 Medium/Low 词；嵌套 evidence.level 按缩进排除），两个调用点对 `出现编号 − 有依据编号` 逐号告警——Medium/Low 记录正常不误报，真缺口（含只有嵌套 evidence 等级的记录）逐号点名。
+  - **conftest 脚手架补全 import（独立对抗审查 🟡 项）**：此前只补了 os/pytest，`Client`/`login` 仍是裸名，照抄即 NameError——补 `from common.client import Client, login`。
+  - **coverage.md 消费方口径降为如实描述（独立对抗审查 🟡 项）**："核心维度已内联为其阶段三交付核对"言过其实——阶段三维度核对仅三项硬核对（主流程/时间双侧/负向底数），改述为"部分内联，其余核心维度由阶段四抽查承担"，防被读成"阶段三已查完核心维度"而弱化阶段四。
+- **全量 skill 质量审查修复批（第三轮复审，30 余项）**：
+  - **风险覆盖门禁静默放行（最重要）**：`validate_schema.py` 风险等级提取为逐行"Rn 与等级词同行同现"启发式，而 `risk-model.md` §4 权威 Risk Map 格式的 `id: R1` 与 `level: Critical` 分行书写——按权威格式写策略时提取为空，风险覆盖门禁与 V4-终态留痕**双门禁整体失效且零报错**（实测复现：同份策略权威格式 exit=0、行内写法 exit=1）。现支持 yaml 块 id/level 跨行记录解析（记录边界为下一 id 行/围栏/标题/空行），两种形态取并集；提取到风险编号但提不出等级时显式告警"门禁将不生效"；补 7 个回归测试锚定该失败形态（含权威格式下 V4-终态必报错、模式一门禁必拦截）。
+  - **校验器反向建议**：V4 对 exclude/handoff 轴缺 depth 发告警，而 schema 约定"不测是范围决策不写 depth"（官方示例 i18n 轴即此形态）——现跳过该两类轴。
+  - **零用例防骗绿报错指错 key**：提示"检查顶层 key 是否为 test_cases"，权威定义是 `cases:`（三层形态）——照提示改名会把对的改错，已修正并附三层形态说明。
+  - **移交包文件名断链**（test-strategy ↔ api-testing）：策略侧示例 `专项移交_performance_{日期}.yaml`（英文轴 id）对执行侧消费 glob `专项移交_性能_*.yaml`（中文）——性能轴移交包在流水线中断链；统一为矩阵轴中文名并在策略落盘步骤显式定义命名规则与完整中文轴名清单。
+  - **回归清单 P 档消歧**：必须/建议/可选回归沿用 P0/P1/P2 记号但归档规则从未显式定义，与用例优先级同名歧义（违背自身消歧纪律）——显式声明"按影响直接程度分档，与用例自身优先级两套口径"。
+  - **修复验证用例落位**：bug-analysis 承诺修复验证进回归清单，但分析链不产出、模板无对应行——清单模板「必须回归」档补修复验证行，生成步骤补"并入 + 双向互链"指令。
+  - **S 级安全定级双路径**：影响分析安全面"命中即上浮一级"与定级规则"安全 → S0"对同一缺陷给不同结果——限定为"潜在窗口上浮 / 已构成实际安全后果直接 S0"，两处互证。
+  - **qa 断点续跑**：阶段 3/4 产物完全同名无完成判据——补逐阶段完成判据（审查记录节/校验通过/分报告落盘等）；执行分报告补文件名 `测试报告_{来源}_{日期}.md`（对齐 report-template 头注）。
+  - **qa headless 接线**：qa 拥有全部 ⏸ 检查点却未引用 pipeline-integration 约定一（三个执行 skill 都引了）——工作流补非交互降级指引，防无人值守时卡死或代答裁决。
+  - **coverage.md 执行口径**：文件头"所有项目必检"与尾注"全检已废除"并立、test-case-review 又要求"全部检查项"——文件头按消费方声明执行强度（编写=抽查选点 / 独立审查=核心 7 维全检+扩展按速查），review 引用措辞对齐。
+  - **审查记录双定义**：case-format §10 与 test-case-review 各有同名"审查记录"模板且字段集不同——case-format §10 显式限定适用写时自审，独立审查以 test-case-review 为唯一来源。
+  - **触发与路由矛盾**：regression-testing"判断某次失败是不是 Bug → bug-analysis"与其输入门矛盾（改为执行 skill 单条流程 / triage 分流 / 定性后进）；test-case-writing"必要时确认"vs 无 UI"开工即问"（改为"无法判定时必问"）；"无法开工"未指明去向（补 exploratory-testing 路由）。
+  - **api-testing 过滤漏洞**：`dev-collab 或 framework:api` 会把 framework:manual 的协作用例吞进自动化——收紧为 framework:api 或 dev-collab 且非 manual；脚手架代码补 import（此前照抄即 NameError）。
+  - **e2e 模板可运行性**：playwright-conventions CRUD/Page Object 模板调用未定义的 `getXxxByName`（补 Locator 返回定义）+ `expect(locator).not.toBeNull()` 恒真断言（改单一 web-first 断言）；SKILL.md 速查表与 Common Mistakes 把 networkidle 立为首选等待、与 §9 阶梯（③ 仅 SSR/MPA）分叉（改阶梯口径）；§13/§14 完整 defineConfig 块照抄陷阱 + devices 未导入（改增补键写法并注明 import）；CI junit 产物路径对齐 pipeline-integration 约定二 `{项目}/results/`。
+  - **markmap 模板四处**：协作五段式"测试数据见附录 A"悬空引用（附录 A 是 Cx 记录，改指前置条件）；Cx 范例缺证据等级/置信度字段（case-format §9 必填）；残留两处 `../../core/` 路径基准违规（HTML 注释内躲过校验器）；轴 2 缺 standard+ 限定（矩阵 §12 规定 light 走 Cx 通道，会多产手动安全用例）。
+  - **矩阵-扫描器口径漂移**：轴 1"消息积压消费逻辑"未标〔S〕而扫描器明示不扫（孤儿信号，补〔S〕并注明语义判断项）；轴 5"有前端"探测描述与 `scan_signals.py` 实现漂移（改为行为口径声明，实现细节归脚本）。
+  - **杂项口径**：triage 示例 `E3+E1` 复合记法未定义（改 E4 双来源印证）；pipeline-integration 退出码 3 的 >10% 阈值补分母；探索笔记风险条目补 status 字段（evidence §3 全输出要求）；bug-analysis description 漏"回归建议"字段；test-strategy 策略示例 functional 四轴补 rationale；exploratory-testing"使用 e2e 工具能力"改宿主能力表述（消除软性跨 skill 依赖）；validate_schema 代码模式弱断言（测准声明在场时 code_refs/evidence 三件套告警级检查，落地 schema-extraction"模式相关必填"）+ docstring 移除未实现的附录剔除声明。
 - **`markmap_template.md` 路径基准违规**：附录 B 的 `../../core/risk-model.md` 按"相对消费方 SKILL.md"约定应为 `../core/risk-model.md`——与 playwright-conventions.md 的约定写法并存构成两套互斥基准（新校验器上线后首个被揪出的违规，已修正）；三个子目录资产（playwright-conventions / helpers_reference / markmap_template）头部补路径口径声明，agent 直接读文件时不再有解析歧义。
 - **README.md 病句与示例编号错位**（润色批次引入，英文版完整）："只要其中某一步……时，直接说需求就行"补全谓语；README 示例用例编号 TC-02-05 与 examples 实际产物错位（到期自动结束实为 TC-03-05），双语对齐。
 - **CHANGELOG [Unreleased] 段内矛盾与乱序**："docs/ 延伸阅读三链接不动"与随后条目"摘除全部 docs 链接"相反陈述（删前者）；条目按提交时间新前旧后重排；截断空行清除。

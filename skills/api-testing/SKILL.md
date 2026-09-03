@@ -11,7 +11,7 @@ description: 接口级测试时使用——从 OpenAPI/Swagger 文档或用例 S
 接口级测试——E2E 之外的另一条执行路径。
 
 - **输入**：API 文档（OpenAPI/Swagger）、用例 Schema 中 `execution_model` 可自动化的接口用例、被测环境信息（base URL、账号/Token）；性能轴（类型矩阵轴 1）移交包 `专项移交_性能_*.yaml`
-- **输出（落盘）**：API 测试脚本（pytest + requests，或项目既定技术栈）+ 运行结果（报告条目按 `../core/report-template.md` 对齐）；性能承接时另产 k6 压测脚本与压测报告（`references/k6-conventions.md`）
+- **输出（落盘）**：API 测试脚本（pytest + requests，或项目既定技术栈）+ 执行分报告 `测试报告_api_{日期}.md`（命名按 `../core/report-template.md` 头注，条目按其 §3 对齐；qa 断点判据按此文件名核收）；性能承接时另产 k6 压测脚本与压测报告（`references/k6-conventions.md`）
 - **边界**：Web UI 流程 → `automated-e2e-testing`；接口手动用例设计 → `test-case-writing`
 
 ## When to Use
@@ -33,7 +33,7 @@ description: 接口级测试时使用——从 OpenAPI/Swagger 文档或用例 S
 
 ```text
 api-tests/
-├── conftest.py            # fixture：base_url、会话/Token、环境配置（读 .env，不硬编码）
+├── conftest.py            # fixture：base_url、会话/Token、环境配置（环境变量注入，可由 .env 加载，不硬编码）
 ├── common/
 │   └── client.py          # 统一请求封装：日志、超时、鉴权头、断言辅助
 ├── test_{模块}_{接口}.py   # 一个接口一个文件，test 名沿用 TC 编号
@@ -42,6 +42,8 @@ api-tests/
 
 ```python
 # common/client.py —— 统一请求封装（requests.Session 不支持 base_url，必须显式拼接）
+import requests
+
 class Client:
     def __init__(self, base_url: str, token: str):
         self.base_url = base_url.rstrip("/")
@@ -64,6 +66,11 @@ def login(user: str, password: str) -> str:
 
 ```python
 # conftest.py 关键 fixture
+import os
+import pytest
+
+from common.client import Client, login
+
 @pytest.fixture(scope="session")
 def client():
     base_url = os.environ["API_BASE_URL"]          # 环境与账号不硬编码，走环境变量
@@ -78,7 +85,7 @@ def client():
 ### 1. 输入解析与范围确认
 
 - 从 OpenAPI 文档提取：接口清单、参数表（必填/类型/范围/默认值）、错误码、鉴权方式
-- 从用例 Schema 过滤：`execution_model: dev-collab` 或 `automation.framework: api` 的用例 → 转换对象（test 名沿用 TC 编号：`test_TC_05_01_写入字段读回一致`）
+- 从用例 Schema 过滤：`automation.framework: api` 的用例，以及 `execution_model: dev-collab` 且 framework 非 manual 的用例 → 转换对象（test 名沿用 TC 编号：`test_TC_05_01_写入字段读回一致`；framework: manual 的 dev-collab 用例保持手动协作，不转）
 - 环境未知 → 向用户索取（base URL、账号、是否可写生产旁路环境），**不确定就问，不猜接口行为**（提问格式与裁决落盘统一按 `../core/clarify-pattern.md`，场景用「执行确认」）
 
 ### 2. 用例设计（此时加载 `../core/testing-principles.md`，方法细节 `../core/methods/data-driven.md`）
@@ -88,7 +95,7 @@ def client():
 | 类别 | 必测点 |
 |------|--------|
 | 参数 | 必填缺失 / 类型错误 / 边界值（空/最值/超大，见 `../core/methods/boundary.md`） |
-| 鉴权 | 无 Token / 过期 Token / 错误 Token / 越权（他人资源 id） |
+| 鉴权 | 无 Token / 过期 Token / 错误 Token / 越权（他人资源 id）——越权方法基线 `../core/methods/permission.md`（Role×Action×Resource 矩阵 + 垂直/水平两类越权，即类型矩阵轴 2 的执行层） |
 | 幂等 | 同一业务键重复提交 → 不重复创建；重试安全 |
 | 并发 | 并发写同一资源 → 无互相覆盖、无中间态 |
 | 错误响应 | 每个错误码的触发条件 + 响应体结构与文案 |
