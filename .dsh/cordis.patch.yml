@@ -2,7 +2,7 @@
 #
 # `dsh plugin --profile <name> add dsh-qa-skills` 会把本包追加进 profile 的
 # dsh.profile.bundles，dsh 启动时将本文件作为一个补丁层并入 cordis 组合，
-# 从而挂载 .dsh/plugins/qa-skills.js（注册 skills/ 下 10 个测试技能 + core）。
+# 从而挂载 .dsh/plugins/qa-skills.js（注册 skills/ 下 11 个测试技能 + core）。
 #
 # 临时停用（写进 profile 自己的 cordis.patch.yml）：
 #   - id: dsh-qa-skills

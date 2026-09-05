@@ -15,7 +15,7 @@
 
 <p align="center">
   <a href="https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml"><img src="https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="./skills/"><img src="https://img.shields.io/badge/skills-10-blue" alt="Skills"></a>
+  <a href="./skills/"><img src="https://img.shields.io/badge/skills-11-blue" alt="Skills"></a>
   <a href="https://github.com/fishzjp/qa-skills/releases"><img src="https://img.shields.io/badge/release-gain%20matrix%20snapshot-orange" alt="Release gain matrix"></a>
   <a href="https://github.com/fishzjp/qa-skills/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
 </p>
@@ -54,7 +54,7 @@ dsh plugin --profile web add dsh-qa-skills
 <summary><strong>Manual install, upgrade & uninstall</strong></summary>
 
 - Manual install: `cp -r skills/* <your skills directory>/` — **`core/` must be copied along**, every skill references it by relative path.
-- Verify: `ls <your skills directory>` should show 10 skill directories + `core/` + `qa-skills.VERSION`.
+- Verify: `ls <your skills directory>` should show 11 skill directories + `core/` + `qa-skills.VERSION`.
 - Upgrade: `./install.sh --target <dir> --link` installs symlinks — `git pull` updates in place.
 - Uninstall: `./uninstall.sh`.
 </details>
@@ -73,6 +73,21 @@ Skills are plain Markdown (frontmatter + relative-path references) with no host-
 | Other Skills-capable agents | their skills directory | 🔶 same |
 
 The pipeline's per-stage context isolation relies on host sub-agent support; hosts without it degrade to sequential sessions joined by files — correctness is unaffected.
+</details>
+
+<details>
+<summary><strong>Loading the project knowledge base (<code>.qa/</code>) per host</strong></summary>
+
+The `qa-memory` skill maintains a `.qa/` knowledge base inside the project under test (Markdown entries + an index, committed with the project and shareable with the team), persisting environment quirks, flaky-noise judgments, defect patterns and other testing knowledge across sessions. Reading has two paths — the skill reads it when triggered; hosts with an entry line see it automatically every session:
+
+| Host | Loading |
+|------|---------|
+| Cursor / OpenCode / Codex / Gemini CLI / Windsurf / Devin, etc. | AGENTS.md entry line (native, zero config) |
+| Claude Code | add `@.qa/INDEX.md` to CLAUDE.md (or via the `@AGENTS.md` import chain) |
+| Aider | set `read: .qa/INDEX.md` in `.aider.conf.yml`, or pass `--read` |
+| Other hosts | the skill loads it actively when triggered (fallback path) |
+
+The entry line is written by `qa-memory`'s bootstrap flow after your confirmation, or added manually. Every entry passes the `memory_validate.py` gate (schema / budgets / secret scan / poisoning defenses).
 </details>
 
 ### First run
@@ -223,7 +238,7 @@ Pre-registered gates: 4/7 under the same-family judge, 5/8 under the heterogeneo
 <summary><strong>Repository layout</strong></summary>
 
 ```text
-skills/        the product (10 skills + shared core/)
+skills/        the product (11 skills + shared core/)
   qa/          orchestration entry (thin, no domain knowledge)
   core/        shared knowledge base (installed as a dependency alongside skills, no task triggering): evidence / risk-model /
                executability / testing-principles / report-template / case-format / coverage /
@@ -232,6 +247,7 @@ skills/        the product (10 skills + shared core/)
                + methods/ (4 design-method guides) + scripts/ (schema validator + type-signal scanner)
   requirement-analysis/  test-strategy/  test-case-writing/  test-case-review/
   automated-e2e-testing/  api-testing/  exploratory-testing/  bug-analysis/  regression-testing/
+  qa-memory/
 .dsh/          dsh plugin trio (manifest in package.json's dsh.bundle)
 assets/        visual assets (hero images, landing-page artwork in landing/, share image og.jpg, social preview)
 examples/      Skill On/Off output comparison

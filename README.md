@@ -15,7 +15,7 @@
 
 <p align="center">
   <a href="https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml"><img src="https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="./skills/"><img src="https://img.shields.io/badge/skills-10-blue" alt="Skills"></a>
+  <a href="./skills/"><img src="https://img.shields.io/badge/skills-11-blue" alt="Skills"></a>
   <a href="https://github.com/fishzjp/qa-skills/releases"><img src="https://img.shields.io/badge/release-%E5%A2%9E%E7%9B%8A%E7%9F%A9%E9%98%B5%E5%BF%AB%E7%85%A7-orange" alt="Release gain matrix"></a>
   <a href="https://github.com/fishzjp/qa-skills/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
 </p>
@@ -54,7 +54,7 @@ dsh plugin --profile web add dsh-qa-skills
 <summary><strong>手动安装、升级与卸载</strong></summary>
 
 - 手动安装：`cp -r skills/* <skills 目录>/`——**`core/` 必须一起复制**，各 skill 以相对路径引用它。
-- 验证：`ls <skills 目录>` 应见 10 个 skill 目录 + `core/` + `qa-skills.VERSION`。
+- 验证：`ls <skills 目录>` 应见 11 个 skill 目录 + `core/` + `qa-skills.VERSION`。
 - 升级：`./install.sh --target <目录> --link` 软链安装，`git pull` 后即更新。
 - 卸载：`./uninstall.sh`。
 </details>
@@ -73,6 +73,21 @@ Skill 是纯 Markdown（frontmatter + 相对路径引用），不依赖宿主特
 | 其他支持 Skills 的 Agent | 各自的 skills 目录 | 🔶 同上 |
 
 `qa` 流水线的每个阶段在独立子会话中运行、互不污染上下文；宿主不支持子代理时自动退化为顺序会话 + 文件衔接，正确性不受影响。
+</details>
+
+<details>
+<summary><strong>项目知识库（<code>.qa/</code>）的宿主装载</strong></summary>
+
+`qa-memory` skill 会在被测项目仓库内维护一个 `.qa/` 知识库（Markdown 条目 + 索引，随项目 git 提交、团队可共享），跨会话沉淀环境怪癖、flaky 判定、缺陷模式等测试知识。读取走双路径——skill 被触发时主动读；装了入口行的宿主每次会话自动可见：
+
+| 宿主 | 装载方式 |
+|------|---------|
+| Cursor / OpenCode / Codex / Gemini CLI / Windsurf / Devin 等 | AGENTS.md 入口行（原生读取，零配置） |
+| Claude Code | CLAUDE.md 加一行 `@.qa/INDEX.md`（或随 `@AGENTS.md` 导入链） |
+| Aider | `.aider.conf.yml` 写 `read: .qa/INDEX.md`，或启动加 `--read` |
+| 其他宿主 | skill 触发时按读取工作流主动加载（兜底路径） |
+
+入口行由 `qa-memory` 的入口自举流程经你确认后写入，也可手动添加。条目写入一律过 `memory_validate.py` 门禁（schema / 预算 / 秘密扫描 / 投毒防线）。
 </details>
 
 ### 开始使用
@@ -223,7 +238,7 @@ PRD / 代码
 <summary><strong>仓库结构</strong></summary>
 
 ```text
-skills/                  产品本体（10 个 skill + core 共享知识库）
+skills/                  产品本体（11 个 skill + core 共享知识库）
   qa/                    编排入口（薄，无领域知识）
   core/                  共享知识库（作为依赖随 skill 一并安装，不独立触发）：evidence / risk-model /
                          executability / testing-principles / report-template / case-format /
@@ -232,7 +247,7 @@ skills/                  产品本体（10 个 skill + core 共享知识库）
                          + methods/（4 篇方法细则）+ scripts/（schema 校验器 + 类型信号扫描器）
   requirement-analysis/  test-strategy/  test-case-writing/
   test-case-review/      automated-e2e-testing/  api-testing/
-  exploratory-testing/   bug-analysis/  regression-testing/
+  exploratory-testing/   bug-analysis/  regression-testing/  qa-memory/
 .dsh/                    dsh 插件三件套（清单见 package.json 的 dsh.bundle）
 assets/                  视觉资产（hero 图、落地页配图 landing/、分享图 og.jpg、社交预览图）
 examples/                Skill On / Off 产出对照

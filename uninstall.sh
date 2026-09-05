@@ -12,6 +12,7 @@ SKILL_DIRS=(
   qa core
   requirement-analysis test-strategy test-case-writing test-case-review
   automated-e2e-testing api-testing exploratory-testing bug-analysis regression-testing
+  qa-memory
 )
 SRC_ROOT="$REPO_ROOT/skills"
 

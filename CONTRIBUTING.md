@@ -32,7 +32,8 @@
 5. **description ≤ 300 字符**：description 常驻宿主每个会话的上下文，只装正触发话术 + 一句产出 + 反触发指向；机制细节写进 SKILL.md 正文（When to Use 等）
 6. **风险等级（Critical / High / Medium / Low）与用例优先级（P0 / P1 / P2）是两套体系**，不得混用命名；Bug 严重程度用 **S0/S1/S2**（缺陷影响等级，口径说明见 `skills/core/report-template.md` §3），与用例优先级的 P 系词汇分离
 7. **产出落盘**：skill 的阶段产物必须落盘为文件（落盘清单见各 SKILL.md 的「落盘产物」行与 `skills/qa/SKILL.md` 的流水线表），Skill 间只通过文件衔接
-8. **跟踪面白名单，与 skills 无关的内容禁止入库**：临时文件、测试数据、实验报告、开发报告、开发计划等一律不得提交（此类内容属维护者本地评测链路，`.gitignore` 已隔离 `eval/`、`tests/test_harness.py`、`.in-situ-lab/`、`docs/` 等）；仓库跟踪面为白名单制——git 跟踪的每个文件必须落在白名单内（根目录既有文件 + `skills/`、`scripts/`、`.github/`、`.dsh/`、`assets/`、`examples/`、`tests/` 前缀；`tests/` 仅放随产品脚本与守门脚本的回归测试及安装器冒烟，如 `test_product_scripts.py`、`test_repo_gates.py`、`install_smoke.sh`），由 `scripts/validate_skills.py` 红线 10 机器强制；`docs/` 整目录本地维护（规划文档与设计稿不入库）；新增合法产品路径须同步扩展脚本中的白名单常量并更新本条
+8. **跟踪面白名单，与 skills 无关的内容禁止入库**：临时文件、测试数据、实验报告、开发报告、开发计划等一律不得提交（此类内容属维护者本地评测链路，`.gitignore` 已隔离 `eval/`、`tests/test_harness.py`、`.in-situ-lab/`、`docs/` 等）；仓库跟踪面为白名单制——git 跟踪的每个文件必须落在白名单内（根目录既有文件 + `skills/`、`scripts/`、`.github/`、`.dsh/`、`assets/`、`examples/`、`tests/` 前缀；`tests/` 仅放随产品脚本与守门脚本的回归测试及安装器冒烟，如 `test_product_scripts.py`、`test_repo_gates.py`、`test_memory_validator.py`、`install_smoke.sh`），由 `scripts/validate_skills.py` 红线 10 机器强制；`docs/` 整目录本地维护（规划文档与设计稿不入库）；新增合法产品路径须同步扩展脚本中的白名单常量并更新本条
+9. **知识库 schema 与门禁同源**：`qa-memory` 的条目 schema（字段 / 枚举 / 预算 / 解析规则）定义改动必须同步 `skills/qa-memory/scripts/memory_validate.py` 与 `tests/test_memory_validator.py`（规则权威文档为 `skills/qa-memory/references/entry-schemas.md`），禁止只改文档不改门禁
 
 ## 提交前自检
 

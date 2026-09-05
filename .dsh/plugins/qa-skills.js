@@ -1,7 +1,7 @@
 /**
  * qa-skills 插件（DeepSeek Harness / dsh）。
  *
- * 把本仓库 skills/ 下的 10 个测试技能 + core/ 共享知识库注册为 dsh 运行时技能：
+ * 把本仓库 skills/ 下的 11 个测试技能 + core/ 共享知识库注册为 dsh 运行时技能：
  * 模型经 `skill` 工具按需加载正文，相对路径引用（../core/*.md、references/、scripts/）
  * 经 resourceBase 指向的技能目录解析。仅用 Node 内建模块，无构建步骤、零运行时依赖
  * （dsh 把 @deepseek-ai/* 嵌在自身安装内，插件无法直接 import，全部经注入的 ctx 访问）。

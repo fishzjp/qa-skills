@@ -21,6 +21,8 @@ description: 代码变更（diff/Bug 修复/需求变更）后判断应回归哪
 > - **全套齐**（markmap + Schema 追溯映射都在）：走工作流完整分析链
 > - **只有 markmap 无 Schema**：先由 `test-case-writing` 对存量 markmap 抽取补建（不需要人工重写），再进工作流
 > - **零用例资产**：不凭 diff 编造清单——向用户给降级选项：P0 冒烟建议（逐条标「无追溯依据，覆盖不保真」），或先由 `test-case-writing` 补建最小用例集再回来跑本流程
+>
+> **知识库输入（另查，不改变上述分流）**：项目存在 `.qa/` 知识库时，启动先读其 `INDEX.md`——`flaky-tests.md` 的 active 条目直接作为「历史噪声 vs 真实回归」判定与回归分级的输入（写入与治理由 `qa-memory` 承担）。
 
 ## When to Use
 
