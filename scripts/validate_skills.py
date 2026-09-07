@@ -53,7 +53,8 @@ MD_EXTS = (".md", ".json", ".py", ".yml", ".yaml")
 ALLOWED_ROOT_FILES = {
     ".gitignore", "AGENTS.md", "CHANGELOG.md", "CONTRIBUTING.md",
     "LICENSE", "README.en.md", "README.md", "RELEASING.md", "index.html",
-    "install.sh", "package.json", "uninstall.sh",
+    "install.sh", "llms.txt", "package.json", "uninstall.sh",
+    # llms.txt：站点根机器可读摘要（AI 引擎/agent 检索面），随 pages.yml 与落地页一同部署
 }
 ALLOWED_DIR_PREFIXES = ("skills/", "scripts/", ".github/", ".dsh/", "assets/", "examples/", "tests/")
 

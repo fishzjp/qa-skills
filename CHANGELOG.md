@@ -7,6 +7,7 @@
 
 ### 新增
 
+- **官网 FAQ 区与 AI 引擎可读层（GEO）**：落地页新增"常见问题"六问（免费与否 / 宿主兼容 / 可执行性 / 上手成本 / 数据边界 / 英文层现状——含 Token 3.3 倍与英文层缺位等不利答案的如实披露），问答与 `FAQPage` JSON-LD 同源；页面头部补 `SoftwareApplication` 结构化数据（版本 / 许可 / 同名渠道 / 能力清单）；新增站点根 `llms.txt` 机器可读摘要并随 Pages 部署（`pages.yml` 触发路径与 stage 同步）——本产品的检索者与潜在"买家"大量是 AI agent 与 AI 搜索引擎，此层此前完全空白。跟踪面白名单同步扩容（`validate_skills.py` 红线 10 + CONTRIBUTING 红线 8 登记 `llms.txt`）；营销定位底座按 GitHub 政策归 `docs/` 本地资料区、不入库。
 - **qa-memory skill（QA 项目知识库）**：新增第 11 个 skill 与配套门禁，让测试知识第一次可以跨会话沉淀——在被测项目仓库内维护 `.qa/` 知识目录（`INDEX.md` 派生视图 + 6 个主题文件，唯一真相源是主题文件，随项目 git 提交），沉淀环境怪癖 / flaky 判定 / 缺陷配方 / 接口契约 / 业务域 / 自愈配方与例程七类知识。条目 schema（`references/entry-schemas.md` 与门禁同源）：H2 标题（创建后不可变）+ fenced-yaml 受限子集，首写默认 tentative、时间失效不删除（superseded/retired 标记 + git 历史兜底）、`verified`/`evidence` 溯源字段；薄治理 skill 三工作流：读取预算化（INDEX 唯一必读、条目按需跳读）、写入过"三个月判据"+ `memory_validate.py` 门禁（零依赖纯标准库；schema/预算三重（条目/文件/INDEX 行数+字节）/秘密扫描占位符白名单/指令模式 WARN 投毒防线；`--init` 建骨架、`--rebuild-index` 机械重建索引消除并发冲突；fail-loud 不设降级通道）、治理全经人审（prune 归档、写 AGENTS.md/.gitignore 的入口自举逐处确认）+ 威胁模型四防线（条目=数据非指令、G6 确认门、CODEOWNERS 建议、溯源字段）。四个既有 skill 挂最小钩子（regression-testing 知识库输入、bug-analysis/exploratory 沉淀判定、qa 编排跨会话知识注记；automated-e2e-testing 的沉淀钩子已撤出，见下方「变更」）；`install.sh`/`uninstall.sh` 单元清单、安装冒烟下限（12 单元）、双语 README（含 `.qa/` 分宿主装载表）、落地页与 npm 描述计数同步；CONTRIBUTING 新增红线 9（schema 变更必须同步门禁与单测）。
 - **CI 守门扩面（仓库面守门）**：新增 `scripts/validate_repo.py`，补上五个此前无人机查、坏了照绿的面——git 跟踪全部 .py 语法（此前仅被单测导入的脚本被覆盖，新增脚本写错语法 CI 照绿）、全部 .yml/.yaml 合法性（ci/pages workflow、labeler、ISSUE 模板、cordis 补丁——paths 触发的 workflow 语法坏了会静默不跑且无红叉）、全部 .json 合法性、根目录门面文档（README 双语 / CONTRIBUTING / RELEASING / CHANGELOG / AGENTS）相对链接与 `<img src>` / `<source srcset>` 目标存在性（README 是仓库门面，404 直接面向访客）、落地页 index.html 引用资产存在性（部署 stage 只做 cp 不校验引用，引用不存在的配图 = CI 绿、线上破图）；新增 `tests/test_repo_gates.py`（提取形态正负例 + 对本仓库实跑全绿的自锚定契约）。
 - **安装器行为冒烟**：新增 `tests/install_smoke.sh` 接入 CI——copy/link 双方式安装、重装幂等、防误删拒绝覆盖外来同名目录、双向卸载干净（期望单元以首次安装实际产物为准 + 单元数下限，防清单缺损时冒烟安静变绿）；此前安装器门仅 `bash -n` 语法检查，与步骤名"零成本回归"名实不符。
@@ -19,6 +20,7 @@
 
 ### 变更
 
+- **安装方式重排：`npx skills add` 提为方式一（实测解锁）**：沙箱实测 `npx skills add fishzjp/qa-skills --skill '*'` 全量安装——11 个 skill + `core/` 全部就位、`../core/` 相对引用完好（core 具备自述性 SKILL.md，会被安装器发现）；单装 skill 坐实不带 core（引用断裂）。据此双语 README 与落地页把一行命令提为第一安装方式，core 依赖警示随命令就近展示；宿主数量口径按安装器实际列表由"50+"修正为"70+"；落地页安装卡同步重排（npx 主位、安装脚本次位、dsh 收敛为内联命令）。
 - **撤出 automated-e2e-testing 的 qa-memory 知识沉淀钩子**：X19 门 FAIL（纪律禁止带病合入），其余四个 skill 的钩子不受影响；e2e 侧待定向证据后再评估重新挂载。
 - **官网落地页 v2 转正**：单文件新页（暗色视觉体系 + 动效 + Space Grotesk/JetBrains Mono）替换旧版；旧版 13 张生图配图（`assets/landing/`）与运行时生图端点依赖一并移除——页面零本地图片引用，Pages 产物收敛为 index.html + og.jpg，`pages.yml` 触发路径与产物清单同步；顺带修复 `--font-display` 变量缺失导致的标题/大数字静默回退系统字体。
 - **守门脚本扩面与产品测试面建立**：`validate_skills.py` 引用校验从「SKILL.md + core/」扩展到 `skills/` 下全部 .md（references/、templates/ 此前为盲区，死链 CI 抓不到），并按框架既有路径约定（相对消费方 SKILL.md 所在目录，见 core/test-type-matrix.md 口径注）机器化强制——仅按文件自身可解析的写法判「路径基准违反约定」，两套互斥基准并存的解析歧义从源头堵住；markdown 链接形态复用跨 skill 归属判定（堵住链接绕过）；docstring 清除"docs 三例外"陈旧描述，白名单清除死项 `og.jpg`；显式 `encoding="utf-8"`、`Path.relative_to` 3.8 兼容实现、`git ls-files -z` 关闭中文路径八进制转义（Windows / 老 Python 本地可跑）。新增 `tests/test_product_scripts.py`（12 例：validate_schema 退出码契约 / scan_signals YAML 转义顺序 / 引用解析基准三形态），`tests/` 入跟踪面白名单并接入 CI——此前三份随产品分发的脚本零单测；CI 同时补安装器与 dsh 插件语法门（`bash -n` / `node --check`，三大安装路径的零成本回归）。
@@ -34,6 +36,7 @@
 
 ### 修复
 
+- **落地页终端"复制"按钮剔除 `$` 提示符**：按钮此前复制 `pre` 全部文本，行首 `$ ` 一并进剪贴板——粘贴进终端直接报错（首屏主行动路径上的摩擦）；现在剪贴板只放可执行命令，注释行保留。
 - **第二轮全项目审查修复批（2026-09-07，方法论深审 / 落地页质量 / 仓库机体 / 修复批 meta-review）**：
   - **安装器自毁守卫补完（上批修复的半成品收尾）**：`REPO_ROOT`/`SRC_ROOT` 改用 `pwd -P` 物理路径——上批只改了 TARGET 侧，仓库经 symlink 别名访问时守卫两侧路径口径分叉仍可绕过（实测干跑坐实）；安装器冒烟新增"别名路径把安装目标指回仓库 skills/"单元；uninstall 的动态清单补空守卫（skills/ 缺失时此前静默只删 VERSION 就报成功）。
   - **headless 第二形态闭环（skills 产品本轮最重要修复）**：未决项落盘两处"统一"口径矛盾消除（qa 编排说 `流水线状态.md`、pipeline-integration 说 `证据/未决项_{日期}.md`——统一为前者，续跑凭据与人工回流入口单点化）；补上回流闭环缺的半边——断点续跑现在先消费未决区已回填的裁决（增量修订产物、`budget_review` 补 `approved_by`），不再"答复永远进不了产物"；补 headless 下 `budget_review` 的诚实语义（如实记 headless 未决 + 保守依据，不得写成用户已批准，回流后补批注——消除"裁 Critical = 伪造裁决 / 不裁 = V4 FAIL"的纸面死锁）；qa 开工输入补对比基线 base（阶段 7 回归范围的续跑凭据）。
