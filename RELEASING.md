@@ -24,7 +24,7 @@
 | 1 | 共享目录（沙箱实测） | 整仓 `--skill '*'` | ✅ 11 skill + core 就位、`../core/` 引用完好 | 2026-09-07 营销批（7fce53f） |
 | 2 | 共享目录（沙箱实测） | 单装 `--skill qa` | ❌ 不带 core（引用断，设计内）→ README 警示随行 | 同上 |
 | 3 | Claude Code（`~/.claude/skills`，裸 HOME 沙箱） | 整仓 `--skill '*' -g -a claude-code` | ✅ 12 单元全就位、core 文档在位 | 2026-09-07 C0 批（0.8.0） |
-| 4 | 其余宿主（Cursor/Codex 等目录形态） | 整仓 | 待测（无报告前 README 只宣称方式一可用宿主数，不宣称逐宿主验证） | — |
+| 4 | Codex 目标（`-a codex`，裸 HOME 沙箱） | 整仓 `--skill '*'` | ✅ 12 单元落位共享目录 `~/.agents/skills`（CLI 对 Codex 的承载形态，未建 `~/.codex/`）、85 处 `../core/` 引用全通、core 完整 | 2026-09-08 C0 收官批 |
 
 ## 版本号规则
 

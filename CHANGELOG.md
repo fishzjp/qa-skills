@@ -5,6 +5,10 @@
 
 ## [Unreleased]
 
+### 新增
+
+- **Skill 描述双语化 C0 批 0 收官（11/12）**：回炉单元 `automated-e2e-testing` / `exploratory-testing` / `qa-memory` 完成双语化上线（全部 ≤300 字符红线、双引号包裹合规）。预注册逐个过门（EXPECTED v1.9 X26 路由屏，temperature=0 确定性仪器，B0=33/35 错误集 {R24 既有混淆, R28 边界样本}）：exploratory-testing 34/35（顺带修复 R28，零新增错判）、qa-memory 33/35（错误集与 B0 一致，`test-case-writing` 指针反触发显式化）、automated-e2e-testing 33/35（错误集与 B0 一致）。**教训（实测两次证实）：双语化压缩不得丢失语义锚点与单元名指针反触发**——e2e 首版删去"写自动化前的业务熟悉踩点"锚点、exploratory 首版删去"（automated-e2e-testing 工作流零）"指针，均立即触发 R26 新增错判，回滚后携锚点/指针重写方过门。**bug-analysis 维持中文原文**：三个差异显著的双语变体（273/298/263 字符）均稳定触发组合刃口新增错判（R26 对 bug 双语化敏感），按预注册回滚缓议并登记 X20 观测、深轮再议——宁缺毋滥，不对路由屏过拟合。同批：安装形态宿主广度格实测通过（`npx skills add -g -a codex` 裸 HOME 沙箱：12 单元全就位、85 处 `../core/` 引用全通），RELEASING 矩阵更新。
+
 ## [0.8.1] - 2026-09-07
 
 ### 修复
