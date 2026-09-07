@@ -20,6 +20,73 @@
 <meta property="og:locale" content="zh_CN">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://fishzjp.github.io/qa-skills/og.jpg">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "qa-skills",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any (agent-host resident, OS-independent)",
+  "description": "面向 AI Agent 的测试工程 Skill 框架：11 个 Skill + 共享知识库，让 Claude Code 等 AI 编程助手按资深测试工程师的方式工作——读需求、排风险、写用例、跑自动化、定位缺陷、出报告。",
+  "softwareVersion": "0.7.0",
+  "license": "https://opensource.org/licenses/MIT",
+  "url": "https://fishzjp.github.io/qa-skills/",
+  "sameAs": [
+    "https://github.com/fishzjp/qa-skills",
+    "https://www.npmjs.com/package/dsh-qa-skills"
+  ],
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "featureList": [
+    "需求分析与澄清检查点",
+    "测试策略（风险评级 + 十类型决策矩阵）",
+    "测试用例设计（markmap + schema.yaml 双轨）",
+    "用例评审",
+    "自动化执行（Playwright / pytest / k6）",
+    "缺陷分析定位到代码行",
+    "回归范围推算",
+    "跨会话项目测试知识库（qa-memory）"
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "qa-skills 是什么？要花钱吗？",
+      "acceptedAnswer": { "@type": "Answer", "text": "一套装进 AI 编程助手的测试工程方法：11 个 Skill + 一个共享知识库，全部是 Markdown 指令文件。不是软件，没有账号和订阅，MIT 协议免费开源。它会多花 Token——约为不装时的 3.3 倍。" }
+    },
+    {
+      "@type": "Question",
+      "name": "我的 AI 助手能用吗？",
+      "acceptedAnswer": { "@type": "Answer", "text": "Skill 是纯 Markdown，不依赖宿主特性：Claude Code 端到端实测通过，npx skills add fishzjp/qa-skills --skill '*' 一行装到 Claude Code / Cursor / Codex / OpenCode 等 70+ 宿主；宿主不支持子代理时自动退化为顺序会话 + 文件衔接，正确性不受影响。" }
+    },
+    {
+      "@type": "Question",
+      "name": "AI 产出的用例，真的能直接执行吗？",
+      "acceptedAnswer": { "@type": "Answer", "text": "产出标准只有一条：没读过需求、没人讲解的人，拿着文件能直接开工。背后是 8 条可执行性硬标准，评测中一票否决；实测无 Skill 时用例合格率 26%，装后 98%。" }
+    },
+    {
+      "@type": "Question",
+      "name": "装完还要学一遍怎么用吗？",
+      "acceptedAnswer": { "@type": "Answer", "text": "不需要。对 AI 助手说「帮我测试这个需求：{需求描述 + 仓库地址}」即可从需求理解跑到测试报告；需求歧义、执行策略、Bug 定性、预算上限四类决策由用户拍板，AI 只提案、不代答。" }
+    },
+    {
+      "@type": "Question",
+      "name": "我的代码和数据会被上传吗？",
+      "acceptedAnswer": { "@type": "Answer", "text": "qa-skills 本身零运行时、零遥测：装进来的只有 Markdown 文件，没有网络调用；测试产出与 .qa/ 项目知识库都存在用户自己的仓库里，随用户的 git 管控。" }
+    },
+    {
+      "@type": "Question",
+      "name": "支持英文吗？",
+      "acceptedAnswer": { "@type": "Answer", "text": "产品本体当前是中文，英文层在路线图上；需求描述与被测代码为中英混合时可正常工作。" }
+    }
+  ]
+}
+</script>
 <link rel="preload" href="assets/fonts/space-grotesk-var-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
   /* ============ 展示字体自托管（零外链策略：woff2 与页面同源部署） ============ */
@@ -392,6 +459,20 @@
     justify-content: center;
     flex-wrap: wrap;
   }
+  /* CTA 下方的证据条：把最硬的数字与上架渠道放在离动作最近的地方（CRO：信任信号贴近 CTA） */
+  .hero-proof {
+    margin-top: 22px;
+    font-size: 13.5px;
+    color: var(--text-3);
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    justify-content: center;
+    flex-wrap: wrap;
+    letter-spacing: 0.01em;
+  }
+  .hero-proof b { color: var(--text-2); font-weight: 500; }
+  .hero-proof .sep { color: var(--border-strong); }
 
   .btn {
     display: inline-flex;
@@ -1607,6 +1688,68 @@
     line-height: 1.8;
   }
 
+  /* ============ FAQ：原生 details 折叠（内容全在 DOM，检索与 AI 引擎可直接提取） ============ */
+  .faq-list {
+    max-width: 780px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .faq-item { padding: 0; overflow: hidden; }
+  .faq-item summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 22px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+    transition: color 0.2s ease;
+  }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary:hover { color: #ffffff; }
+  /* 加号图标：展开时竖线收起变减号，纯 CSS 无位图 */
+  .faq-icon { position: relative; width: 12px; height: 12px; flex: none; }
+  .faq-icon::before,
+  .faq-icon::after {
+    content: '';
+    position: absolute;
+    background: var(--text-3);
+    transition: transform 0.3s ease, background 0.3s ease;
+  }
+  .faq-icon::before { left: 0; top: 5px; width: 12px; height: 2px; }
+  .faq-icon::after { left: 5px; top: 0; width: 2px; height: 12px; }
+  .faq-item[open] .faq-icon::after { transform: scaleY(0); }
+  .faq-item[open] .faq-icon::before,
+  .faq-item[open] .faq-icon::after { background: var(--blue); }
+  .faq-item .faq-a {
+    padding: 0 28px 24px;
+    color: var(--text-2);
+    font-size: 15px;
+    line-height: 1.9;
+  }
+  .faq-item .faq-a a { color: var(--blue); }
+  /* 正文内联代码（FAQ 答案与安装卡说明段）：复用窗口气泡 code 的胶囊样式 */
+  .faq-a code,
+  .install-card > p code {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1px 6px;
+    color: var(--code-key);
+    word-break: break-all;
+  }
+  @media (max-width: 640px) {
+    .faq-item summary { padding: 18px 20px; font-size: 15px; }
+    .faq-item .faq-a { padding: 0 20px 20px; }
+  }
+
   /* ============ 安装区 ============ */
   .install-grid {
     display: grid;
@@ -1636,6 +1779,13 @@
     line-height: 1.7;
     color: var(--text-2);
   }
+  /* 安装卡内的次级提示（core 依赖等小字），比正文再退一档（特异性压过 .install-card > p） */
+  .install-card > p.install-note {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--text-3);
+  }
+  .install-card > p.install-note code { font-size: 12px; }
 
   .terminal {
     margin-top: 22px;
@@ -2004,6 +2154,7 @@
       <a href="#how">怎么工作</a>
       <a href="#skills">六大能力</a>
       <a href="#proof">实测效果</a>
+      <a href="#faq">常见问题</a>
       <a href="#install">安装</a>
       <a class="nav-github" href="https://github.com/fishzjp/qa-skills" target="_blank" rel="noopener" aria-label="GitHub 仓库" title="GitHub 仓库">
         <svg width="19" height="19" viewBox="0 0 16 16" aria-hidden="true">
@@ -2034,6 +2185,9 @@
       <a class="btn btn-primary" href="#install">一行命令安装</a>
       <a class="btn btn-ghost" href="#what">了解更多 <span class="arr">→</span></a>
     </div>
+    <p class="hero-proof reveal d4 in">
+      实测：用例合格率 <b>26% → 98%</b><span class="sep">·</span>已上架 <b>skills.sh</b> / <b>npm</b><span class="sep">·</span>MIT 开源免费
+    </p>
   </div>
 
   <!-- 窗口舞台单独用加宽容器：标题与按钮仍保持 1080 版心的紧凑节奏 -->
@@ -2367,30 +2521,68 @@
   </div>
 </section>
 
-<!-- ============ 第七章：安装 ============ -->
+<!-- ============ 第七章：常见问题（异议处理；问答与 FAQPage JSON-LD 同源） ============ -->
+<section class="section" id="faq">
+  <div class="container">
+    <div class="section-head reveal fb">
+      <div class="kicker">07 · FAQ</div>
+      <h2>装之前的疑虑，<br>逐条如实回答。</h2>
+      <p>包括不那么好听的答案——Token 更贵、英文层还在路上，都直接写在这里。</p>
+    </div>
+    <div class="faq-list">
+      <details class="glass-card faq-item reveal">
+        <summary>qa-skills 是什么？要花钱吗？<span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-a">一套装进 AI 编程助手的测试工程方法：11 个 Skill + 一个共享知识库，全部是 Markdown 指令文件。不是软件，没有账号和订阅，MIT 协议免费开源。它确实会多花 Token——约为不装时的 3.3 倍，这笔账我们在首页如实写着。</div>
+      </details>
+      <details class="glass-card faq-item reveal">
+        <summary>我的 AI 助手能用吗？<span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-a">Skill 是纯 Markdown（frontmatter + 相对路径引用），不依赖宿主特性：Claude Code 端到端实测通过，<code>npx skills add fishzjp/qa-skills --skill '*'</code> 一行装到 Claude Code / Cursor / Codex / OpenCode 等 70+ 宿主。宿主不支持子代理时，流水线自动退化为顺序会话 + 文件衔接，正确性不受影响。</div>
+      </details>
+      <details class="glass-card faq-item reveal">
+        <summary>AI 产出的用例，真的能直接执行吗？<span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-a">这是本框架唯一的产出标准：没读过需求、没人讲解的人，拿着文件能直接开工。背后是 8 条可执行性硬标准，评测中一票否决——判定模糊、占位符未替换、虚构入口的用例，覆盖再全也计零分。实测：无 Skill 时用例合格率 26%，装后 98%。</div>
+      </details>
+      <details class="glass-card faq-item reveal">
+        <summary>装完还要学一遍怎么用吗？<span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-a">不需要。对 AI 助手说「帮我测试这个需求：{需求描述 + 仓库地址}」，流水线就从需求理解跑到测试报告；只要其中一段产出（写用例 / 审查 / 回归范围）时，直接说需求。需求歧义、执行策略、Bug 定性、预算上限这四类决策由你拍板，AI 只提案、不代答。</div>
+      </details>
+      <details class="glass-card faq-item reveal">
+        <summary>我的代码和数据会被上传吗？<span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-a">qa-skills 本身零运行时、零遥测：装进来的只有 Markdown 文件，没有任何网络调用；测试产出与 .qa/ 项目知识库都存在你自己的仓库里，随你的 git 管控。（AI 助手本身如何处理数据，取决于你选的宿主与模型服务商，与本框架无关。）</div>
+      </details>
+      <details class="glass-card faq-item reveal">
+        <summary>支持英文吗？<span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-a">产品本体当前是中文——这是如实边界，英文层在路线图上。需求描述与被测代码为中英混合时可正常工作。如果你希望现在就用英文协作，欢迎到 <a href="https://github.com/fishzjp/qa-skills/discussions" target="_blank" rel="noopener">Discussions</a> 告诉我们你的场景，这会直接影响英文层的优先级。</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 第八章：安装 ============ -->
 <section class="section" id="install">
   <div class="container">
     <div class="section-head reveal fb">
-      <div class="kicker">07 · Install</div>
+      <div class="kicker">08 · Install</div>
       <h2>两步接入你的 AI 助手</h2>
       <p>不需要账号，不需要订阅。两条命令，一句话。</p>
     </div>
     <div class="install-grid">
       <div class="glass-card install-card reveal">
         <div class="step-no">01</div>
-        <h3>把 Skill 装进 AI 编程助手</h3>
-        <p>终端里执行（macOS / Linux），也可以按 README 手动复制文件：</p>
+        <h3>一行命令，装进 AI 编程助手</h3>
+        <p>Claude Code / Cursor / Codex / OpenCode 等 <span class="nb">70+ 宿主</span>通用，全量安装（11 个 Skill + core 共享知识库）：</p>
+        <div class="terminal">
+          <div class="terminal-bar"><i></i><i></i><i></i><button class="copy-btn" type="button">复制</button></div>
+          <pre><span class="dollar">$</span> npx skills add fishzjp/qa-skills --skill '*'</pre>
+        </div>
+        <p style="margin-top:24px">不用 npx？克隆仓库跑安装脚本（自动检测宿主目录），也可按 README 手动复制文件：</p>
         <div class="terminal">
           <div class="terminal-bar"><i></i><i></i><i></i><button class="copy-btn" type="button">复制</button></div>
           <pre><span class="dollar">$</span> git clone https://github.com/fishzjp/qa-skills.git
-<span class="dollar">$</span> cd qa-skills <span>&amp;&amp;</span> ./install.sh
-<span class="cm"># 选择装到哪个助手，或 ./install.sh --auto 全自动</span></pre>
+<span class="dollar">$</span> cd qa-skills <span>&amp;&amp;</span> ./install.sh --auto</pre>
         </div>
-        <p style="margin-top:24px">用 <span class="nb">DeepSeek Harness</span>（dsh）？插件已上架 npm，一条命令装好：</p>
-        <div class="terminal">
-          <div class="terminal-bar"><i></i><i></i><i></i><button class="copy-btn" type="button">复制</button></div>
-          <pre><span class="dollar">$</span> dsh plugin --profile web add dsh-qa-skills</pre>
-        </div>
+        <p style="margin-top:24px">用 <span class="nb">DeepSeek Harness</span>（dsh）？插件已上架 npm，一条命令装好：<code>dsh plugin --profile web add dsh-qa-skills</code></p>
+        <p class="install-note">无论哪种方式，<code>core/</code> 必须一起装（方式一已自带）——单装某个 skill 不带 core，相对引用会断。</p>
       </div>
       <div class="glass-card install-card reveal d1">
         <div class="step-no">02</div>
@@ -2544,6 +2736,8 @@
       btn.addEventListener('click', function () {
         var pre = btn.closest('.terminal').querySelector('pre');
         var text = pre ? pre.textContent : '';
+        // 剪贴板只放可执行命令：剔除行首 "$ " 提示符，否则粘贴进终端直接报错
+        text = text.split('\n').map(function (line) { return line.replace(/^\$\s/, ''); }).join('\n');
         var done = function () {
           btn.textContent = '已复制';
           btn.classList.add('copied');
