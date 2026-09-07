@@ -26,7 +26,15 @@
 
 ### 安装
 
-**方式一：安装脚本**（自动检测宿主 skills 目录）
+**方式一：[skills.sh](https://skills.sh) 跨 Agent 安装**（Claude Code / Cursor / Codex / OpenCode 等 70+ 宿主，一行命令）
+
+```bash
+npx skills add fishzjp/qa-skills --skill '*'
+```
+
+> 无论哪种方式，`core/`（共享知识库，不是可独立触发的 skill）必须一起装——单装任何一个 skill 而不带 core，相对路径引用会断。方式一的 `--skill '*'` 全量安装已实测：11 个 skill + core 全部就位、引用完好。
+
+**方式二：安装脚本**（自动检测宿主 skills 目录）
 
 ```bash
 git clone https://github.com/fishzjp/qa-skills.git
@@ -36,19 +44,11 @@ cd qa-skills
 ./install.sh --auto     # 或全自动安装
 ```
 
-**方式二：[skills.sh](https://skills.sh) 跨 Agent 安装**（Claude Code / Cursor / Codex / OpenCode 等 50+ 宿主）
-
-```bash
-npx skills add fishzjp/qa-skills            # 交互式勾选，全装用 --skill '*'
-```
-
 **方式三：dsh 插件**（npm 包 [`dsh-qa-skills`](https://www.npmjs.com/package/dsh-qa-skills)）
 
 ```bash
 dsh plugin --profile web add dsh-qa-skills
 ```
-
-> `core/` 是共享知识库（不是可独立运行的 skill）：装任何一个 skill 都必须连它一起装，否则相对路径引用会断。
 
 <details>
 <summary><strong>手动安装、升级与卸载</strong></summary>

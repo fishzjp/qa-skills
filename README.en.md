@@ -26,7 +26,15 @@
 
 ### Install
 
-**Option 1: the universal install script** (auto-detects agent skills directories)
+**Option 1: [skills.sh](https://skills.sh) cross-agent install** (Claude Code / Cursor / Codex / OpenCode and 70+ other hosts, one command)
+
+```bash
+npx skills add fishzjp/qa-skills --skill '*'
+```
+
+> However you install, `core/` — the shared knowledge base dependency unit (not an executable skill) — must come along: installing any single skill without core breaks the relative-path references. Option 1's `--skill '*'` full install is verified: all 11 skills + core land in place, references intact.
+
+**Option 2: the universal install script** (auto-detects agent skills directories)
 
 ```bash
 git clone https://github.com/fishzjp/qa-skills.git
@@ -36,19 +44,11 @@ cd qa-skills
 ./install.sh --auto # or fully automatic
 ```
 
-**Option 2: [skills.sh](https://skills.sh) cross-agent install** (Claude Code / Cursor / Codex / OpenCode and 50+ other hosts)
-
-```bash
-npx skills add fishzjp/qa-skills            # interactive selection; install everything with --skill '*'
-```
-
 **Option 3: the DeepSeek Harness (dsh) plugin** ([`dsh-qa-skills` on npm](https://www.npmjs.com/package/dsh-qa-skills))
 
 ```bash
 dsh plugin --profile web add dsh-qa-skills
 ```
-
-> `core/` is the shared knowledge base dependency unit (not an executable skill): it must be installed alongside any skill, or the relative-path references break.
 
 <details>
 <summary><strong>Manual install, upgrade & uninstall</strong></summary>

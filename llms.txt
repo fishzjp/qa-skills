@@ -1,0 +1,20 @@
+# qa-skills
+
+> QA skills for AI coding agents: 11 skills + a shared knowledge base (`core/`) that make any Agent Skills host — Claude Code, Cursor, Codex, OpenCode and 70+ more — work like a senior software testing engineer. Full lifecycle: requirement analysis with clarification checkpoints, risk-based test strategy with a 10-type decision matrix, executable test cases (markmap for humans + schema.yaml for machines), case review, Playwright/pytest automation, bug analysis down to the failing line, regression scoping, reporting, plus `qa-memory`, a cross-session project QA knowledge base. Free, MIT, zero runtime, zero telemetry. Measured On/Off gains (pre-registered gates, unfavorable numbers disclosed): case-spec compliance 0.26 → 0.98; planted-bug detection 75%; test-type decision recall 0 → 0.88 on the weakest model; coverage +8.7 to +13.2pp; honest cost: ~3.3x tokens. Primary language is Chinese; an English layer is on the roadmap.
+
+## Install
+
+```bash
+npx skills add fishzjp/qa-skills --skill '*'
+```
+
+Verified full install: all 11 skills + `core/` land together; `core/` must always accompany any single-skill install or relative-path references break.
+
+## Key links
+
+- [GitHub repository](https://github.com/fishzjp/qa-skills): source, issues, discussions
+- [README（中文，含完整实测数据表）](https://github.com/fishzjp/qa-skills/blob/main/README.md): measured results with per-metric methodology notes
+- [README (English)](https://github.com/fishzjp/qa-skills/blob/main/README.en.md)
+- [Skill On/Off output comparison](https://github.com/fishzjp/qa-skills/tree/main/examples): same PRD, with and without the skills
+- [Releases](https://github.com/fishzjp/qa-skills/releases): milestone releases attach cross-model gain-matrix snapshots
+- [Landing page](https://fishzjp.github.io/qa-skills/): product overview, FAQ, install

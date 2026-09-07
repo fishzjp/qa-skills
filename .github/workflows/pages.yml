@@ -1,12 +1,13 @@
-# 宣传落地页部署：index.html / assets/og.jpg 变更合入 main 后自动发布到 GitHub Pages
-# 产物打包 index.html + og.jpg（仓库内为 assets/og.jpg，部署时回到站点根路径），不携带仓库其余内容
+# 宣传落地页部署：index.html / assets/og.jpg / llms.txt 变更合入 main 后自动发布到 GitHub Pages
+# 产物打包 index.html + og.jpg + llms.txt（仓库内 og.jpg 归位 assets/，部署时回到站点根路径），不携带仓库其余内容
 # （v2 落地页为单文件无本地图片引用；旧版 13 张 assets/landing/ 配图已随 2026-09-07 死资产清理移除）
+# llms.txt 随站部署：本产品的检索者与买家大量是 AI agent，站点根提供机器可读摘要（GEO）
 name: pages
 
 on:
   push:
     branches: [main]
-    paths: ['index.html', 'assets/og.jpg', 'assets/fonts/**', '.github/workflows/pages.yml']
+    paths: ['index.html', 'assets/og.jpg', 'assets/fonts/**', 'llms.txt', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:
@@ -48,6 +49,8 @@ jobs:
           # og:image 的绝对 URL 指向站点根的 og.jpg（历史已流通，不可变更）；
           # 仓库内归位 assets/og.jpg，部署时重命名回站点根，分享图 URL 保持不变
           cp assets/og.jpg _site/og.jpg
+          # AI 系统的机器可读站点摘要（GEO）
+          cp llms.txt _site/llms.txt
           # 展示字体自托管（Space Grotesk 变量 latin 子集，页面 @font-face 引用）
           mkdir -p _site/assets
           cp -R assets/fonts _site/assets/
