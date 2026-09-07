@@ -30,6 +30,13 @@
     font-display: swap;            /* 加载期间先以系统字体呈现，不白屏 */
     unicode-range: U+0000-00FF;    /* 仅拉丁/数字字形；中文自动走系统栈 */
   }
+  /* 注册角度型自定义属性：让 conic 渐变的角度可以参与 CSS 过渡/动画
+     （窗口描边旋转流光依赖；不支持的浏览器优雅降级为静态光斑） */
+  @property --ha {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 0deg;
+  }
   /* ============ 设计变量（深色开发者风） ============ */
   :root {
     /* 品牌强调色：蓝 → 紫渐变，仅在关键处使用 */
@@ -69,6 +76,9 @@
     --nav-h: 56px;
     --section-pad: 140px;
     --section-head-gap: 72px;
+
+    /* 动效曲线：expo/quint-out 管入场收尾，spring（back-out 过冲）管悬浮弹性——Antimetal 同款双曲线体系 */
+    --spring: cubic-bezier(.34, 1.56, .64, 1);
 
     /* 等宽字体栈 */
     --mono: "SF Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
@@ -143,6 +153,18 @@
     background: rgba(6, 6, 9, 0.85);
     border-bottom-color: rgba(255, 255, 255, 0.1);
   }
+  /* 阅读进度条：骑在 nav 底部发丝线上，蓝紫渐变随滚动从左向右填充
+     （transform 驱动，合成器直走；发丝线在它下面，未填充段仍是原线） */
+  nav .scroll-progress {
+    position: absolute;
+    left: 0; right: 0; bottom: -1px;
+    height: 1.5px;
+    background: var(--accent-grad);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    z-index: 1;
+    pointer-events: none;
+  }
   nav .container {
     height: 100%;
     display: flex;
@@ -173,9 +195,15 @@
   .nav-links a {
     font-size: 13px;
     color: var(--text-2);
-    transition: color 0.2s ease;
+    /* 悬浮下划线从左向右滑出（与页脚链接同一套语言） */
+    background-image: linear-gradient(currentColor, currentColor);
+    background-size: 0% 1px;
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    padding-bottom: 2px;
+    transition: color 0.2s ease, background-size 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   }
-  .nav-links a:hover { color: var(--text); }
+  .nav-links a:not(.nav-github):hover { color: var(--text); background-size: 100% 1px; }
   .nav-links a.nav-github { display: flex; align-items: center; }
   .nav-links a.nav-github svg { display: block; }
   .nav-links a.nav-github path {
@@ -194,6 +222,19 @@
     padding: calc(var(--nav-h) + 110px) 0 110px;
     text-align: center;
     overflow: hidden;
+  }
+
+  /* WebGL 流体光场画布（initHeroShader 驱动）：
+     fbm 域扭曲的蓝紫光雾，鼠标缓慢扰动，向下渐隐融入页底色。
+     z-index -1：垫在 CSS 光晕与网格之下，失败/降级时静默让位 */
+  .hero-fx {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+    -webkit-mask-image: linear-gradient(180deg, #000 68%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 68%, transparent 100%);
   }
 
   /* 顶部蓝紫光晕：极散、极淡 */
@@ -285,13 +326,52 @@
     font-weight: 650;
     letter-spacing: -0.028em;
     line-height: 1.05;
-    background: linear-gradient(180deg, #ffffff 30%, #99a2dd 100%);
+    /* 双层背景：底层白→雾蓝纵渐变打底，上层一道窄亮带周期性横扫
+       （incident.io text-shimmer 同技法：background-position 200%→-200%）
+       这份是无 JS 的兜底形态；JS 逐行遮罩接管后（.masked）背景移交到每行 .hl-in */
+    background:
+      linear-gradient(110deg, transparent 42%, rgba(255, 255, 255, 0.5) 50%, transparent 58%) no-repeat,
+      linear-gradient(180deg, #ffffff 30%, #99a2dd 100%);
+    background-size: 250% 100%, 100% 100%;
+    background-position: 120% 0, 0 0;
+    animation: h1-sheen 9s ease-in-out infinite;
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     text-wrap: balance;
     /* 标题背后垫一团极淡的蓝晕：白字在暗底上更有「发光体」的体积感 */
     filter: drop-shadow(0 20px 60px rgba(77, 163, 255, 0.16));
+  }
+  /* ---- 逐行遮罩入场（initHeroLineMask 包裹后启用；Antimetal 招牌开场） ----
+     每行一个 overflow:hidden 舞台，行内容从遮罩下缘升起；渐变与扫光逐行自理，
+     h1 本体退化为纯容器（transformed 后代配 background-clip:text 存在渲染歧义） */
+  .hero h1.masked { background: none; animation: none; }
+  .hero h1 .hl {
+    display: block;
+    overflow: hidden;
+    margin-bottom: -0.12em;
+    padding-bottom: 0.12em; /* 遮罩不裁掉字形下缘 */
+  }
+  .hero h1 .hl-in {
+    display: block;
+    transform: translateY(115%);
+    background:
+      linear-gradient(110deg, transparent 42%, rgba(255, 255, 255, 0.5) 50%, transparent 58%) no-repeat,
+      linear-gradient(180deg, #ffffff 30%, #99a2dd 100%);
+    background-size: 250% 100%, 100% 100%;
+    background-position: 120% 0, 0 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: hl-rise 1.05s cubic-bezier(0.22, 1, 0.36, 1) 0.15s forwards,
+               h1-sheen 9s ease-in-out 1.3s infinite;
+  }
+  .hero h1 .hl:nth-child(2) .hl-in { animation-delay: 0.3s, 1.3s; }
+  @keyframes hl-rise { to { transform: none; } }
+  @keyframes h1-sheen {
+    0%   { background-position: 120% 0, 0 0; }
+    16%  { background-position: -20% 0, 0 0; }
+    100% { background-position: -20% 0, 0 0; }
   }
 
   .hero .sub {
@@ -323,19 +403,34 @@
     font-weight: 500;
     line-height: 1.2;
     border: 1px solid transparent;
-    transition: transform 0.15s ease, background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+    /* 位移走 spring 曲线：悬浮起落带一点过冲回弹，按钮像有实体重量 */
+    transition: transform 0.45s var(--spring), background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
   }
   /* 主按钮：暗色体系里的白钮（Vercel / Linear 式），带外发光与悬浮手感 */
   .btn-primary {
+    position: relative;
+    overflow: hidden;
     background: #f0f0f4;
     color: #060609;
     box-shadow:
       0 0 0 1px rgba(255, 255, 255, 0.06),
       0 10px 32px -10px rgba(240, 240, 244, 0.4);
   }
+  /* 悬浮时一道斜向光泽扫过白钮表面（玻璃高光的微缩版） */
+  .btn-primary::after {
+    content: '';
+    position: absolute;
+    top: -20%; bottom: -20%; left: 0;
+    width: 34%;
+    background: linear-gradient(105deg, transparent, rgba(6, 6, 9, 0.13), transparent);
+    transform: translateX(-180%) skewX(-18deg);
+    transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+  .btn-primary:hover::after { transform: translateX(430%) skewX(-18deg); }
   .btn-primary:hover {
     background: #ffffff;
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     box-shadow:
       0 0 0 1px rgba(255, 255, 255, 0.1),
       0 16px 44px -12px rgba(240, 240, 244, 0.5);
@@ -423,6 +518,31 @@
       rgba(255, 255, 255, 0.012) 30%,
       transparent 48%);
   }
+  /* 窗口描边旋转流光：两团蓝紫光沿 1px 描边环缓慢巡游
+     （incident.io shiny-edge-rotation 同技法；角度动画依赖顶部 @property --ha，
+      不支持的浏览器降级为静态双光斑）。主角产品窗口因此永远是「活」的 */
+  .window-halo {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    z-index: 2;
+    pointer-events: none;
+    background: conic-gradient(from var(--ha),
+      transparent 0deg,
+      rgba(139, 124, 255, 0.55) 30deg,
+      transparent 80deg,
+      transparent 165deg,
+      rgba(77, 163, 255, 0.4) 200deg,
+      transparent 245deg);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask-composite: exclude;
+    opacity: 0.8;
+    animation: halo-orbit 11s linear infinite;
+  }
+  @keyframes halo-orbit { to { --ha: 360deg; } }
 
   .window-bar {
     display: flex;
@@ -552,7 +672,17 @@
     font-size: 14px;
     line-height: 1.55;
     color: var(--text-2);
+    transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
   }
+  /* 状态符号由 CSS content 生成：HTML 只携带终态类名，无 JS / 爬虫直接看到成品；
+     流水线叙事动画（initWindowSequence）按 ●→✓ 逐项换类重演一遍过程 */
+  .pl-item .st { transition: color 0.25s ease; }
+  .pl-item .st::before { content: '·'; }
+  .pl-item.pending { color: var(--text-3); }
+  .pl-item.pending .st { color: var(--text-3); animation: none; }
+  .pl-item.done .st::before { content: '✓'; }
+  .pl-item.running .st::before { content: '●'; }
   .pl-item .st {
     flex: none;
     font-family: var(--mono);
@@ -669,6 +799,20 @@
     .mmap-node { font-size: 11.5px; padding: 7px 10px; }
   }
 
+  /* ---- 产品窗口「流水线叙事」入场（initWindowSequence 驱动） ---- */
+  /* HTML 静态携带终态（无 JS / 爬虫 / reduced-motion 直接看到成品）；
+     JS 在首屏把窗口置为 .seq 起点：气泡、清单、导图节点全部隐去，再按
+     用户消息 → 清单逐项点亮 → 导图级联浮现 → 连线 draw-on 的节奏演一遍。
+     .seq 存续期间，未获 .show 的元素保持隐身 */
+  .app-window.seq .msg:not(.show),
+  .app-window.seq .pl-item:not(.show) { opacity: 0; transform: translateY(8px); }
+  .app-window.seq .mmap-node:not(.show) { opacity: 0; transform: scale(0.92); }
+  .app-window .msg,
+  .app-window .mmap-node {
+    transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
   /* 窗口下沿浮动徽章 */
   .float-chip {
     position: absolute;
@@ -704,6 +848,45 @@
     .hero-badge { display: block; border-radius: 14px; padding: 10px 18px; line-height: 1.8; }
   }
 
+  /* ============ Skills 跑马灯（incident.io marquee 语言） ============ */
+  /* 双份内容等宽拷贝，translateX(-50%) 无缝巡游；两端渐隐遮罩提示无限延伸 */
+  .ticker {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    padding: 17px 0;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+  }
+  .ticker-track {
+    display: flex;
+    width: max-content;
+    animation: ticker-scroll 38s linear infinite;
+  }
+  .ticker:hover .ticker-track { animation-play-state: paused; }
+  .ticker-group {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    padding-right: 30px; /* 组间距 = 元间距：-50% 循环的接缝不可见 */
+  }
+  .ticker-group span {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--text-3);
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 30px;
+  }
+  .ticker-group span::after {
+    content: '';
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: rgba(139, 124, 255, 0.45);
+  }
+  @keyframes ticker-scroll { to { transform: translateX(-50%); } }
+
   /* ============ 通用区块 ============ */
   .section { padding: var(--section-pad) 0; position: relative; }
 
@@ -735,6 +918,17 @@
     width: 900px; height: 500px;
     background: radial-gradient(ellipse, rgba(77, 163, 255, 0.06) 0%, transparent 65%);
   }
+  /* 区块光晕呼吸（Antimetal d-hero-breathe 同技法）：错相 13s 慢呼吸，
+     全页光场永远在极缓慢地涨落，打破「静态贴图」感 */
+  @keyframes glow-drift {
+    0%, 100% { opacity: 0.7; }
+    50%      { opacity: 1; }
+  }
+  #why::before               { animation: glow-drift 13s ease-in-out infinite; }
+  #skills::before            { animation: glow-drift 13s ease-in-out 4s infinite; }
+  #install::before           { animation: glow-drift 13s ease-in-out 8s infinite; }
+  .section-dark-wrap::before { animation: glow-drift 15s ease-in-out 2s infinite; }
+  .section-dark-wrap::after  { animation: glow-drift 15s ease-in-out 7s infinite; }
   @media (max-width: 640px) { :root { --section-pad: 96px; } }
 
   /* 区块顶部细分隔线 */
@@ -817,7 +1011,8 @@
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    transition: border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    /* 位移走 spring：卡片悬浮带过冲回弹，落回时像被磁吸归位 */
+    transition: border-color 0.3s ease, transform 0.5s var(--spring), box-shadow 0.3s ease;
   }
   .glass-card:hover {
     border-color: var(--border-strong);
@@ -1033,6 +1228,65 @@
     gap: 12px;
     margin-top: 72px;
   }
+  /* ---- 钉住式滚动叙事（#how.pin-on 由 JS 桌面端启用）----
+     外层 .steps-pin 撑出 2.4 屏滚动里程，.steps 钉在视口；
+     滚动进度 --sp 驱动光束填充与阶段逐个点亮，可逆、可回滚 */
+  #how.pin-on .steps-pin { height: 240vh; }
+  #how.pin-on .steps {
+    position: sticky;
+    top: calc(var(--nav-h) + 16vh);
+    margin-top: 0;
+  }
+  #how.pin-on .step .dot { animation: none; }       /* 时间驱动波次让位给滚动驱动 */
+  #how.pin-on .steps .line-pulse { display: none; }
+  #how.pin-on .step { opacity: 0.35; transition: opacity 0.45s ease; }
+  #how.pin-on .step.lit { opacity: 1; }
+  #how.pin-on .step .dot {
+    transition: background 0.4s ease, color 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+  }
+  #how.pin-on .step.lit .dot {
+    background: var(--accent-grad);
+    border-color: transparent;
+    color: #060609;
+    box-shadow: 0 0 26px -4px rgba(139, 124, 255, 0.85);
+  }
+  #how.pin-on .step p { transition: color 0.4s ease; }
+  #how.pin-on .step.lit p { color: var(--text); }
+  /* 滚动进度光束：叠在贯穿线上，宽度 = --sp */
+  .pin-fill {
+    position: absolute;
+    top: 17px; left: 5%;
+    width: calc(var(--sp, 0) * 90%);
+    height: 1px;
+    background: linear-gradient(90deg, rgba(77, 163, 255, 0.75), rgba(139, 124, 255, 0.95));
+    box-shadow: 0 0 10px rgba(139, 124, 255, 0.65);
+    z-index: 0;
+    display: none;
+  }
+  #how.pin-on .pin-fill { display: block; }
+  /* 钉住阶段下方的读数：当前阶段序号 + 名称 */
+  .pin-status {
+    position: absolute;
+    left: 0; right: 0;
+    top: calc(100% + 46px);
+    display: none;
+    justify-content: center;
+    align-items: baseline;
+    gap: 18px;
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    color: var(--text-3);
+  }
+  #how.pin-on .pin-status { display: flex; }
+  .pin-status .ps-idx { color: var(--blue); font-weight: 600; }
+  .pin-status .ps-name {
+    color: var(--text);
+    font-family: -apple-system, "PingFang SC", sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
   /* 贯穿线 */
   .steps::before {
     content: '';
@@ -1042,6 +1296,26 @@
     background: linear-gradient(90deg, transparent, rgba(77, 163, 255, 0.35) 20%, rgba(139, 124, 255, 0.35) 80%, transparent);
   }
   .step { position: relative; text-align: center; padding: 0 4px; }
+  /* 光脉冲：一段蓝紫亮带沿贯穿线从左到右巡游，与圆点波次点亮呼应
+     （incident.io radar-rotate 的「扫描」语义移植：流水线永远在跑） */
+  .steps .line-pulse {
+    position: absolute;
+    top: 17px; left: 5%; right: 5%;
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent,
+      rgba(119, 156, 255, 0.95) 45%,
+      rgba(139, 124, 255, 0.95) 55%,
+      transparent) no-repeat;
+    background-size: 200px 100%;
+    filter: drop-shadow(0 0 6px rgba(77, 163, 255, 0.7));
+    animation: line-pulse 7s linear infinite;
+    pointer-events: none;
+  }
+  @keyframes line-pulse {
+    0%   { background-position: -220px 0; }
+    100% { background-position: calc(100% + 220px) 0; }
+  }
   .step .dot {
     position: relative;
     z-index: 1;
@@ -1058,7 +1332,20 @@
     background: #0d0d14;
     border: 1px solid rgba(77, 163, 255, 0.35);
     box-shadow: 0 0 16px -4px rgba(77, 163, 255, 0.4);
+    /* 波次点亮：脉冲带 7s 走完全线，第 i 个圆点在 i-0.5s 时被「扫过」亮起 */
+    animation: dot-wave 7s ease-in-out infinite;
   }
+  @keyframes dot-wave {
+    0%, 9%, 100% { box-shadow: 0 0 16px -4px rgba(77, 163, 255, 0.4); }
+    4%           { box-shadow: 0 0 22px 2px rgba(139, 124, 255, 0.8); }
+  }
+  .step:nth-child(1) .dot { animation-delay: 0.5s; }
+  .step:nth-child(2) .dot { animation-delay: 1.5s; }
+  .step:nth-child(3) .dot { animation-delay: 2.5s; }
+  .step:nth-child(4) .dot { animation-delay: 3.5s; }
+  .step:nth-child(5) .dot { animation-delay: 4.5s; }
+  .step:nth-child(6) .dot { animation-delay: 5.5s; }
+  .step:nth-child(7) .dot { animation-delay: 6.5s; }
   .step p { font-size: 14.5px; font-weight: 600; letter-spacing: -0.005em; }
   .step small {
     display: block;
@@ -1071,6 +1358,7 @@
   @media (max-width: 960px) {
     .steps { grid-template-columns: repeat(3, 1fr); gap: 28px 12px; }
     .steps::before { display: none; }
+    .steps .line-pulse { display: none; }
     .step:last-child { grid-column: 2; }
   }
   @media (max-width: 560px) {
@@ -1465,17 +1753,32 @@
   /* ============ 滚动渐入动画 ============ */
   .reveal {
     opacity: 0;
-    transform: translateY(22px);
+    /* 微缩放入场：与位移叠加出「由远及近」的纵深感 */
+    transform: translateY(22px) scale(0.988);
     transition: opacity 0.9s cubic-bezier(0.22, 1, 0.36, 1),
-                transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+                transform 0.9s cubic-bezier(0.22, 1, 0.36, 1),
+                filter 0.9s cubic-bezier(0.22, 1, 0.36, 1);
   }
   .reveal.in { opacity: 1; transform: none; }
+  /* 聚焦拉焦（focus pull）：display 级区块头从虚到实，胶片对焦的质感。
+     只加在 .section-head / 收束句上——正文长文本用 blur 会糊成 smear */
+  .reveal.fb { filter: blur(10px); }
+  .reveal.fb.in { filter: blur(0); }
+  /* .reveal.in 与 .glass-card:hover 同特异性，但声明靠后会压住 hover 位移；
+     这里提高特异性把卡片悬浮抬升显式抢回来 */
+  .glass-card.reveal.in:hover { transform: translateY(-2px); }
   .reveal.d1 { transition-delay: 0.1s; }
   .reveal.d2 { transition-delay: 0.2s; }
   .reveal.d3 { transition-delay: 0.3s; }
   .reveal.d4 { transition-delay: 0.4s; }
   .reveal.d5 { transition-delay: 0.5s; }
   .reveal.d6 { transition-delay: 0.6s; }
+
+  /* ============ 逐字点亮（scroll-linked，Antimetal 招牌手法） ============ */
+  /* initWordIlluminate 把收束句拆成单字 span，随滚动进度逐个点亮：
+     「宣言」不是一次性淡入，而是被滚动一格格擦亮 */
+  .iw { opacity: 0.16; transition: opacity 0.35s ease; }
+  .iw.lit { opacity: 1; }
 
   /* ============ 首屏入场动画：badge → 标题 → 副文案 → CTA → 产品窗口 依次浮起 ============ */
   /* 首屏元素在 HTML 里静态携带 .in（无 JS 也能显示），这里用 keyframe 动画补上 load 时的开场编排 */
@@ -1491,16 +1794,144 @@
 
   @media (prefers-reduced-motion: reduce) {
     .reveal { opacity: 1; transform: none; transition: none; }
+    .reveal.fb { filter: none; }
+    .iw { opacity: 1; transition: none; }
     html { scroll-behavior: auto; }
+    .hero-fx { display: none; } /* WebGL 光场不启动，静态光晕兜底 */
+    .ticker-track { animation: none; }
     .hero::before,
     .hero::after,
+    .hero h1,
     .hero .reveal.in,
+    .window-halo,
+    .steps .line-pulse,
+    .step .dot,
     .window-bar .win-live::before,
     .pl-item.running .st,
-    .chat-bubble .cursor { animation: none; }
+    .chat-bubble .cursor,
+    #why::before,
+    #skills::before,
+    #install::before,
+    .section-dark-wrap::before,
+    .section-dark-wrap::after { animation: none; }
     .glass-card:hover, .card:hover, .compare-card:hover { transform: none; }
     .btn:active { transform: none; }
+    /* 第二幕环境动效关闭（.fx 门未开，一次性编排天然不触发） */
+    #skills .card, .float-chip, .dd-btn.ok { animation: none; }
+    .fx .compare > .glass-card.reveal,
+    .fx .compare > .glass-card.reveal.d1 { transform: none; }
   }
+  /* ============ 第二幕：区块小剧场（body.fx 门控，initSectionPlays 驱动） ============ */
+  /* 无 JS / reduced-motion 没有 .fx：所有初始隐藏态不生效，页面保持静态终态 */
+
+  /* ---- #why / #what 文件树：行级联 + 蓝光扫描线 ---- */
+  .fx .file-tree > div:not(.ft-title) { opacity: 0; transform: translateX(-10px); }
+  .fx .file-tree.play > div:not(.ft-title) {
+    opacity: 1; transform: none;
+    transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: calc(150ms + var(--i, 0) * 90ms);
+  }
+  .file-tree.play::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; top: -20%;
+    height: 34%;
+    background: linear-gradient(180deg, transparent, rgba(77, 163, 255, 0.1), transparent);
+    animation: scan-y 1.1s ease-out 0.15s both;
+    pointer-events: none;
+  }
+  @keyframes scan-y { to { top: 110%; } }
+
+  /* ---- #problem 对比卡：从左右两侧相对滑入 ---- */
+  .fx .compare > .glass-card.reveal { transform: translateX(-48px) scale(0.988); }
+  .fx .compare > .glass-card.reveal.d1 { transform: translateX(48px) scale(0.988); }
+  .fx .compare > .glass-card.reveal.in { transform: none; }
+
+  /* ---- #what 装载图：箭头虚线流动 + 能力清单逐条确认 ---- */
+  .mount-diagram.play .mount-arrow::before {
+    background: repeating-linear-gradient(180deg, transparent 0 4px, rgba(77, 163, 255, 0.65) 4px 10px, transparent 10px 14px);
+    animation: dash-flow 0.9s linear infinite;
+  }
+  .mount-diagram.play .mount-arrow::after {
+    background: repeating-linear-gradient(180deg, transparent 0 4px, rgba(139, 124, 255, 0.6) 4px 10px, transparent 10px 14px);
+    animation: dash-flow-rev 0.9s linear infinite;
+  }
+  @keyframes dash-flow { to { background-position-y: 14px; } }
+  @keyframes dash-flow-rev { from { background-position-y: 14px; } to { background-position-y: 0; } }
+  .fx .agent-core .ac-cap { opacity: 0; transform: translateX(10px); }
+  .fx .mount-diagram.play .ac-cap {
+    opacity: 1; transform: none;
+    transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: calc(350ms + var(--i, 0) * 110ms);
+  }
+
+  /* ---- #proof 数字区：光泽横扫 + delta 徽章逐个弹出 ---- */
+  .fx .stats .delta { opacity: 0; }
+  .stats { position: relative; }
+  .stats.play::after {
+    content: '';
+    position: absolute;
+    top: -10%; bottom: -10%; left: -20%;
+    width: 34%;
+    background: linear-gradient(105deg, transparent, rgba(77, 163, 255, 0.07), transparent);
+    transform: skewX(-18deg) translateX(-180%);
+    animation: stats-sheen 1.2s ease-out 0.5s both;
+    pointer-events: none;
+  }
+  @keyframes stats-sheen { to { transform: skewX(-18deg) translateX(480%); } }
+  .fx .stats.play .delta { animation: chip-pop 0.55s var(--spring) both; }
+  .fx .stats.play .stat:nth-child(1) .delta { animation-delay: 0.55s; }
+  .fx .stats.play .stat:nth-child(2) .delta { animation-delay: 0.7s; }
+  .fx .stats.play .stat:nth-child(3) .delta { animation-delay: 0.85s; }
+  .fx .stats.play .stat:nth-child(4) .delta { animation-delay: 1s; }
+  @keyframes chip-pop { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }
+
+  /* ---- #install 终端：命令行「正在写入」横向擦除 ---- */
+  .fx .terminal.play pre { animation: term-write 1.4s cubic-bezier(0.4, 0, 0.2, 1) 0.3s both; }
+  @keyframes term-write {
+    from { clip-path: inset(0 100% 0 0); }
+    to   { clip-path: inset(0 0 0 0); }
+  }
+
+  /* ---- #skills 卡片持续悬浮（translate 属性与 transform/hover/tilt 可组合不互斥） ---- */
+  #skills .card { animation: card-float 7s ease-in-out infinite; }
+  #skills .cards .card:nth-child(3n+2) { animation-delay: -2.4s; }
+  #skills .cards .card:nth-child(3n)   { animation-delay: -4.4s; }
+  @keyframes card-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -7px; } }
+
+  /* ---- hero 浮动徽章轻浮 + 决策卡「批准执行」呼吸辉光 ---- */
+  .float-chip { animation: chip-bob 5.5s ease-in-out infinite; }
+  .float-chip.chip-b { animation-delay: -2.7s; }
+  @keyframes chip-bob { 0%, 100% { translate: 0 0; } 50% { translate: 0 -5px; } }
+  .dd-btn.ok { animation: ok-pulse 2.8s ease-in-out infinite; }
+  @keyframes ok-pulse { 50% { box-shadow: 0 0 18px -2px rgba(50, 215, 75, 0.5); } }
+
+  /* ---- kicker 两侧短线随 reveal 展开 ---- */
+  .fx .section-head .kicker::before,
+  .fx .section-head .kicker::after { transform: scaleX(0); transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.25s; }
+  .fx .section-head .kicker::before { transform-origin: right center; }
+  .fx .section-head .kicker::after { transform-origin: left center; }
+  .fx .section-head.reveal.in .kicker::before,
+  .fx .section-head.reveal.in .kicker::after { transform: scaleX(1); }
+
+  /* ---- 移动端 steps：圆点弹跳级联（pin 只在桌面启用，小屏用时间编排补位） ---- */
+  @media (max-width: 960px) {
+    .fx .steps .step.in .dot { animation: dot-pop 0.6s var(--spring) both; }
+    .fx .steps .step:nth-child(2) .dot { animation-delay: 0.08s; }
+    .fx .steps .step:nth-child(3) .dot { animation-delay: 0.16s; }
+    .fx .steps .step:nth-child(4) .dot { animation-delay: 0.24s; }
+    .fx .steps .step:nth-child(5) .dot { animation-delay: 0.32s; }
+    .fx .steps .step:nth-child(6) .dot { animation-delay: 0.4s; }
+    .fx .steps .step:nth-child(7) .dot { animation-delay: 0.48s; }
+  }
+  @keyframes dot-pop { from { transform: scale(0.5); opacity: 0.4; } }
+
+  /* 第二幕环境动效的 RM 关闭必须与本块同级靠后：基础规则声明在文件更后处，
+     同特异性下靠后者胜出（前置 RM 块管不到这里） */
+  @media (prefers-reduced-motion: reduce) {
+    #skills .card, .float-chip, .dd-btn.ok { animation: none; }
+  }
+
   /* ============ 细节强化：高级感来自最后一层微调 ============ */
   /* 导航底部的彩色发丝线：滚动内容从其上掠过时有精密仪器感 */
   nav::after {
@@ -1547,8 +1978,13 @@
   }
 </style>
 <noscript>
-  <!-- 滚动渐入依赖 JS 加 .in；无 JS 环境直接呈现全部内容 -->
-  <style>.reveal { opacity: 1; transform: none; }</style>
+  <!-- 滚动渐入依赖 JS 加 .in；无 JS 环境直接呈现全部内容（含 .fb 的 blur 复位；
+       跑马灯冻结为静态一行，钉住叙事/pin 状态本就由 JS 启用、天然缺席） -->
+  <style>
+    .reveal { opacity: 1; transform: none; }
+    .reveal.fb { filter: none; }
+    .ticker-track { animation: none; }
+  </style>
 </noscript>
 </head>
 <body>
@@ -1576,10 +2012,12 @@
       </a>
     </div>
   </div>
+  <div class="scroll-progress" aria-hidden="true"></div>
 </nav>
 
 <!-- ============ Hero ============ -->
 <header class="hero" id="top">
+  <canvas class="hero-fx" aria-hidden="true"></canvas>
   <div class="hero-grid" aria-hidden="true"></div>
   <div class="container">
     <div class="hero-badge reveal in">
@@ -1624,10 +2062,10 @@
               <div class="msg-body">
                 <div class="role">AGENT · 已装载 qa-skills</div>
                 <div class="pipeline-list">
-                  <div class="pl-item done"><span class="st">✓</span><span>需求分析 <span class="pl-note">2 个歧义点已向你确认</span></span></div>
-                  <div class="pl-item done"><span class="st">✓</span><span>测试策略 <span class="pl-note">高危：到期竞态、时区边界</span></span></div>
-                  <div class="pl-item done"><span class="st">✓</span><span>用例设计 <span class="pl-note">schema.yaml + 脑图已产出</span></span></div>
-                  <div class="pl-item running"><span class="st">●</span><span>用例评审 <span class="pl-note">覆盖基准逐条复审中…</span></span></div>
+                  <div class="pl-item done"><span class="st"></span><span>需求分析 <span class="pl-note">2 个歧义点已向你确认</span></span></div>
+                  <div class="pl-item done"><span class="st"></span><span>测试策略 <span class="pl-note">高危：到期竞态、时区边界</span></span></div>
+                  <div class="pl-item done"><span class="st"></span><span>用例设计 <span class="pl-note">schema.yaml + 脑图已产出</span></span></div>
+                  <div class="pl-item running"><span class="st"></span><span>用例评审 <span class="pl-note">覆盖基准逐条复审中…</span></span></div>
                 </div>
               </div>
             </div>
@@ -1640,12 +2078,25 @@
             <div class="code-area mmap-area" style="position: relative;"><svg class="mmap-svg" id="mmapSvg" aria-hidden="true" width="764" height="435" viewBox="0 0 764 435"><path d="M 262.921875 217.5 C 288.921875 217.5, 274.921875 90, 300.921875 90" fill="none" stroke="rgba(91,163,245,0.55)" stroke-width="1.5"></path><path d="M 262.921875 217.5 C 288.921875 217.5, 274.921875 192, 300.921875 192" fill="none" stroke="rgba(139,124,255,0.55)" stroke-width="1.5"></path><path d="M 262.921875 217.5 C 288.921875 217.5, 274.921875 319.5, 300.921875 319.5" fill="none" stroke="rgba(57,197,207,0.55)" stroke-width="1.5"></path><path d="M 382.921875 90 C 408.921875 90, 394.921875 90, 420.921875 90" fill="none" stroke="rgba(91,163,245,0.55)" stroke-width="1.5"></path><path d="M 382.921875 192 C 408.921875 192, 394.921875 141, 420.921875 141" fill="none" stroke="rgba(139,124,255,0.55)" stroke-width="1.5"></path><path d="M 382.921875 192 C 408.921875 192, 394.921875 192, 420.921875 192" fill="none" stroke="rgba(139,124,255,0.55)" stroke-width="1.5"></path><path d="M 382.921875 192 C 408.921875 192, 394.921875 243, 420.921875 243" fill="none" stroke="rgba(139,124,255,0.55)" stroke-width="1.5"></path><path d="M 382.921875 319.5 C 408.921875 319.5, 394.921875 294, 420.921875 294" fill="none" stroke="rgba(57,197,207,0.55)" stroke-width="1.5"></path><path d="M 382.921875 319.5 C 408.921875 319.5, 394.921875 345, 420.921875 345" fill="none" stroke="rgba(57,197,207,0.55)" stroke-width="1.5"></path></svg><div class="mmap" id="mmapTree" style="transform: none; margin-left: 0px; margin-right: 0px; transform-origin: left center;"><div class="mmap-row"><div class="mmap-node root">到期后自动变为「已结束」[P1]</div><div class="mmap-col"><div class="mmap-row"><div class="mmap-node lv1 c1">前置条件</div><div class="mmap-col"><div class="mmap-row"><div class="mmap-node c1">固定时间段已发布券 · 结束时间设为 10 分钟后</div></div></div></div><div class="mmap-row"><div class="mmap-node lv1 c2">操作步骤</div><div class="mmap-col"><div class="mmap-row"><div class="mmap-node c2">① 记录结束时间</div></div><div class="mmap-row"><div class="mmap-node c2">② 等待到期</div></div><div class="mmap-row"><div class="mmap-node c2">③ 刷新列表查状态</div></div></div></div><div class="mmap-row"><div class="mmap-node lv1 c3">预期结果</div><div class="mmap-col"><div class="mmap-row"><div class="mmap-node c3">到期后 1 小时内 → 状态「已结束」</div></div><div class="mmap-row"><div class="mmap-node c3">超 1 小时未变 → 判失败</div></div></div></div></div></div></div></div>
           </div>
         </div>
-        <!-- 屏幕玻璃反光层：压在窗口内容之上，纯装饰 -->
+        <!-- 描边旋转流光与屏幕玻璃反光：压在窗口内容之上，纯装饰 -->
+        <div class="window-halo" aria-hidden="true"></div>
         <div class="screen-glare" aria-hidden="true"></div>
       </div>
     </div>
   </div>
 </header>
+
+<!-- ============ Skills 跑马灯：装载清单的无限巡游（纯装饰，信息在正文有承载） ============ -->
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track">
+    <div class="ticker-group">
+      <span>requirement-analysis</span><span>test-strategy</span><span>test-case-writing</span><span>test-case-review</span><span>automated-e2e-testing</span><span>api-testing</span><span>exploratory-testing</span><span>bug-analysis</span><span>regression-testing</span><span>qa-memory</span><span>qa</span>
+    </div>
+    <div class="ticker-group">
+      <span>requirement-analysis</span><span>test-strategy</span><span>test-case-writing</span><span>test-case-review</span><span>automated-e2e-testing</span><span>api-testing</span><span>exploratory-testing</span><span>bug-analysis</span><span>regression-testing</span><span>qa-memory</span><span>qa</span>
+    </div>
+  </div>
+</div>
 
 <main>
 <!-- ============ 01 WHY：软件测试是干嘛的 ============ -->
@@ -1682,7 +2133,7 @@
 <!-- ============ 02 PROBLEM：能写不等于能执行 ============ -->
 <section class="section" id="problem">
   <div class="container">
-    <div class="section-head reveal">
+    <div class="section-head reveal fb">
       <div class="kicker">02 · Problem</div>
       <h2>能写，更要能执行。</h2>
       <p>
@@ -1720,7 +2171,7 @@
         <p class="quote-verdict"><strong>任何测试人员拿到就能执行，</strong>不用讲解。</p>
       </div>
     </div>
-    <p class="compare-note reveal">
+    <p class="compare-note reveal fb" data-illuminate>
       产出标准只有一条：<br>
       任何一个没接触过这个需求的人，拿到文件就能直接执行。
       <small>背后是 8 条可执行性硬标准，评测中一票否决。</small>
@@ -1731,7 +2182,7 @@
 <!-- ============ 03 WHAT：它是什么 ============ -->
 <section class="section" id="what">
   <div class="container">
-    <div class="section-head reveal">
+    <div class="section-head reveal fb">
       <div class="kicker">03 · What</div>
       <h2>不是软件，<br>是一套装进 AI 的工作方法。</h2>
       <p>
@@ -1784,21 +2235,26 @@
 <!-- ============ 第四章：怎么工作（纯代码流水线，无位图） ============ -->
 <section class="section" id="how">
   <div class="container">
-    <div class="section-head reveal">
+    <div class="section-head reveal fb">
       <div class="kicker">04 · How</div>
       <h2>一句指令，从需求到报告。</h2>
       <p>
         对 AI 助手说「帮我测试这个需求」，从需求到报告各环节自动接力，每个环节都有明确的产出物（完整流水线共九个阶段，含探索旁路与回归验证）。
       </p>
     </div>
-    <div class="steps">
-      <div class="step reveal"><div class="dot">1</div><p>需求分析</p><small>不懂就先问</small></div>
-      <div class="step reveal d1"><div class="dot">2</div><p>测试策略</p><small>锁定高危区域</small></div>
-      <div class="step reveal d1"><div class="dot">3</div><p>用例设计</p><small>人和机器都能读</small></div>
-      <div class="step reveal d2"><div class="dot">4</div><p>用例评审</p><small>再挑一遍错</small></div>
-      <div class="step reveal d2"><div class="dot">5</div><p>自动执行</p><small>浏览器 + 接口</small></div>
-      <div class="step reveal d3"><div class="dot">6</div><p>缺陷分析</p><small>追到出错代码</small></div>
-      <div class="step reveal d3"><div class="dot">7</div><p>回归 + 报告</p><small>证据齐全</small></div>
+    <div class="steps-pin">
+      <div class="steps">
+        <div class="line-pulse" aria-hidden="true"></div>
+        <div class="pin-fill" aria-hidden="true"></div>
+        <div class="step reveal"><div class="dot">1</div><p>需求分析</p><small>不懂就先问</small></div>
+        <div class="step reveal d1"><div class="dot">2</div><p>测试策略</p><small>锁定高危区域</small></div>
+        <div class="step reveal d1"><div class="dot">3</div><p>用例设计</p><small>人和机器都能读</small></div>
+        <div class="step reveal d2"><div class="dot">4</div><p>用例评审</p><small>再挑一遍错</small></div>
+        <div class="step reveal d2"><div class="dot">5</div><p>自动执行</p><small>浏览器 + 接口</small></div>
+        <div class="step reveal d3"><div class="dot">6</div><p>缺陷分析</p><small>追到出错代码</small></div>
+        <div class="step reveal d3"><div class="dot">7</div><p>回归 + 报告</p><small>证据齐全</small></div>
+        <div class="pin-status" aria-hidden="true"><span class="ps-idx">01 / 07</span><span class="ps-name">需求分析</span></div>
+      </div>
     </div>
   </div>
 </section>
@@ -1806,7 +2262,7 @@
 <!-- ============ 第五章：六大能力（无位图卡片） ============ -->
 <section class="section" id="skills">
   <div class="container">
-    <div class="section-head reveal">
+    <div class="section-head reveal fb">
       <div class="kicker">05 · Skills</div>
       <h2>从用例到回归，<br>每道工序都有对应的 Skill。</h2>
       <p>每个 Skill 单独可用，也能串成完整流水线。需要哪一段，就用哪一段。</p>
@@ -1849,7 +2305,7 @@
 <!-- ============ 第六章：实测效果（光晕数字区） ============ -->
 <section class="section section-dark-wrap" id="proof">
   <div class="container">
-    <div class="section-head reveal">
+    <div class="section-head reveal fb">
       <div class="kicker">06 · Proof</div>
       <h2>每一个数字，都来自实测。</h2>
       <p>同一批任务，同一个模型，唯一差异是装没装 qa-skills。<br>数字如实披露，包括不好看的那些。</p>
@@ -1880,7 +2336,7 @@
         <span class="delta">不装时为 0</span>
       </div>
     </div>
-    <p class="fine-print reveal">
+    <p class="fine-print reveal fb">
       Token 成本约 3.3 倍。覆盖提升：写用例 <span class="nb">+8.7pp</span>、<span class="nb">全任务 +13.2pp</span>、找缺陷 <span class="nb">+9.7pp</span>。
       完整数据见 README，里程碑版 Release 附跨模型增益矩阵快照。
     </p>
@@ -1914,7 +2370,7 @@
 <!-- ============ 第七章：安装 ============ -->
 <section class="section" id="install">
   <div class="container">
-    <div class="section-head reveal">
+    <div class="section-head reveal fb">
       <div class="kicker">07 · Install</div>
       <h2>两步接入你的 AI 助手</h2>
       <p>不需要账号，不需要订阅。两条命令，一句话。</p>
@@ -2029,21 +2485,54 @@
   }
 
   /**
-   * 导航栏滚动深化：滚过 8px 后加 .scrolled 类，底色与下边框加深；
-   * passive 监听 + rAF 合帧，避免高频 scroll 回调引发重排
+   * 滚动联动特效（单 rAF 合帧，passive 监听）：
+   * 1) 导航滚动深化：滚过 8px 后加 .scrolled，底色与下边框加深
+   * 2) 阅读进度条：nav 底部渐变线 scaleX 随滚动填充（transform 合成器直走）
+   * 3) Hero 视差退场：文案快、产品窗口慢的双速下沉 + 淡出——滚动时首屏
+   *    不是被「推上去」而是「沉下去」，留出景深（Antimetal 招牌手法）
    */
   function initNavElevation() {
     var nav = document.querySelector('nav');
     if (!nav) return;
+    var progress = nav.querySelector('.scroll-progress');
+    var hero = document.querySelector('.hero');
+    var heroText = document.querySelector('.hero .container');
+    var heroStage = document.querySelector('.hero .container-wide');
+    var heroFx = document.querySelector('.hero-fx');
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var ticking = false;
+    function update() {
+      ticking = false;
+      var y = window.scrollY;
+      nav.classList.toggle('scrolled', y > 8);
+      if (progress) {
+        var max = document.documentElement.scrollHeight - window.innerHeight;
+        progress.style.transform = 'scaleX(' + (max > 0 ? Math.min(y / max, 1) : 0) + ')';
+      }
+      updatePin();
+      updateParallax();
+      if (reduced || !hero) return;
+      var h = hero.offsetHeight;
+      // 光场画布随首屏离场淡出，与视差下沉同节奏
+      if (heroFx) heroFx.style.opacity = Math.max(1 - y / (h * 0.85), 0);
+      if (y <= h) {
+        // 文案层 0.22 倍速下沉、淡到 0；窗口层 0.1 倍速、保底 0.25 透明度垫后
+        if (heroText) {
+          heroText.style.transform = 'translateY(' + (y * 0.22) + 'px)';
+          heroText.style.opacity = Math.max(1 - y / (h * 0.7), 0);
+        }
+        if (heroStage) {
+          heroStage.style.transform = 'translateY(' + (y * 0.1) + 'px)';
+          heroStage.style.opacity = Math.max(1 - y / (h * 0.9), 0.25);
+        }
+      }
+    }
     window.addEventListener('scroll', function () {
       if (ticking) return;
       ticking = true;
-      requestAnimationFrame(function () {
-        nav.classList.toggle('scrolled', window.scrollY > 8);
-        ticking = false;
-      });
+      requestAnimationFrame(update);
     }, { passive: true });
+    update();
   }
 
   /**
@@ -2134,11 +2623,15 @@
    * 遍历导图行，取「行内直系节点 = 父、行内直系列内的子节点 = 孩」，
    * 从父节点右缘中点向每个孩子左缘中点画三次贝塞尔曲线，颜色跟随孩子的分支色。
    * svg 尺寸按容器滚动尺寸设定，保证横向溢出滚动时连线不裁切。
+   * @param {boolean} [animate] - true 时连线以 stroke-dash draw-on 方式逐条画出
+   *   （流水线叙事开场专用；resize / 字体就绪的常规重绘必须走静态，避免闪线）
    */
-  function drawMindmap() {
+  var windowSeqActive = false; // 流水线叙事进行中：挡掉常规重绘，防止静态连线闪现穿帮
+  function drawMindmap(animate) {
     var svg = document.getElementById('mmapSvg');
     var tree = document.getElementById('mmapTree');
     if (!svg || !tree) return;
+    if (windowSeqActive && !animate) return;
     fitMindmap(); // 先缩放适配窗格，再按最终视觉位置画连线
     var area = svg.closest('.mmap-area');
     var NS = 'http://www.w3.org/2000/svg';
@@ -2149,6 +2642,7 @@
     svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
     svg.textContent = ''; // 清掉上一帧的连线再重画
     var origin = area.getBoundingClientRect();
+    var drawn = 0;
     tree.querySelectorAll('.mmap-row').forEach(function (row) {
       var parent = row.querySelector(':scope > .mmap-node');
       var col = row.querySelector(':scope > .mmap-col');
@@ -2173,8 +2667,28 @@
         path.setAttribute('stroke', stroke);
         path.setAttribute('stroke-width', '1.5');
         svg.appendChild(path);
+        if (animate) {
+          // draw-on：先量长度，再用 dashoffset 从「全隐藏」过渡到 0，逐条错峰
+          var len = path.getTotalLength();
+          path.style.strokeDasharray = len;
+          path.style.strokeDashoffset = len;
+          path.getBoundingClientRect(); // 强制一帧，确保起始态先于 transition 生效
+          path.style.transition = 'stroke-dashoffset 0.55s cubic-bezier(0.22, 1, 0.36, 1) ' + (drawn * 70) + 'ms';
+          path.style.strokeDashoffset = '0';
+        }
+        drawn++;
       });
     });
+    if (animate) {
+      // 画完后清掉内联 dash/transition：后续 resize 静态重绘不受残留样式影响
+      setTimeout(function () {
+        svg.querySelectorAll('path').forEach(function (p) {
+          p.style.strokeDasharray = '';
+          p.style.strokeDashoffset = '';
+          p.style.transition = '';
+        });
+      }, drawn * 70 + 700);
+    }
   }
 
   /**
@@ -2192,13 +2706,384 @@
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawMindmap);
   }
 
-  // 页面就绪后启动全部交互
+  /**
+   * 产品窗口「流水线叙事」开场（本页的签名动效）：
+   * 把静态终态的窗口当一帧定格画面，首屏加载后重演它的诞生过程——
+   * 用户消息浮入 → 清单逐项 ·→●→✓ 点亮 → 导图节点级联浮现 → 连线 draw-on。
+   * reduced-motion / 刷新落在页中（scrollY>80）时直接呈现静态终态，不演。
+   * 必须先于 initMindmap 执行：预置演出态后，首帧静态连线会被 windowSeqActive 挡住
+   */
+  function initWindowSequence() {
+    var win = document.querySelector('.app-window');
+    if (!win) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (window.scrollY > 80) return; // 刷新落在页中：观众已错过开场，直接给成品
+    var items = win.querySelectorAll('.pl-item');
+    var msgs = win.querySelectorAll('.msg');
+    var nodes = win.querySelectorAll('.mmap-node');
+    if (!items.length || !nodes.length) return;
+    var finals = [];
+    items.forEach(function (it) { finals.push(it.className); });
+    // 首帧前置起点：窗口进入「演出中」，内容全部隐身（.seq CSS 规则接管）
+    windowSeqActive = true;
+    win.classList.add('seq');
+    items.forEach(function (it) { it.className = 'pl-item pending'; });
+
+    var t = 1150; // 与 hero-rise 编排（d4 0.38s 延迟 + 1.1s 时长）尾部重叠，衔接不断气
+    function step(gap, fn) { setTimeout(fn, t); t += gap; }
+
+    step(380, function () { msgs[0].classList.add('show'); });            // 用户消息浮入
+    step(320, function () { msgs[1].classList.add('show'); });            // AI 清单容器浮入
+    [0, 1, 2].forEach(function (i) {                                      // 三个已完成阶段逐个点亮
+      step(260, function () { items[i].classList.add('show'); });              // · 出现待跑
+      step(340, function () { items[i].className = 'pl-item running show'; }); // ● 跑起来
+      step(300, function () { items[i].className = 'pl-item done show'; });    // ✓ 完成
+    });
+    step(380, function () {                                               // 产出：导图节点级联浮现
+      nodes.forEach(function (n, i) {
+        setTimeout(function () { n.classList.add('show'); }, i * 70);
+      });
+    });
+    step(720, function () {                                               // 连线 draw-on + 评审阶段开跑
+      drawMindmap(true);
+      items[3].classList.add('show');
+      setTimeout(function () { items[3].className = 'pl-item running show'; }, 300);
+    });
+    step(1250, function () {                                              // 收尾：撤演出态，回到静态终态
+      windowSeqActive = false;
+      win.classList.remove('seq');
+      msgs.forEach(function (m) { m.classList.remove('show'); });
+      items.forEach(function (it, i) { it.className = finals[i]; });
+      nodes.forEach(function (n) { n.classList.remove('show'); });
+      drawMindmap(); // 演出中字体就绪触发的重绘被挡掉了，这里补一次静态校准
+    });
+  }
+
+  /**
+   * 逐字点亮（scroll-linked）：把 data-illuminate 元素的文本拆成单字 span，
+   * 随滚动进度逐个从 16% 亮度擦亮到 100%——「宣言」不是一次性淡入，
+   * 而是被滚动一格格点亮（Antimetal 招牌手法；中文无空格分词，按字符粒度）。
+   * reduced-motion 不拆字，保持原生静态；无 JS 环境自然没有拆字，安全兜底
+   */
+  function initWordIlluminate() {
+    var els = document.querySelectorAll('[data-illuminate]');
+    if (!els.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var items = [];
+    els.forEach(function (el) {
+      var words = [];
+      (function split(node) {
+        Array.prototype.slice.call(node.childNodes).forEach(function (child) {
+          if (child.nodeType === 3) {
+            var frag = document.createDocumentFragment();
+            child.textContent.split('').forEach(function (ch) {
+              if (!ch.trim()) { frag.appendChild(document.createTextNode(ch)); return; }
+              var s = document.createElement('span');
+              s.className = 'iw';
+              s.textContent = ch;
+              frag.appendChild(s);
+              words.push(s);
+            });
+            node.replaceChild(frag, child);
+          } else if (child.nodeType === 1 && child.tagName !== 'BR' && child.tagName !== 'SMALL') {
+            split(child); // <br> 原样保留；<small> 脚注保持常规渲染，不参与点亮
+          }
+        });
+      })(el);
+      items.push({ el: el, words: words, lit: -1 });
+    });
+    var ticking = false;
+    function update() {
+      ticking = false;
+      var vh = window.innerHeight;
+      items.forEach(function (item) {
+        var top = item.el.getBoundingClientRect().top;
+        // 从「视口 85% 线」开始点亮，0.45vh 滚动行程内点完
+        var progress = (vh * 0.85 - top) / (vh * 0.45);
+        var lit = Math.max(0, Math.min(Math.round(progress * item.words.length), item.words.length));
+        if (lit === item.lit) return;
+        item.lit = lit;
+        item.words.forEach(function (w, i) { w.classList.toggle('lit', i < lit); });
+      });
+    }
+    window.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    }, { passive: true });
+    update();
+  }
+
+  /**
+   * Hero WebGL 流体光场（页面的「场面感」来源）：
+   * fbm 域扭曲驱动的蓝紫光雾在暗底上缓慢流动，鼠标位置低通滤波后轻微牵引光场。
+   * 降级链：reduced-motion / 无 WebGL / 不可见 → 不启动（CSS 静态光晕兜底）；
+   * 性能护栏：DPR 上限 1.5、滚出首屏或标签页隐藏即停帧
+   */
+  function initHeroShader() {
+    var canvas = document.querySelector('.hero-fx');
+    if (!canvas) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var gl = canvas.getContext('webgl', { alpha: true, antialias: false, premultipliedAlpha: true })
+          || canvas.getContext('experimental-webgl', { alpha: true, premultipliedAlpha: true });
+    if (!gl) return;
+
+    var VERT = 'attribute vec2 a;void main(){gl_Position=vec4(a,0.0,1.0);}';
+    var FRAG = [
+      'precision highp float;',
+      'uniform vec2 u_res;',
+      'uniform float u_time;',
+      'uniform vec2 u_mouse;',
+      'float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);}',
+      'float noise(vec2 p){',
+      '  vec2 i=floor(p),f=fract(p);',
+      '  vec2 u=f*f*(3.0-2.0*f);',
+      '  return mix(mix(hash(i),hash(i+vec2(1.0,0.0)),u.x),mix(hash(i+vec2(0.0,1.0)),hash(i+vec2(1.0,1.0)),u.x),u.y);',
+      '}',
+      'float fbm(vec2 p){',
+      '  float v=0.0,a=0.5;',
+      '  for(int i=0;i<4;i++){v+=a*noise(p);p=p*2.03+vec2(11.3,7.9);a*=0.5;}',
+      '  return v;',
+      '}',
+      'void main(){',
+      '  vec2 uv=gl_FragCoord.xy/u_res;',
+      '  vec2 p=uv;p.x*=u_res.x/u_res.y;',
+      '  float t=u_time*0.055;',
+      '  vec2 m=u_mouse*0.22;',
+      '  vec2 q=vec2(fbm(p*1.35+t),fbm(p*1.35-t*0.82));',
+      '  vec2 r=vec2(fbm(p*1.7+q*1.25+vec2(1.7,9.2)+m),fbm(p*1.7+q*1.25+vec2(8.3,2.8)-m.yx));',
+      '  float f=fbm(p*1.55+r*1.4);',
+      '  vec3 blue=vec3(0.302,0.639,1.0);',
+      '  vec3 violet=vec3(0.545,0.486,1.0);',
+      '  vec3 teal=vec3(0.216,0.769,0.812);',
+      '  vec3 col=blue*0.55*smoothstep(0.32,0.92,f);',
+      '  col+=violet*0.5*smoothstep(0.35,0.95,1.0-abs(q.x-q.y));',
+      '  col+=teal*0.13*smoothstep(0.55,1.0,r.y);',
+      '  float top=exp(-3.0*length((uv-vec2(0.5,0.74))*vec2(1.5,1.05)));',
+      '  col+=(blue*0.5+violet*0.4)*top*(0.35+0.45*f);',
+      '  col*=0.5+0.5*smoothstep(0.05,0.6,uv.y);',
+      '  float a=clamp(max(max(col.r,col.g),col.b)*1.7,0.0,0.85);',
+      '  gl_FragColor=vec4(col*a,a);',
+      '}'
+    ].join('\n');
+
+    function compile(type, src) {
+      var s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) return null;
+      return s;
+    }
+    var vs = compile(gl.VERTEX_SHADER, VERT), fs = compile(gl.FRAGMENT_SHADER, FRAG);
+    if (!vs || !fs) return;
+    var prog = gl.createProgram();
+    gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return;
+    gl.useProgram(prog);
+    var buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    var loc = gl.getAttribLocation(prog, 'a');
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    var uRes = gl.getUniformLocation(prog, 'u_res');
+    var uTime = gl.getUniformLocation(prog, 'u_time');
+    var uMouse = gl.getUniformLocation(prog, 'u_mouse');
+
+    var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    function resize() {
+      canvas.width = canvas.clientWidth * dpr;
+      canvas.height = canvas.clientHeight * dpr;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    resize();
+
+    // 鼠标低通滤波目标值（-1..1，画布中心为原点）
+    var mx = 0, my = 0, tx = 0, ty = 0;
+    window.addEventListener('pointermove', function (e) {
+      var r = canvas.getBoundingClientRect();
+      tx = ((e.clientX - r.left) / r.width) * 2 - 1;
+      ty = -(((e.clientY - r.top) / r.height) * 2 - 1);
+    }, { passive: true });
+
+    var inView = true, running = false;
+    function frame(now) {
+      if (!running) return;
+      mx += (tx - mx) * 0.035;
+      my += (ty - my) * 0.035;
+      gl.uniform2f(uRes, canvas.width, canvas.height);
+      gl.uniform1f(uTime, now / 1000);
+      gl.uniform2f(uMouse, mx, my);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      requestAnimationFrame(frame);
+    }
+    function setRun(on) {
+      if (on === running) return;
+      running = on;
+      if (on) requestAnimationFrame(frame);
+    }
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        inView = entries[0].isIntersecting;
+        setRun(inView && !document.hidden);
+      }, { threshold: 0 }).observe(canvas);
+    }
+    document.addEventListener('visibilitychange', function () {
+      setRun(inView && !document.hidden);
+    });
+    window.addEventListener('resize', function () { resize(); }, { passive: true });
+    setRun(true);
+  }
+
+  /**
+   * Hero 标题逐行遮罩包裹：把 <br> 分隔的行装进 overflow:hidden 舞台，
+   * 配合 .hl-in 的 hl-rise 动画做「行从遮罩下缘升起」的开场。
+   * 无 JS / reduced-motion 不包裹，h1 保持静态渐变兜底形态
+   */
+  function initHeroLineMask() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var h1 = document.querySelector('.hero h1');
+    if (!h1 || h1.classList.contains('masked')) return;
+    var lines = h1.innerHTML.split(/<br\s*\/?>/i);
+    if (lines.length < 2) return;
+    h1.innerHTML = lines.map(function (line) {
+      return '<span class="hl"><span class="hl-in">' + line.trim() + '</span></span>';
+    }).join('');
+    h1.classList.add('masked');
+  }
+
+  /**
+   * 卡片 3D 倾斜：指针位置映射为 perspective + rotateX/rotateY，
+   * 离开时以 spring 曲线弹回原位（antimetal 卡片的「可按压实体感」）。
+   * 只对鼠标指针生效，触屏不误触；reduced-motion 不启用
+   */
+  function initTilt() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    document.querySelectorAll('.compare-card, .install-card, #skills .card').forEach(function (card) {
+      var raf = null;
+      card.addEventListener('pointermove', function (e) {
+        if (e.pointerType !== 'mouse') return;
+        if (raf) return;
+        raf = requestAnimationFrame(function () {
+          raf = null;
+          var r = card.getBoundingClientRect();
+          var px = (e.clientX - r.left) / r.width - 0.5;
+          var py = (e.clientY - r.top) / r.height - 0.5;
+          card.style.transition = 'transform 0.12s ease-out';
+          card.style.transform = 'perspective(900px) rotateX(' + (-py * 6).toFixed(2) +
+            'deg) rotateY(' + (px * 8).toFixed(2) + 'deg) translateY(-2px)';
+        });
+      });
+      card.addEventListener('pointerleave', function () {
+        if (raf) { cancelAnimationFrame(raf); raf = null; }
+        card.style.transition = 'transform 0.6s var(--spring)';
+        card.style.transform = '';
+      });
+    });
+  }
+
+  /* ---- 钉住式流水线叙事（#how.pin-on）：滚动进度 → 光束填充 + 阶段逐个点亮 ---- */
+  var pinStageNames = ['需求分析', '测试策略', '用例设计', '用例评审', '自动执行', '缺陷分析', '回归 + 报告'];
+  var pinLastIdx = 0;
+  function syncPinMode() {
+    var how = document.getElementById('how');
+    if (!how) return;
+    var on = !window.matchMedia('(prefers-reduced-motion: reduce)').matches &&
+             window.matchMedia('(min-width: 961px)').matches;
+    how.classList.toggle('pin-on', on);
+    if (!on) {
+      document.querySelectorAll('#how .step').forEach(function (s) { s.classList.remove('lit'); });
+    }
+  }
+  function updatePin() {
+    var how = document.getElementById('how');
+    if (!how || !how.classList.contains('pin-on')) return;
+    var pin = document.querySelector('#how .steps-pin');
+    if (!pin) return;
+    var r = pin.getBoundingClientRect();
+    var vh = window.innerHeight;
+    var total = r.height - vh * 0.55;
+    var p = Math.min(Math.max((vh * 0.7 - r.top) / total, 0), 1);
+    pin.style.setProperty('--sp', p.toFixed(4));
+    var lit = Math.min(7, Math.ceil(p * 7 - 0.0001));
+    document.querySelectorAll('#how .step').forEach(function (s, i) {
+      s.classList.toggle('lit', i < lit);
+    });
+    var idx = Math.min(7, Math.max(1, Math.ceil(p * 7 - 0.0001)));
+    if (idx !== pinLastIdx) {
+      pinLastIdx = idx;
+      var psIdx = document.querySelector('#how .ps-idx');
+      var psName = document.querySelector('#how .ps-name');
+      if (psIdx) psIdx.textContent = '0' + idx + ' / 07';
+      if (psName) psName.textContent = pinStageNames[idx - 1];
+    }
+  }
+
+  /* ---- 全页滚动视差：装饰容器随滚动缓慢漂移（只挂无 reveal/tilt 的容器，
+     与子元素动效互不干扰；位移每帧由实时矩形推导，k≪1 自阻尼无需缓存布局） ---- */
+  var plxEls = [];
+  function initParallax() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    [['#why .duo', -0.045], ['#problem .compare', 0.05], ['#what .cards', -0.045],
+     ['#skills .cards', 0.05], ['#proof .stats', -0.04], ['#proof .decision-demo', 0.05],
+     ['#install .install-grid', -0.045]].forEach(function (item) {
+      var el = document.querySelector(item[0]);
+      if (el) plxEls.push({ el: el, k: item[1] });
+    });
+  }
+  function updateParallax() {
+    if (!plxEls.length) return;
+    var vh = window.innerHeight;
+    var rects = plxEls.map(function (p) { return p.el.getBoundingClientRect(); }); // 先读后写，避免布局抖动
+    plxEls.forEach(function (p, i) {
+      var off = (rects[i].top + rects[i].height / 2) - vh / 2;
+      var ty = Math.max(-46, Math.min(46, off * p.k));
+      p.el.style.transform = 'translate3d(0,' + ty.toFixed(1) + 'px,0)';
+    });
+  }
+
+  /* ---- 区块小剧场：IO 进入视口加 .play，一次性编排交给 CSS（.fx 门控初始态） ---- */
+  var playIO = 'IntersectionObserver' in window ? new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('play');
+        playIO.unobserve(entry.target); // 只演一次
+      }
+    });
+  }, { threshold: 0.3 }) : null;
+  function watchPlay(el) { if (playIO) playIO.observe(el); }
+  function initSectionPlays() {
+    if (!playIO) return;
+    document.querySelectorAll('#why .file-tree, #what .file-tree').forEach(function (t) {
+      t.querySelectorAll(':scope > div:not(.ft-title)').forEach(function (r, i) { r.style.setProperty('--i', i); });
+      watchPlay(t);
+    });
+    document.querySelectorAll('#what .agent-core .ac-cap').forEach(function (c, i) { c.style.setProperty('--i', i); });
+    var md = document.querySelector('#what .mount-diagram');
+    if (md) watchPlay(md);
+    var stats = document.querySelector('#proof .stats');
+    if (stats) watchPlay(stats);
+    document.querySelectorAll('#install .terminal').forEach(watchPlay);
+  }
+
+  // 页面就绪后启动全部交互（initWindowSequence 必须在 initMindmap 之前，见其注释）
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.body.classList.add('fx'); // 第二幕初始隐藏态的总门（无 JS / reduced-motion 不加）
+  }
   initRevealOnScroll();
   initCountUp();
   initNavElevation();
   initCardSpotlight();
   initCopyButtons();
+  initWindowSequence();
   initMindmap();
+  initWordIlluminate();
+  initHeroLineMask();
+  initHeroShader();
+  initTilt();
+  initParallax();
+  initSectionPlays();
+  syncPinMode();
+  window.addEventListener('resize', function () { syncPinMode(); }, { passive: true });
 </script>
 
 
