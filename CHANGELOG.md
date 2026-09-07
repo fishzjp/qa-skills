@@ -5,8 +5,12 @@
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-09-07
+
 ### 新增
 
+- **Skill 描述双语化首批 8 单元（补强方案 C0 批，X26 路由门护航）**：`qa` / `test-case-writing` / `test-strategy` / `test-case-review` / `api-testing` / `regression-testing` / `requirement-analysis` / `core` 的 frontmatter description 改为中英双语（英文在前供 skills.sh 跨宿主发现，中文触发词与反触发互指全保留，全部 ≤300 字符红线）。预注册两批滚动门（EXPECTED v1.9 X26，`run_eval.py routing` 35 意图 × local:Qwen3.5-9B-4bit）：基线 34/35 → 批 A（旗舰 2 单元）34/35 零新增错判 PASS → 批 B（10 单元齐上）31/35 **FAIL**（新增错判 3，跌破 32 底线）→ 按预注册单条粒度回滚 `automated-e2e-testing` / `exploratory-testing` / `bug-analysis`（批 B 交互肇事）与 `qa-memory`（二分定位单独肇事：其 "governed writes" 表述与"更新用例文件"意图语义竞争）→ 终态复跑 34/35 零新增错判 PASS。回炉 4 单元改写后逐个重过 X26 再双语上线；长期触发质量归 X20 周度探针（发版后两周重点观测）。
+- **安装形态实测矩阵登记（RELEASING）**：新增专节——第三方安装器产物形态不受我方 install.sh 把控，凡影响 `../core/` 相对引用的发版按矩阵登记实测（共享目录整仓 ✅ / 单装缺 core ❌ 设计内 / Claude Code 裸 HOME 整仓 ✅ 本批补测；其余宿主待测、不超前宣称）。
 - **官网 FAQ 区与 AI 引擎可读层（GEO）**：落地页新增"常见问题"六问（免费与否 / 宿主兼容 / 可执行性 / 上手成本 / 数据边界 / 英文层现状——含 Token 3.3 倍与英文层缺位等不利答案的如实披露），问答与 `FAQPage` JSON-LD 同源；页面头部补 `SoftwareApplication` 结构化数据（版本 / 许可 / 同名渠道 / 能力清单）；新增站点根 `llms.txt` 机器可读摘要并随 Pages 部署（`pages.yml` 触发路径与 stage 同步）——本产品的检索者与潜在"买家"大量是 AI agent 与 AI 搜索引擎，此层此前完全空白。跟踪面白名单同步扩容（`validate_skills.py` 红线 10 + CONTRIBUTING 红线 8 登记 `llms.txt`）；营销定位底座按 GitHub 政策归 `docs/` 本地资料区、不入库。
 - **qa-memory skill（QA 项目知识库）**：新增第 11 个 skill 与配套门禁，让测试知识第一次可以跨会话沉淀——在被测项目仓库内维护 `.qa/` 知识目录（`INDEX.md` 派生视图 + 6 个主题文件，唯一真相源是主题文件，随项目 git 提交），沉淀环境怪癖 / flaky 判定 / 缺陷配方 / 接口契约 / 业务域 / 自愈配方与例程七类知识。条目 schema（`references/entry-schemas.md` 与门禁同源）：H2 标题（创建后不可变）+ fenced-yaml 受限子集，首写默认 tentative、时间失效不删除（superseded/retired 标记 + git 历史兜底）、`verified`/`evidence` 溯源字段；薄治理 skill 三工作流：读取预算化（INDEX 唯一必读、条目按需跳读）、写入过"三个月判据"+ `memory_validate.py` 门禁（零依赖纯标准库；schema/预算三重（条目/文件/INDEX 行数+字节）/秘密扫描占位符白名单/指令模式 WARN 投毒防线；`--init` 建骨架、`--rebuild-index` 机械重建索引消除并发冲突；fail-loud 不设降级通道）、治理全经人审（prune 归档、写 AGENTS.md/.gitignore 的入口自举逐处确认）+ 威胁模型四防线（条目=数据非指令、G6 确认门、CODEOWNERS 建议、溯源字段）。四个既有 skill 挂最小钩子（regression-testing 知识库输入、bug-analysis/exploratory 沉淀判定、qa 编排跨会话知识注记；automated-e2e-testing 的沉淀钩子已撤出，见下方「变更」）；`install.sh`/`uninstall.sh` 单元清单、安装冒烟下限（12 单元）、双语 README（含 `.qa/` 分宿主装载表）、落地页与 npm 描述计数同步；CONTRIBUTING 新增红线 9（schema 变更必须同步门禁与单测）。
 - **CI 守门扩面（仓库面守门）**：新增 `scripts/validate_repo.py`，补上五个此前无人机查、坏了照绿的面——git 跟踪全部 .py 语法（此前仅被单测导入的脚本被覆盖，新增脚本写错语法 CI 照绿）、全部 .yml/.yaml 合法性（ci/pages workflow、labeler、ISSUE 模板、cordis 补丁——paths 触发的 workflow 语法坏了会静默不跑且无红叉）、全部 .json 合法性、根目录门面文档（README 双语 / CONTRIBUTING / RELEASING / CHANGELOG / AGENTS）相对链接与 `<img src>` / `<source srcset>` 目标存在性（README 是仓库门面，404 直接面向访客）、落地页 index.html 引用资产存在性（部署 stage 只做 cp 不校验引用，引用不存在的配图 = CI 绿、线上破图）；新增 `tests/test_repo_gates.py`（提取形态正负例 + 对本仓库实跑全绿的自锚定契约）。
@@ -20,6 +24,8 @@
 
 ### 变更
 
+- **skills.sh 徽章与 core 误装补救命令（双语 README）**：徽章行补 skills.sh 安装徽章（直达收录页）；core 依赖警示补具体补救命令（误单装后补跑 `npx skills add fishzjp/qa-skills --skill '*'` 或手动补拷 `core/`——此前只有抽象警示）。
+- **npm 断档清偿决策登记（RELEASING）**：v0.7.0 起的断档不再逐版补发——0.8.0 定版直接同步 npm（npm 不要求版本连续；补发缺 qa-memory 的旧版反而制造第二次断档）；新增踩坑 #9（跳版直发优于逐版补发，跳版只允许向前跳且 CHANGELOG 须登记跳过版本与理由）。
 - **安装方式重排：`npx skills add` 提为方式一（实测解锁）**：沙箱实测 `npx skills add fishzjp/qa-skills --skill '*'` 全量安装——11 个 skill + `core/` 全部就位、`../core/` 相对引用完好（core 具备自述性 SKILL.md，会被安装器发现）；单装 skill 坐实不带 core（引用断裂）。据此双语 README 与落地页把一行命令提为第一安装方式，core 依赖警示随命令就近展示；宿主数量口径按安装器实际列表由"50+"修正为"70+"；落地页安装卡同步重排（npx 主位、安装脚本次位、dsh 收敛为内联命令）。
 - **撤出 automated-e2e-testing 的 qa-memory 知识沉淀钩子**：X19 门 FAIL（纪律禁止带病合入），其余四个 skill 的钩子不受影响；e2e 侧待定向证据后再评估重新挂载。
 - **官网落地页 v2 转正**：单文件新页（暗色视觉体系 + 动效 + Space Grotesk/JetBrains Mono）替换旧版；旧版 13 张生图配图（`assets/landing/`）与运行时生图端点依赖一并移除——页面零本地图片引用，Pages 产物收敛为 index.html + og.jpg，`pages.yml` 触发路径与产物清单同步；顺带修复 `--font-display` 变量缺失导致的标题/大数字静默回退系统字体。
@@ -519,7 +525,8 @@ v2 改造：从两个 skill 升级为全生命周期 QA Agent Skills 框架。
 - 双轨产物：markmap（人执行）+ Test Case Schema（机器消费）
 - 早期迭代：test-case-writing 代码驱动增强、两层审查架构、二阶交叉覆盖
 
-[Unreleased]: https://github.com/fishzjp/qa-skills/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/fishzjp/qa-skills/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/fishzjp/qa-skills/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/fishzjp/qa-skills/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/fishzjp/qa-skills/compare/v0.5.1...v0.6.0
 [0.5.1]: https://github.com/fishzjp/qa-skills/compare/v0.5.0...v0.5.1

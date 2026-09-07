@@ -2,8 +2,8 @@
 name: core
 slug: core
 displayName: QA 共享知识库
-version: 0.7.0
-description: qa-skills 共享知识库，安装依赖单元（非触发 skill）：承载被其余 11 个 skill 以相对路径引用的方法、规则、模板与脚本（可执行性标准、证据分级、风险模型、类型决策矩阵等）。仅在 qa-skills 系列 skill 工作流中被引用读取；任何具体测试任务都不要独立触发本 skill，独立使用无意义。通过 npx skills 等安装器单独安装其他 qa-skills skill 时，必须同时安装本 skill，否则引用路径断裂。
+version: 0.8.0
+description: qa-skills shared knowledge base — dependency, NOT triggerable: executability standards, evidence grading, risk model, type matrix, templates, scripts. Never invoke standalone; always install with the skills, or references break. 共享知识库（依赖单元，非触发 skill）：承载全系列引用的方法/模板/脚本。任何测试任务不要独立触发；装其他 skill 必须连装。
 ---
 
 # qa-skills 共享知识库（core）

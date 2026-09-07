@@ -2,8 +2,8 @@
 name: qa
 slug: qa
 displayName: QA 测试流水线
-version: 0.7.0
-description: 端到端测试的唯一入口：用户说"帮我测试这个需求/功能"、"把这个功能完整测一遍"时，编排需求理解→测试策略（风险与类型决策）→用例→审查→执行→Bug 分析→回归→报告的完整流水线，产出落盘、可断点续跑。只要单阶段产出（如"帮我审一下这份用例"）→ 直接用对应阶段 skill，不用本 skill。
+version: 0.8.0
+description: End-to-end QA entry: "test this feature fully" orchestrates requirements, strategy, cases, review, execution, bugs, regression, report; resumable. Single-stage tasks use their stage skill. 端到端测试唯一入口：“帮我测试这个需求/功能”时编排需求→策略→用例→审查→执行→Bug 分析→回归→报告，落盘可续跑；单阶段诉求直接用对应阶段 skill。
 ---
 
 # QA 编排入口（qa）

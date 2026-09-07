@@ -16,6 +16,7 @@
 <p align="center">
   <a href="https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml"><img src="https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="./skills/"><img src="https://img.shields.io/badge/skills-11-blue" alt="Skills"></a>
+  <a href="https://www.skills.sh/fishzjp/qa-skills"><img src="https://img.shields.io/badge/skills.sh-npx%20skills%20add-black" alt="Install via skills.sh"></a>
   <a href="https://github.com/fishzjp/qa-skills/releases"><img src="https://img.shields.io/badge/release-gain%20matrix%20snapshot-orange" alt="Release gain matrix"></a>
   <a href="https://github.com/fishzjp/qa-skills/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
 </p>
@@ -32,7 +33,7 @@
 npx skills add fishzjp/qa-skills --skill '*'
 ```
 
-> However you install, `core/` — the shared knowledge base dependency unit (not an executable skill) — must come along: installing any single skill without core breaks the relative-path references. Option 1's `--skill '*'` full install is verified: all 11 skills + core land in place, references intact.
+> However you install, `core/` — the shared knowledge base dependency unit (not an executable skill) — must come along: installing any single skill without core breaks the relative-path references. To fix a partial install, re-run `npx skills add fishzjp/qa-skills --skill '*'` (or copy the `core/` directory manually). Option 1's `--skill '*'` full install is verified: all 11 skills + core land in place, references intact.
 
 **Option 2: the universal install script** (auto-detects agent skills directories)
 

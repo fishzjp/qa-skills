@@ -13,7 +13,18 @@
 | 3 | **dsh 插件市场**（npm 包 `dsh-qa-skills`） | npmjs.com | `npm publish` | ❌ **必须手动** |
 | 4 | 官网落地页 | GitHub Pages | push 中 `index.html`/`assets/og.jpg` 变更触发 `pages.yml` | 条件自动 |
 
-反面实例：v0.5.1 只完成了 #1，npm 侧停留在 0.5.0（v0.6.0 已于 2026-08-27 补发；**v0.7.0 为现役断档**——发布机械门 `prepublishOnly` 已加，见文末踩坑记录）。
+反面实例：v0.5.1 只完成了 #1，npm 侧停留在 0.5.0（v0.6.0 已于 2026-08-27 补发）。**断档清偿决策（2026-09-07）**：v0.7.0 起的断档不再逐版补发——0.8.0 定版时直接同步 npm（npm 不要求版本连续；补发缺 qa-memory 的旧版反而制造第二次断档），历史欠账在踩坑记录 #9 闭环。
+
+## 安装形态实测矩阵（触达安装面/引用路径的发版必登记）
+
+`npx skills add fishzjp/qa-skills` 是第三方安装器，产物形态不受我方 install.sh 把控——凡影响跨 skill 相对引用（`../core/`）的变更，发版前按此矩阵登记实测结果（含日期与命令）：
+
+| # | 宿主目录 | 安装形态 | 结果 | 凭证 |
+|---|---|---|---|---|
+| 1 | 共享目录（沙箱实测） | 整仓 `--skill '*'` | ✅ 11 skill + core 就位、`../core/` 引用完好 | 2026-09-07 营销批（7fce53f） |
+| 2 | 共享目录（沙箱实测） | 单装 `--skill qa` | ❌ 不带 core（引用断，设计内）→ README 警示随行 | 同上 |
+| 3 | Claude Code（`~/.claude/skills`，裸 HOME 沙箱） | 整仓 `--skill '*' -g -a claude-code` | ✅ 12 单元全就位、core 文档在位 | 2026-09-07 C0 批（0.8.0） |
+| 4 | 其余宿主（Cursor/Codex 等目录形态） | 整仓 | 待测（无报告前 README 只宣称方式一可用宿主数，不宣称逐宿主验证） | — |
 
 ## 版本号规则
 
@@ -139,3 +150,4 @@ npm view dsh-qa-skills version --registry "$NPM_REGISTRY"   # 复验：latest ==
 6. **pyc 编译缓存混入发包**（2026-08-27 补发实战；2026-08-28 复发修正）：发包前核对 tarball 清单，发现 `skills/core/scripts/__pycache__/*.pyc` 入包（38 files）。npm 的 `files` 白名单是目录级，兜不住运行时生成的缓存子目录；处理 = 即时删除 + 根级 `.npmignore`（排除 `__pycache__/`、`*.pyc`），并把 `npm pack --dry-run` 固化为 §3 测试关与 §5 第 4 步的固定动作。复核后 37 files 干净入站。**2026-08-28 复发**：根级 `.npmignore` 拦不住 `files` 白名单内路径（pyc 再次入包、40 files）——真正根治 = `package.json` `files` 数组加否定模式（`!skills/**/__pycache__`、`!skills/**/*.pyc`），dry-run 复核 38 files、pyc 计数 0。
 7. **npm 发布认证新政：EOTP/E403 两段墙**（2026-08-27 补发实战）：publish 必须携带第二因子，且策略因账号而异——绑定 TOTP 时报 `EOTP`（等码）；关掉 2FA 或使用未获 bypass 授权的令牌反而报 `E403`（"Two-factor authentication or granular access token with bypass 2fa enabled is required"）。另据官方公告，bypass-2fa 细粒度令牌正被限制直接发布——令牌路线是死路。正解：①账号 Two-Factor Authentication 以 Authenticator App 方式绑定（服务端 `two-factor auth: auth-and-writes` 即就绪）②发版用 `npm publish --otp=<当前6位动态码>`。实测兜底：CLI 的 `--otp` 位也接受恢复码（每条一次性消耗），验证器不在手边时可应急；恢复码已多次暴露的应整体重新生成。
 8. **push tag ≠ GitHub Release 已建**（2026-08-27 补发实战）：v0.6.0 当轮全副精力陷在 npm 认证墙（踩坑 7）里，§5 的 #4 步（Release 页）被执行悬空——tag 推上远端后被心理上当作"已发布完毕"，直到用户质疑才经 `gh release list` 发现 v0.4.0–v0.5.1 三条在列而 v0.6.0 缺席。教训：四个分发面互不等价、彼此独立可见，任一面都不会替另一面兜底；checklist 靠记忆执行必然有洞，且某一面反复排障时会挤占其余面的注意力——恰恰是洞最可能出现的位置。由此固化两条纪律：①§5 逐面执行后各写一行完成凭证（URL / 命令输出摘要），**本面确认无需动作也必须显式写下"不动的理由"**，禁止留白跳过；②§6 自证须包含 `gh release list` 核对最新 tag 在列且为 Latest——这是所有"以为发了实际没发"类断档的统一兜底探针。
+9. **版本断档的清偿方式：跳版直发优于逐版补发**（2026-09-07 定版决策）：v0.7.0 起积压多个未发版内容（qa-memory 合入 + 两轮审查批 + 营销批 + C0 描述双语）时，逐版补发会让 npm 先收到缺 qa-memory 的旧版、再立刻被新版覆盖——两次发布零收益。npm 不要求版本连续，正确清偿 = 最新内容定版一次发布（0.8.0），tag 跳号在 CHANGELOG compare 链里自明。反面约束：跳版只允许向**前**跳（npm latest 必须始终 ≥ git 最新 tag），且 CHANGELOG 定版节须显式登记跳过的版本号与理由。

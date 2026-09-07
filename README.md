@@ -16,6 +16,7 @@
 <p align="center">
   <a href="https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml"><img src="https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="./skills/"><img src="https://img.shields.io/badge/skills-11-blue" alt="Skills"></a>
+  <a href="https://www.skills.sh/fishzjp/qa-skills"><img src="https://img.shields.io/badge/skills.sh-npx%20skills%20add-black" alt="Install via skills.sh"></a>
   <a href="https://github.com/fishzjp/qa-skills/releases"><img src="https://img.shields.io/badge/release-%E5%A2%9E%E7%9B%8A%E7%9F%A9%E9%98%B5%E5%BF%AB%E7%85%A7-orange" alt="Release gain matrix"></a>
   <a href="https://github.com/fishzjp/qa-skills/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
 </p>
@@ -32,7 +33,7 @@
 npx skills add fishzjp/qa-skills --skill '*'
 ```
 
-> 无论哪种方式，`core/`（共享知识库，不是可独立触发的 skill）必须一起装——单装任何一个 skill 而不带 core，相对路径引用会断。方式一的 `--skill '*'` 全量安装已实测：11 个 skill + core 全部就位、引用完好。
+> 无论哪种方式，`core/`（共享知识库，不是可独立触发的 skill）必须一起装——单装任何一个 skill 而不带 core，相对路径引用会断；误装补救 = 补跑一次 `npx skills add fishzjp/qa-skills --skill '*'`（或手动补拷 `core/` 目录）。方式一的 `--skill '*'` 全量安装已实测：11 个 skill + core 全部就位、引用完好。
 
 **方式二：安装脚本**（自动检测宿主 skills 目录）
 

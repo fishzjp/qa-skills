@@ -2,8 +2,8 @@
 name: regression-testing
 slug: regression-testing
 displayName: 回归测试
-version: 0.7.0
-description: 代码变更（diff/Bug 修复/需求变更）后判断应回归哪些测试时使用——沿"改动文件 → 改动函数 → 受影响功能 → 受影响用例"分析链，基于用例 Schema 的追溯映射产出分级回归清单。不用于：用例文件本身的增量修改（test-case-writing）、长期回归策略（test-strategy）。
+version: 0.8.0
+description: After a code change (diff/fix/requirement change), decide what to regression-test: changed files → functions → features → cases traceability; outputs a ranked list. Not for: editing case files (test-case-writing), long-term strategy (test-strategy). 代码变更后判断回归哪些测试：沿改动分析链产出分级回归清单。不用于：用例增量修改、长期策略。
 ---
 
 # 回归测试（regression-testing）
