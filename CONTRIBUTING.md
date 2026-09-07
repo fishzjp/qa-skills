@@ -34,6 +34,7 @@
 7. **产出落盘**：skill 的阶段产物必须落盘为文件（落盘清单见各 SKILL.md 的「落盘产物」行与 `skills/qa/SKILL.md` 的流水线表），Skill 间只通过文件衔接
 8. **跟踪面白名单，与 skills 无关的内容禁止入库**：临时文件、测试数据、实验报告、开发报告、开发计划等一律不得提交（此类内容属维护者本地评测链路，`.gitignore` 已隔离 `eval/`、`tests/test_harness.py`、`.in-situ-lab/`、`docs/` 等）；仓库跟踪面为白名单制——git 跟踪的每个文件必须落在白名单内（根目录既有文件 + `skills/`、`scripts/`、`.github/`、`.dsh/`、`assets/`、`examples/`、`tests/` 前缀；`tests/` 仅放随产品脚本与守门脚本的回归测试及安装器冒烟，如 `test_product_scripts.py`、`test_repo_gates.py`、`test_memory_validator.py`、`install_smoke.sh`），由 `scripts/validate_skills.py` 红线 10 机器强制；`docs/` 整目录本地维护（规划文档与设计稿不入库）；新增合法产品路径须同步扩展脚本中的白名单常量并更新本条
 9. **知识库 schema 与门禁同源**：`qa-memory` 的条目 schema（字段 / 枚举 / 预算 / 解析规则）定义改动必须同步 `skills/qa-memory/scripts/memory_validate.py` 与 `tests/test_memory_validator.py`（规则权威文档为 `skills/qa-memory/references/entry-schemas.md`），禁止只改文档不改门禁
+10. **skills/ 下每个一级子目录必须含 SKILL.md**：skill 目录的最低合法形态（core 同样满足）；临时杂物不得放 skills/ 下——无 SKILL.md 的新目录会逃过全部 per-skill 红线，由 `scripts/validate_skills.py`（校验器 docstring 内编号 11）机器强制。注：本清单编号与校验器 docstring 的红线编号不一一对应（校验器额外含引用 / JSON / eval 等机器面条目），对外以本清单为准
 
 ## 提交前自检
 

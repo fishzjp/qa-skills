@@ -70,7 +70,7 @@ git diff --stat                                                  # 复验：每�
 
 | 触发条件 | 必做同步 |
 |----------|----------|
-| 新增 / 下线 skill 单元 | `install.sh` 的 `SKILL_DIRS` 数组；`uninstall.sh` 清单对齐；package.json description 中的 skill 计数；双语 README 结构树计数与行列排布 |
+| 新增 / 下线 skill 单元 | 安装器清单自动派生自 `skills/*/SKILL.md`（install.sh / uninstall.sh 无需改清单）；package.json description 中的 skill 计数与枚举；双语 README 结构树计数与行列排布；`tests/install_smoke.sh` 的单元数下限与 bug_report.yml 问题区域下拉（如适用） |
 | 新增 / 下线 core 共享文档 | 双语 README 结构树 core 行的文档枚举；涉及指纹文件的更名需同改 `install.sh`/`uninstall.sh` 的 `owns_unit` 判据 |
 | core 文档在触发措辞上影响其他 skill | 相互指向的 description / When NOT to Use 同步修订 |
 
@@ -109,6 +109,8 @@ git push origin main
 git push origin v0.7.0                         # 禁止 --tags：会重推全部历史 tag，已被拒项制造噪音报错
 
 # 4) 推送 #3 npm 插件市场（手动强制项！）
+# 前置：本机已装 python3 + PyYAML——prepublishOnly 会在 publish 前强制跑两道校验器，
+# 缺依赖直接卡发版（设计行为，防"绕过门禁发版"；pip install pyyaml 即解）
 NPM_REGISTRY="https://registry.npmjs.org"    # 本机默认源可能是 npmmirror 只读镜像（踩坑 5），一律显式官方源
 npm whoami --registry "$NPM_REGISTRY"        # 未登录先：npm login --registry "$NPM_REGISTRY" --auth-type=web
 npm view dsh-qa-skills version --registry "$NPM_REGISTRY"   # 预检：latest ≠ 本次版本（既防重发、也暴露断档）

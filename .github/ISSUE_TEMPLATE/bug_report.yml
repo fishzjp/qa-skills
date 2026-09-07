@@ -8,6 +8,7 @@ body:
       label: 问题区域
       options:
         - qa（编排）
+        - qa-memory（项目知识库）
         - test-case-writing / test-case-review（用例）
         - test-strategy / requirement-analysis（策略与需求）
         - automated-e2e-testing / api-testing（执行）

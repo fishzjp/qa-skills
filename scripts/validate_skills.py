@@ -35,7 +35,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _gate_common import extract_local_refs, find_git  # noqa: E402
+from _gate_common import extract_local_refs, find_git, visible_lines  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
 SKILLS_ROOT = REPO / "skills"   # 产品本体（11 个 skill + core/ 共享库）统一在此
@@ -174,9 +174,12 @@ def check_target(md_path, ref, errors, line_no=None):
 
 
 def check_references(md_path, errors):
-    """反引号引用（前缀形态全库 skills/**/*.md + 裸相对形态仅 core），报错带行号。"""
+    """反引号引用（前缀形态全库 skills/**/*.md + 裸相对形态仅 core），报错带行号。
+
+    fenced code block 内的示例写法不在校验范围（与 docstring 口径一致）。
+    """
     in_core = md_path.resolve().is_relative_to((SKILLS_ROOT / "core").resolve())
-    for i, line in enumerate(md_path.read_text(encoding="utf-8").splitlines(), 1):
+    for i, line in visible_lines(md_path.read_text(encoding="utf-8")):
         for m in REF_PATTERN.finditer(line):
             check_target(md_path, m.group(1), errors, i)
         if in_core:

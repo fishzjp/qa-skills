@@ -41,7 +41,7 @@ description: 需求不完整、系统陌生、文档不足时，发起以理解�
 - 入口与导航路径 / 角色与权限 / 核心流程 / 数据流向 / 状态与流转
 
 ## 风险清单（每条带证据标注，此时加载 `../core/evidence.md`）
-- R?：{风险描述}｜evidence: {E0–E4 + 来源}｜confidence: {high/medium/low}｜status: {fact / inference / risk / hypothesis}
+- R?：{风险描述}｜level: {Critical/High/Medium/Low，按 `../core/risk-model.md` 的 Impact × Likelihood 预评}｜evidence: {E0–E4 + 来源}｜confidence: {high/medium/low}｜status: {fact / inference / risk / hypothesis}
   （R? 为会话内临时编号；移交 `test-strategy` 时并入其 Risk Map 统一重编为 R1…，探索笔记原文编号不保留）
 
 ## 测试想法（后续转化为正式用例的候选）

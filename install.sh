@@ -17,7 +17,9 @@
 # 卸载：./uninstall.sh --target <目录>（或 --auto 自动选择检测到的安装目录）
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# pwd -P 取物理路径：仓库经 symlink 别名访问时逻辑路径与目标解析结果会分叉
+# （macOS /tmp→/private/tmp 即系统级实例），防自毁守卫依赖两侧同一套路径口径
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 
 # 安装单元单一真相源：skills/ 下凡含 SKILL.md 的目录即安装单元（含 core/）——
 # 新增 / 下线 skill 不需要改本脚本与 uninstall.sh 的清单，消除"改一处漏一处"的失败模式

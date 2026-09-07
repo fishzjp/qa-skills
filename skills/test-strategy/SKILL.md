@@ -98,7 +98,7 @@ test_strategy:
 ### 5. 深度校准与预算排序（此时执行矩阵第 13 节 R1–R6）
 
 - 升降档按 R1–R6（风险升档 / 双源信号 / 历史缺陷 / 无信号降档 / 成本门 / 预算约束）
-- **R6 > R1**：full（两域合并）> 3 时按风险排序裁剪；被裁剪的 Critical 轴触发 **⏸ 预算裁决检查点**——呈现排序与裁剪影响，用户可扩预算（扩预算时 depth_budget 记 `budget_review: {approved_by: 用户}`）
+- **R6 > R1**：full（两域合并）> 3 时按风险排序裁剪；被裁剪的 Critical 轴触发 **⏸ 预算裁决检查点**——呈现排序与裁剪影响，用户可扩预算（扩预算时 depth_budget 记 `budget_review: {approved_by: 用户}`）。**headless 下**（pipeline-integration 约定一第 4 条）：如实记 `budget_review: {headless 未决: 保守裁剪, 依据: …}`——不得写成用户已批准；人工回流后在原行补 `approved_by: 用户`
 - **depth 与 execution_status 分离**：环境 / 数据 / 工具缺位 → depth 不降，记 `blocked` + `todo`（向谁索取什么）——"做不了"不得冒充"不用测"
 
 ### 6. 自动化计划提案（⏸ 提案，不裁决）

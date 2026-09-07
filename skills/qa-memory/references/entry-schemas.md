@@ -46,7 +46,7 @@
 | `summary` | ✓ | 非空，≤60 字，一句话结论；禁止竖线 `|` |
 | `keywords` | ✓ | 3–8 个非空元素，优先专有名词 |
 | `related` |  | 列表；每个元素必须是 `.qa/` 内真实存在的条目标题（精确匹配） |
-| `verified` |  | 最后一次现场核验的 ISO 日期或 commit 哈希（7–40 位十六进制）；staleness 锚点，读取时落后当前 HEAD 过多按 tentative 对待 |
+| `verified` |  | 最后一次现场核验的 ISO 日期或 commit 哈希（7–40 位**小写**十六进制，与门禁 `COMMIT_RE` 口径一致）；staleness 锚点，读取时落后当前 HEAD 过多按 tentative 对待 |
 | `evidence` |  | **defect 与 contract 类必填非空**：PR 链接 / commit / 落盘产物路径（证据可回查） |
 | `gt-failure-mode` |  | `""` \| `澄清缺失` \| `边界遗漏` \| `状态遗漏` \| `断言强度不足`（评测飞轮对齐字段） |
 
@@ -75,7 +75,7 @@ type: flaky
 status: active
 created: 2026-09-05
 updated: 2026-09-05
-source: automated-e2e-testing@2026-09-05
+source: bug-analysis@2026-09-05
 confidence: tentative
 summary: 支付 WS 网关超时致用例假失败，重试需带幂等头
 keywords: [checkout, websocket, 超时]

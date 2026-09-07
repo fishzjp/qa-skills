@@ -249,7 +249,7 @@ skills/                  产品本体（11 个 skill + core 共享知识库）
   test-case-review/      automated-e2e-testing/  api-testing/
   exploratory-testing/   bug-analysis/  regression-testing/  qa-memory/
 .dsh/                    dsh 插件三件套（清单见 package.json 的 dsh.bundle）
-assets/                  视觉资产（README 头图 hero、分享图 og.jpg、社交预览图 social-preview）
+assets/                  视觉资产（README 头图 hero、分享图 og.jpg、社交预览图 social-preview）+ 落地页自托管字体 fonts/
 examples/                Skill On / Off 产出对照
 scripts/                 守门脚本（validate_skills.py 架构红线 + validate_repo.py 仓库面守门）
 tests/                   回归测试与安装器冒烟（test_product_scripts / test_memory_validator /

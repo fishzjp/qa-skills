@@ -249,7 +249,7 @@ skills/        the product (11 skills + shared core/)
   automated-e2e-testing/  api-testing/  exploratory-testing/  bug-analysis/  regression-testing/
   qa-memory/
 .dsh/          dsh plugin trio (manifest in package.json's dsh.bundle)
-assets/        visual assets (README hero images, share image og.jpg, social preview)
+assets/        visual assets (README hero images, share image og.jpg, social preview) + landing-page self-hosted fonts in fonts/
 examples/      Skill On/Off output comparison
 scripts/       gate scripts (validate_skills.py architecture red lines + validate_repo.py repo-level gate)
 tests/         regression tests & installer smoke (test_product_scripts / test_memory_validator /

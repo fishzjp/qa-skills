@@ -6,7 +6,7 @@ name: pages
 on:
   push:
     branches: [main]
-    paths: ['index.html', 'assets/og.jpg', '.github/workflows/pages.yml']
+    paths: ['index.html', 'assets/og.jpg', 'assets/fonts/**', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:
@@ -48,6 +48,9 @@ jobs:
           # og:image 的绝对 URL 指向站点根的 og.jpg（历史已流通，不可变更）；
           # 仓库内归位 assets/og.jpg，部署时重命名回站点根，分享图 URL 保持不变
           cp assets/og.jpg _site/og.jpg
+          # 展示字体自托管（Space Grotesk 变量 latin 子集，页面 @font-face 引用）
+          mkdir -p _site/assets
+          cp -R assets/fonts _site/assets/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5

@@ -47,11 +47,12 @@ bench 的产出是"改哪里"，不是总分。聚合数字（如覆盖 +8.7pp�
 
 ## 门禁入口（维护者本地 ≠ CI）
 
-CI 与贡献者入口（CONTRIBUTING 自检）只覆盖已跟踪面：`unittest discover tests -p "test_*.py"`（74 例）
+CI 与贡献者入口（CONTRIBUTING 自检）只覆盖已跟踪面：`unittest discover tests -p "test_*.py"`
 + 两个校验器 + 安装器冒烟。`tests/test_harness.py`（harness 单测，随 eval/ 本地维护、gitignore）
-**只能用 pytest 跑**：`python3 -m pytest tests/ -q`（145 例，含上述 74）。改 skill / 加 skill 后
-本地合入前必须跑 pytest 口径——2026-09-07 审查教训：qa-memory 合入使 harness 断言红了一次，
-unittest 入口永远看不到它，红灯静默 9 天。
+**只能用 pytest 跑**：`python3 -m pytest tests/ -q`（收集面 = 上述已跟踪用例 + harness 全部用例）。
+改 skill / 加 skill 后本地合入前必须跑 pytest 口径——用例数一律以实际收集数为准、不写进文档
+（2026-09-07 审查教训：qa-memory 合入使 harness 断言红了一次，unittest 入口永远看不到它，
+红灯静默 9 天；同批 AGENTS 写死的用例计数在加测试的同一个提交里就过期了）。
 
 ## 报告与对外发布的定位
 

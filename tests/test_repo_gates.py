@@ -36,6 +36,18 @@ class LocalTargetExtractionTests(unittest.TestCase):
         paths = [p for _, _, p in validate_repo.extract_local_refs(text)]
         self.assertIn("./docs/manual.md", paths)
 
+    def test_fenced_block_and_footnote_skipped(self):
+        # 围栏内示例与脚注定义是两类实证误报源（2026-09-07 二轮审查），必须跳过
+        text = ('```md\n[manual]: ./docs/fenced.md\n[link](./fenced-link.md)\n```\n'
+                '[^1]: note\n[ok]: ./docs/real.md\n')
+        paths = [p for _, _, p in validate_repo.extract_local_refs(text)]
+        self.assertEqual(paths, ["./docs/real.md"])
+
+    def test_reference_def_with_title_and_image_prefix(self):
+        text = '![logo]: ./img.png "Logo"\n[with-title]: ./docs/a.md "标题"\n'
+        paths = [p for _, _, p in validate_repo.extract_local_refs(text)]
+        self.assertEqual(paths, ["./img.png", "./docs/a.md"])
+
     def test_line_numbers_accurate(self):
         text = 'line1\n\n[x](./a.md)\n[y](./missing.md)\n'
         rows = validate_repo.extract_local_refs(text)

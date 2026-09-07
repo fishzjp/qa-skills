@@ -9,13 +9,27 @@
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="qa-skills">
 <meta property="og:title" content="qa-skills — 让测试工程，成为 AI 的本能">
-<meta property="og:description" content="面向 AI Agent 的测试工程 Skill 框架。装进 Claude Code 等 AI 编程助手，AI 就能按资深测试工程师的方式工作：理解需求、排风险、写用例、跑自动化、出报告。">
+<meta property="og:description" content="qa-skills 是面向 AI Agent 的测试工程 Skill 框架。装进 Claude Code 等 AI 编程助手，AI 就能按资深测试工程师的方式工作：理解需求、排风险、写用例、跑自动化、定位缺陷、出报告。">
 <meta property="og:url" content="https://fishzjp.github.io/qa-skills/">
+<link rel="canonical" href="https://fishzjp.github.io/qa-skills/">
 <meta property="og:image" content="https://fishzjp.github.io/qa-skills/og.jpg">
+<meta property="og:image:width" content="2560">
+<meta property="og:image:height" content="1440">
+<meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:alt" content="qa-skills — Testing skills for AI coding agents">
 <meta property="og:locale" content="zh_CN">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://fishzjp.github.io/qa-skills/og.jpg">
+<link rel="preload" href="assets/fonts/space-grotesk-var-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+  /* ============ 展示字体自托管（零外链策略：woff2 与页面同源部署） ============ */
+  @font-face {
+    font-family: "Space Grotesk";
+    src: url("assets/fonts/space-grotesk-var-latin.woff2") format("woff2");
+    font-weight: 300 700;          /* 变量字体：覆盖 300–700 全轴（650/600 在此范围内） */
+    font-display: swap;            /* 加载期间先以系统字体呈现，不白屏 */
+    unicode-range: U+0000-00FF;    /* 仅拉丁/数字字形；中文自动走系统栈 */
+  }
   /* ============ 设计变量（深色开发者风） ============ */
   :root {
     /* 品牌强调色：蓝 → 紫渐变，仅在关键处使用 */
@@ -32,7 +46,7 @@
     --border-strong: rgba(255, 255, 255, 0.16);
     --text: #f0f0f4;
     --text-2: #a4a4b0;
-    --text-3: #6f6f7a;
+    --text-3: #8a8a96;   /* 对 --bg 对比度 ≈5.9:1（AA）；此前 4.08:1 不达小字正文标准 */
 
     /* 语义色 */
     --green: #32d74b;
@@ -57,9 +71,9 @@
     --section-head-gap: 72px;
 
     /* 等宽字体栈 */
-    --mono: "SF Mono", ui-monospace, "JetBrains Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    --mono: "SF Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
 
-    /* 展示字体栈：标题与大数字的拉丁/数字字形走 Space Grotesk，中文自动回落苹方/雅黑 */
+    /* 展示字体栈：标题与大数字的拉丁/数字字形走自托管 Space Grotesk（见 @font-face），中文自动回落苹方/雅黑 */
     --font-display: "Space Grotesk", -apple-system, BlinkMacSystemFont, "SF Pro Display",
                     "PingFang SC", "Microsoft YaHei", sans-serif;
   }
@@ -776,7 +790,7 @@
     align-items: center;
   }
   .duo.rev .duo-media { order: 2; }
-  .duo-text h3 {
+  .duo-text h2 {
     font-size: clamp(26px, 3.6vw, 40px);
     font-weight: 650;
     letter-spacing: -0.02em;
@@ -953,7 +967,7 @@
     background: rgba(50, 215, 75, 0.08);
     border: 1px solid rgba(50, 215, 75, 0.22);
   }
-  .compare-card h4 {
+  .compare-card h3 {
     font-size: 21px;
     font-weight: 600;
     letter-spacing: -0.012em;
@@ -1103,7 +1117,7 @@
     font-size: 11.5px;
     color: var(--text-3);
   }
-  .card h4 {
+  .card h3 {
     font-size: 19px;
     font-weight: 600;
     letter-spacing: -0.01em;
@@ -1179,7 +1193,7 @@
     -webkit-background-clip: text;
     background-clip: text;
   }
-  .stat h5 {
+  .stat h3 {
     margin-top: 16px;
     font-size: 16px;
     font-weight: 600;
@@ -1236,7 +1250,7 @@
   @media (max-width: 860px) {
     .human-in-loop { grid-template-columns: 1fr; padding: 34px; gap: 40px; }
   }
-  .human-in-loop h4 {
+  .human-in-loop h3 {
     font-size: clamp(23px, 3vw, 30px);
     font-weight: 650;
     letter-spacing: -0.018em;
@@ -1323,7 +1337,7 @@
     color: var(--blue);
     margin-bottom: 16px;
   }
-  .install-card h4 {
+  .install-card h3 {
     font-size: 21px;
     font-weight: 600;
     letter-spacing: -0.012em;
@@ -1479,6 +1493,8 @@
     .reveal { opacity: 1; transform: none; transition: none; }
     html { scroll-behavior: auto; }
     .hero::before,
+    .hero::after,
+    .hero .reveal.in,
     .window-bar .win-live::before,
     .pl-item.running .st,
     .chat-bubble .cursor { animation: none; }
@@ -1505,11 +1521,6 @@
   }
   /* 统计数字：微弱紫晕，呼应流光边框 */
   .stat .num { filter: drop-shadow(0 0 26px rgba(139, 124, 255, 0.22)); }
-  /* 减少动态效果偏好：关掉氛围动画，保留静态光 */
-  @media (prefers-reduced-motion: reduce) {
-    .hero::before { animation: none; }
-    .chat-bubble .cursor { animation: none; }
-  }
 
   /* ============ 移动端适配补充：所有规则只收窄屏，桌面样式零改动 ============ */
   /* 导图可平移时（fitMindmap 标记 .is-pannable）两端 24px 渐隐，
@@ -1535,11 +1546,15 @@
     .hero-cta .btn { justify-content: center; }
   }
 </style>
+<noscript>
+  <!-- 滚动渐入依赖 JS 加 .in；无 JS 环境直接呈现全部内容 -->
+  <style>.reveal { opacity: 1; transform: none; }</style>
+</noscript>
 </head>
 <body>
 
 <!-- ============ 导航栏 ============ -->
-<nav class="scrolled">
+<nav>
   <div class="container">
     <a class="nav-logo" href="#top">
       <span class="mark" aria-hidden="true" style="position: relative;">
@@ -1637,9 +1652,9 @@
 <section class="section" id="why">
   <div class="container">
     <div class="duo">
-      <div class="duo-text reveal in">
+      <div class="duo-text reveal">
         <div class="kicker">01 · Why</div>
-        <h3>软件发布之前，<br>总得有人先把住质量关</h3>
+        <h2>软件发布之前，<br>总得有人先把住质量关</h2>
         <p>
           每一款软件上线前，都要回答成百上千个「如果」：
           并发下单会不会超卖？优惠券到期会不会自动失效？接口异常时数据会不会错乱？
@@ -1650,7 +1665,7 @@
         </p>
         <p><strong>qa-skills 做的，就是让 AI 助手学会这套本事。</strong></p>
       </div>
-      <div class="duo-media reveal d1 in">
+      <div class="duo-media reveal d1">
         <div class="glass-card file-tree" aria-hidden="true">
           <div class="ft-title">上线前要回答的问题</div>
           <div><span class="dir">并发下单</span> <span class="indent">···</span> 高峰期会不会超卖？</div>
@@ -1667,7 +1682,7 @@
 <!-- ============ 02 PROBLEM：能写不等于能执行 ============ -->
 <section class="section" id="problem">
   <div class="container">
-    <div class="section-head reveal in">
+    <div class="section-head reveal">
       <div class="kicker">02 · Problem</div>
       <h2>能写，更要能执行。</h2>
       <p>
@@ -1677,12 +1692,12 @@
       </p>
     </div>
     <div class="compare">
-      <div class="glass-card compare-card reveal in">
+      <div class="glass-card compare-card reveal">
         <div class="card-top">
           <span class="card-tag tag-bad">✗ 无 Skill 的模型产出</span>
           <span class="card-idx">CASE-001</span>
         </div>
-        <h4>判定模糊，无法执行</h4>
+        <h3>判定模糊，无法执行</h3>
         <p class="lead">预期结果不可判定，等于没有验证：</p>
         <div class="quote-box quote-bad">
           「检查优惠券功能<em>是否正常</em>」<br>
@@ -1690,12 +1705,12 @@
         </div>
         <p class="quote-verdict"><strong>判定不了的用例，</strong>覆盖再全也计零分。</p>
       </div>
-      <div class="glass-card compare-card reveal d1 in">
+      <div class="glass-card compare-card reveal d1">
         <div class="card-top">
           <span class="card-tag tag-good">✓ qa-skills 的真实产出</span>
           <span class="card-idx">TC-03-05</span>
         </div>
-        <h4>步骤精确，判定可量化</h4>
+        <h3>步骤精确，判定可量化</h3>
         <p class="lead">前置、步骤、预期、时限，四要素齐备：</p>
         <div class="quote-box quote-good">
           「选一张 <em>10 分钟后到期</em> 的已发布优惠券，等待到期。<br>
@@ -1705,7 +1720,7 @@
         <p class="quote-verdict"><strong>任何测试人员拿到就能执行，</strong>不用讲解。</p>
       </div>
     </div>
-    <p class="compare-note reveal in">
+    <p class="compare-note reveal">
       产出标准只有一条：<br>
       任何一个没接触过这个需求的人，拿到文件就能直接执行。
       <small>背后是 8 条可执行性硬标准，评测中一票否决。</small>
@@ -1716,7 +1731,7 @@
 <!-- ============ 03 WHAT：它是什么 ============ -->
 <section class="section" id="what">
   <div class="container">
-    <div class="section-head reveal in">
+    <div class="section-head reveal">
       <div class="kicker">03 · What</div>
       <h2>不是软件，<br>是一套装进 AI 的工作方法。</h2>
       <p>
@@ -1724,7 +1739,7 @@
         放对目录就能生效。
       </p>
     </div>
-    <div class="mount-diagram reveal in">
+    <div class="mount-diagram reveal">
       <div class="glass-card file-tree">
         <div class="ft-title">qa-skills/ · Markdown 指令</div>
         <div><span class="dir">skills/</span></div>
@@ -1732,7 +1747,7 @@
         <div class="indent">├─ <span class="file hot">test-strategy/</span></div>
         <div class="indent">├─ <span class="file hot">test-case-writing/</span></div>
         <div class="indent">├─ <span class="file hot">automated-e2e-testing/</span></div>
-        <div class="indent">├─ <span class="file">bug-analysis/ · regression/ …</span></div>
+        <div class="indent">├─ <span class="file">bug-analysis/ · regression-testing/ …</span></div>
         <div><span class="dir">core/</span> <span class="file"><em>共享知识库 · 8 条硬标准</em></span></div>
       </div>
       <!-- 装载连接线：细线 + 竖排小字由 CSS 绘制（.mount-arrow 及其伪元素） -->
@@ -1747,19 +1762,19 @@
       </div>
     </div>
     <div class="cards" style="margin-top:72px">
-      <div class="glass-card card reveal in">
+      <div class="glass-card card reveal">
         <div class="card-top"><span class="card-kicker">modular</span><span class="card-idx">01</span></div>
-        <h4>11 个 QA Skill + 共享知识库</h4>
+        <h3>11 个 QA Skill + 共享知识库</h3>
         <p>需求分析、策略、用例、评审、执行、缺陷、回归，每个环节一个专属 Skill，按需加载。</p>
       </div>
-      <div class="glass-card card reveal d1 in">
+      <div class="glass-card card reveal d1">
         <div class="card-top"><span class="card-kicker">file-based</span><span class="card-idx">02</span></div>
-        <h4>一条自动接力的流水线</h4>
+        <h3>一条自动接力的流水线</h3>
         <p>每个阶段的产出都写成文件，不靠对话记忆。中断了，新开一个对话接着跑。</p>
       </div>
-      <div class="glass-card card reveal d2 in" style="--mx: 329.921875px; --my: 123.8125px;">
+      <div class="glass-card card reveal d2">
         <div class="card-top"><span class="card-kicker">human-gated</span><span class="card-idx">03</span></div>
-        <h4>关键决定，由你拍板</h4>
+        <h3>关键决定，由你拍板</h3>
         <p>需求没写清的，先问你；Bug 怎么定性、预算设多少，AI 助手只提案、不代答。你的裁决会记录在案，后续不得推翻。</p>
       </div>
     </div>
@@ -1769,7 +1784,7 @@
 <!-- ============ 第四章：怎么工作（纯代码流水线，无位图） ============ -->
 <section class="section" id="how">
   <div class="container">
-    <div class="section-head reveal in">
+    <div class="section-head reveal">
       <div class="kicker">04 · How</div>
       <h2>一句指令，从需求到报告。</h2>
       <p>
@@ -1777,13 +1792,13 @@
       </p>
     </div>
     <div class="steps">
-      <div class="step reveal in"><div class="dot">1</div><p>需求分析</p><small>不懂就先问</small></div>
-      <div class="step reveal d1 in"><div class="dot">2</div><p>测试策略</p><small>锁定高危区域</small></div>
-      <div class="step reveal d1 in"><div class="dot">3</div><p>用例设计</p><small>人和机器都能读</small></div>
-      <div class="step reveal d2 in"><div class="dot">4</div><p>用例评审</p><small>再挑一遍错</small></div>
-      <div class="step reveal d2 in"><div class="dot">5</div><p>自动执行</p><small>浏览器 + 接口</small></div>
-      <div class="step reveal d3 in"><div class="dot">6</div><p>缺陷分析</p><small>追到出错代码</small></div>
-      <div class="step reveal d3 in"><div class="dot">7</div><p>回归 + 报告</p><small>证据齐全</small></div>
+      <div class="step reveal"><div class="dot">1</div><p>需求分析</p><small>不懂就先问</small></div>
+      <div class="step reveal d1"><div class="dot">2</div><p>测试策略</p><small>锁定高危区域</small></div>
+      <div class="step reveal d1"><div class="dot">3</div><p>用例设计</p><small>人和机器都能读</small></div>
+      <div class="step reveal d2"><div class="dot">4</div><p>用例评审</p><small>再挑一遍错</small></div>
+      <div class="step reveal d2"><div class="dot">5</div><p>自动执行</p><small>浏览器 + 接口</small></div>
+      <div class="step reveal d3"><div class="dot">6</div><p>缺陷分析</p><small>追到出错代码</small></div>
+      <div class="step reveal d3"><div class="dot">7</div><p>回归 + 报告</p><small>证据齐全</small></div>
     </div>
   </div>
 </section>
@@ -1791,40 +1806,40 @@
 <!-- ============ 第五章：六大能力（无位图卡片） ============ -->
 <section class="section" id="skills">
   <div class="container">
-    <div class="section-head reveal in">
+    <div class="section-head reveal">
       <div class="kicker">05 · Skills</div>
       <h2>从用例到回归，<br>每道工序都有对应的 Skill。</h2>
       <p>每个 Skill 单独可用，也能串成完整流水线。需要哪一段，就用哪一段。</p>
     </div>
     <div class="cards">
-      <div class="glass-card card reveal in">
+      <div class="glass-card card reveal">
         <div class="card-top"><span class="card-kicker">test-case-writing</span><span class="card-idx">01</span></div>
-        <h4>用例设计</h4>
+        <h3>用例设计</h3>
         <p>代码优先：先读实现、审出潜在缺陷，再落笔。产出两份，markmap 脑图给人读，schema.yaml 给机器校验。</p>
       </div>
-      <div class="glass-card card reveal d1 in">
+      <div class="glass-card card reveal d1">
         <div class="card-top"><span class="card-kicker">test-strategy</span><span class="card-idx">02</span></div>
-        <h4>测试策略</h4>
+        <h3>测试策略</h3>
         <p>风险评级必须给出证据；性能、安全、并发等十个类型，逐一决定测还是不测，每个决定都留下记录。说不清依据的策略，等于没有策略。</p>
       </div>
-      <div class="glass-card card reveal d2 in">
+      <div class="glass-card card reveal d2">
         <div class="card-top"><span class="card-kicker">test-case-review</span><span class="card-idx">03</span></div>
-        <h4>用例评审</h4>
+        <h3>用例评审</h3>
         <p>把所有能测的点列全，作为基准逐条复审：覆盖够不够、能不能执行，直接修订文件并留下审查记录。</p>
       </div>
-      <div class="glass-card card reveal in">
+      <div class="glass-card card reveal">
         <div class="card-top"><span class="card-kicker">automated-e2e · api-testing</span><span class="card-idx">04</span></div>
-        <h4>自动化执行</h4>
+        <h3>自动化执行</h3>
         <p>用例转成可运行的 Playwright / pytest 代码：按 Page Object 规范组织，测试数据自己造、跑完自己清。</p>
       </div>
-      <div class="glass-card card reveal d1 in">
+      <div class="glass-card card reveal d1">
         <div class="card-top"><span class="card-kicker">bug-analysis</span><span class="card-idx">05</span></div>
-        <h4>缺陷分析</h4>
+        <h3>缺陷分析</h3>
         <p>先复现，再读代码定位到出错的那一行，然后分析影响面、给出回归建议。产出的 Bug 条目带根因、带证据。</p>
       </div>
-      <div class="glass-card card reveal d2 in">
+      <div class="glass-card card reveal d2">
         <div class="card-top"><span class="card-kicker">regression-testing</span><span class="card-idx">06</span></div>
-        <h4>回归测试</h4>
+        <h3>回归测试</h3>
         <p>从代码改动推算波及范围，生成回归清单。防止修一个、坏三个。</p>
       </div>
     </div>
@@ -1834,44 +1849,44 @@
 <!-- ============ 第六章：实测效果（光晕数字区） ============ -->
 <section class="section section-dark-wrap" id="proof">
   <div class="container">
-    <div class="section-head reveal in">
+    <div class="section-head reveal">
       <div class="kicker">06 · Proof</div>
       <h2>每一个数字，都来自实测。</h2>
       <p>同一批任务，同一个模型，唯一差异是装没装 qa-skills。<br>数字如实披露，包括不好看的那些。</p>
     </div>
     <div class="stats">
-      <div class="glass-card stat reveal in" style="--mx: 77.3515625px; --my: 208.03125px;">
+      <div class="glass-card stat reveal">
         <div class="num"><span data-count="98">98</span>%</div>
-        <h5>用例合格率</h5>
+        <h3>用例合格率</h3>
         <p>格式与内容逐条核对</p>
         <span class="delta">不装时 26%</span>
       </div>
-      <div class="glass-card stat reveal d1 in" style="--mx: 75.359375px; --my: 212.421875px;">
+      <div class="glass-card stat reveal d1">
         <div class="num"><span data-count="75">75</span>%</div>
-        <h5>植入缺陷检出率</h5>
+        <h3>植入缺陷检出率</h3>
         <p>代码审查任务实测</p>
         <span class="delta">换一套裁判评：100%</span>
       </div>
-      <div class="glass-card stat reveal d2 in" style="--mx: 164.0859375px; --my: 81.984375px;">
+      <div class="glass-card stat reveal d2">
         <div class="num" style="position: relative;"><span data-count="7">7</span><sub>/ 9</sub></div>
-        <h5>E2E 用例真实执行通过</h5>
+        <h3>E2E 用例真实执行通过</h3>
         <p>单任务×3 采样真浏览器实测</p>
         <span class="delta">不装时 0/9</span>
       </div>
-      <div class="glass-card stat reveal d3 in" style="--mx: 233.3671875px; --my: 91.859375px;">
+      <div class="glass-card stat reveal d3">
         <div class="num">0.<span data-count="88">88</span></div>
-        <h5>类型查全率</h5>
+        <h3>类型查全率</h3>
         <p>最弱模型上实测</p>
         <span class="delta">不装时为 0</span>
       </div>
     </div>
-    <p class="fine-print reveal in">
+    <p class="fine-print reveal">
       Token 成本约 3.3 倍。覆盖提升：写用例 <span class="nb">+8.7pp</span>、<span class="nb">全任务 +13.2pp</span>、找缺陷 <span class="nb">+9.7pp</span>。
       完整数据见 README，里程碑版 Release 附跨模型增益矩阵快照。
     </p>
-    <div class="human-in-loop glass-card reveal in">
+    <div class="human-in-loop glass-card reveal">
       <div>
-        <h4>它知道，什么该由你决定。</h4>
+        <h3>它知道，什么该由你决定。</h3>
         <p>
           需求有歧义，先澄清；执行走人工还是自动化，你选；
           Bug 怎么定性、预算上限设多少，你说了算。
@@ -1899,20 +1914,20 @@
 <!-- ============ 第七章：安装 ============ -->
 <section class="section" id="install">
   <div class="container">
-    <div class="section-head reveal in">
+    <div class="section-head reveal">
       <div class="kicker">07 · Install</div>
       <h2>两步接入你的 AI 助手</h2>
       <p>不需要账号，不需要订阅。两条命令，一句话。</p>
     </div>
     <div class="install-grid">
-      <div class="glass-card install-card reveal in">
+      <div class="glass-card install-card reveal">
         <div class="step-no">01</div>
-        <h4>把 Skill 装进 AI 编程助手</h4>
+        <h3>把 Skill 装进 AI 编程助手</h3>
         <p>终端里执行（macOS / Linux），也可以按 README 手动复制文件：</p>
         <div class="terminal">
           <div class="terminal-bar"><i></i><i></i><i></i><button class="copy-btn" type="button">复制</button></div>
           <pre><span class="dollar">$</span> git clone https://github.com/fishzjp/qa-skills.git
-<span class="dollar">$</span> cd qa-skills <span class="">&amp;&amp;</span> ./install.sh
+<span class="dollar">$</span> cd qa-skills <span>&amp;&amp;</span> ./install.sh
 <span class="cm"># 选择装到哪个助手，或 ./install.sh --auto 全自动</span></pre>
         </div>
         <p style="margin-top:24px">用 <span class="nb">DeepSeek Harness</span>（dsh）？插件已上架 npm，一条命令装好：</p>
@@ -1921,9 +1936,9 @@
           <pre><span class="dollar">$</span> dsh plugin --profile web add dsh-qa-skills</pre>
         </div>
       </div>
-      <div class="glass-card install-card reveal d1 in">
+      <div class="glass-card install-card reveal d1">
         <div class="step-no">02</div>
-        <h4>对 AI 助手说一句话</h4>
+        <h3>对 AI 助手说一句话</h3>
         <p>像给测试同事派活一样：</p>
         <div class="chat-bubble">
           <div class="who">你，对 AI 助手说</div>
@@ -1995,6 +2010,13 @@
    * 监听统计卡片：首次进入视口时触发内部全部 data-count 滚动（每卡只一次）
    */
   function initCountUp() {
+    // 减少动态效果偏好：不播滚动，直接呈现终值（数字是承诺，必须可读而非可看动画）
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelectorAll('[data-count]').forEach(function (el) {
+        el.textContent = el.dataset.count;
+      });
+      return;
+    }
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (entry) {
         if (entry.isIntersecting) {
@@ -2044,20 +2066,6 @@
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(text).then(done).catch(function () {});
         }
-      });
-    });
-  }
-
-  /**
-   * 外链跳转兜底：预览沙箱等环境禁用弹窗时（window.open 返回 null），
-   * 退化为当前标签页直接导航，保证点击始终有跳转反应
-   */
-  function initExternalLinks() {
-    document.querySelectorAll('a[target="_blank"]').forEach(function (a) {
-      a.addEventListener('click', function (e) {
-        e.preventDefault();
-        var win = window.open(a.href, '_blank', 'noopener');
-        if (!win) location.href = a.href; // 弹窗被宿主拦截：当前页跳转
       });
     });
   }
@@ -2190,7 +2198,6 @@
   initNavElevation();
   initCardSpotlight();
   initCopyButtons();
-  initExternalLinks();
   initMindmap();
 </script>
 

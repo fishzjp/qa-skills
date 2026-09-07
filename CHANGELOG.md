@@ -34,6 +34,18 @@
 
 ### 修复
 
+- **第二轮全项目审查修复批（2026-09-07，方法论深审 / 落地页质量 / 仓库机体 / 修复批 meta-review）**：
+  - **安装器自毁守卫补完（上批修复的半成品收尾）**：`REPO_ROOT`/`SRC_ROOT` 改用 `pwd -P` 物理路径——上批只改了 TARGET 侧，仓库经 symlink 别名访问时守卫两侧路径口径分叉仍可绕过（实测干跑坐实）；安装器冒烟新增"别名路径把安装目标指回仓库 skills/"单元；uninstall 的动态清单补空守卫（skills/ 缺失时此前静默只删 VERSION 就报成功）。
+  - **headless 第二形态闭环（skills 产品本轮最重要修复）**：未决项落盘两处"统一"口径矛盾消除（qa 编排说 `流水线状态.md`、pipeline-integration 说 `证据/未决项_{日期}.md`——统一为前者，续跑凭据与人工回流入口单点化）；补上回流闭环缺的半边——断点续跑现在先消费未决区已回填的裁决（增量修订产物、`budget_review` 补 `approved_by`），不再"答复永远进不了产物"；补 headless 下 `budget_review` 的诚实语义（如实记 headless 未决 + 保守依据，不得写成用户已批准，回流后补批注——消除"裁 Critical = 伪造裁决 / 不裁 = V4 FAIL"的纸面死锁）；qa 开工输入补对比基线 base（阶段 7 回归范围的续跑凭据）。
+  - **落地页外链点击不再"带走"当前页**：删除 `window.open(…, 'noopener')` 拦截——按规范该调用恒返回 null，兜底分支必然后跳当前页，且废掉 Ctrl/Cmd+点击；`rel="noopener"` 原生行为本已足够。
+  - **展示字体真正装车**：Space Grotesk 变量字体（latin 子集 22KB）自托管 `assets/fonts/`，`@font-face` + preload + `font-display: swap`——此前 `--font-display` 引用的字体从未被加载，标题/大数字在几乎所有访客机器上静默回退系统字体（`--font-display` 变量丢失事故的同类复发）；`--mono` 摘除从未加载的 JetBrains Mono 名（SF Mono/Cascadia/Consolas 原生栈覆盖）；pages.yml 部署产物与触发路径、双语 README 结构树同步。
+  - **滚动渐入动效复活**：36 个非首屏 `.reveal` 去掉静态 `.in`（此前 41/41 全量写死使 IntersectionObserver 空转、入场编排从不发生——"无 JS 可见"修复时误伤），补 `<noscript>` 兜底；`prefers-reduced-motion` 三处漏网补齐（hero 光束 sway、hero-rise 入场、数字滚动直接呈现终值）并删除一段纯重复的死配置块。
+  - **落地页可访问性与元数据**：次要文案色 `--text-3` 提亮至 ≈5.9:1 对比度（原 4.08:1 不达 AA，承担的却全是 12-13.5px 真实内容）；标题大纲修复（h1 → h2 节 → h3 卡，消除三处跳级）；补 canonical、`og:image:width/height/type`、显式 `twitter:image`，og:description 补齐与 meta description 一致的"定位缺陷、"；nav 移除硬编码 `scrolled` 类（页首未滚动即呈加深态）、装饰文件树 `regression/` 改真实目录名 `regression-testing/`、清理运行时残留的 `--mx/--my` 内联样式与空 class 属性。
+  - **守门器误报锐边消除（上批"引用式定义"检查自带的）**：`_gate_common` 引用提取与 validate_skills 反引号引用检查增加 fenced code block 感知（围栏内示例不再误报，兑现 docstring"代码块内示例不在校验范围"的既有承诺）；引用式定义排除脚注 `[^1]:`、容许 `!` 前缀与尾随 title；新增三个回归测试钉住。
+  - **dsh 插件 frontmatter 解析与校验器口径对齐**：`parseSkill` 兼容 YAML 块标量（`>-` 此前会把字面量 `">-"` 注册为 description），与 `_fm_scalar` 同口径折叠。
+  - **计数与口径尾巴**：GitHub 仓库 About "10 Skills"→11（最显眼的对外数字残留）；AGENTS.md 用例计数去数字化（上批"当场写旧"的根除：计数一律以实际收集数为准）；qa-memory "七类知识"→六类（W1 表实有六行）；entry-schemas 的 verified 哈希口径对齐门禁（小写十六进制）、正例 source 改为实际有写入钩子的 bug-analysis（e2e 钩子已撤出）；CONTRIBUTING 架构红线补第 10 条（skills 目录形态，注明与校验器编号的映射关系）并与 PR 模板自检枚举对齐；bug_report.yml 问题区域下拉补 qa-memory；RELEASING 条件项表对齐动态派生后的现实、npm publish 前置补 python3+PyYAML 说明（prepublishOnly 会强制跑校验器）；exploratory 风险行模板补 level 槽位（与预评级步骤闭环）；qa 阶段 3 判据"模式一"术语自明化；requirement-analysis:78 与 tcw:160 的 core 模板/映射复述收敛为指针；tcw/api-testing 同源自伤案例互指注记（红线 4 要求双份自包含，防漂移）；examples 的评测 run id 噪声移除；benchmark.yml 头注释改按"私有环境 workflow"的真实定位；install_smoke 单元循环改 while-read（去词分割依赖）。
+  - **已知缺口登记（不属本批修复）**："为什么漏测"类逃逸归因请求暂无技能正面接住——属触发面能力扩展，按迭代纪律须过评测门后另行迭代，不在审查批内随手改。
+
 - **全项目审查修复批（2026-09-07，六维审查：skill 内容 / 脚本与 CI / 门面一致性 / 过工程 / 安全 / 一致性横扫）**：
   - **守门骗绿根除**：`validate_repo.py` 的 YAML 门由"无 PyYAML 打印提示后跳过（返回 0）"改为 **FAIL**——门禁缺依赖 = 门没跑 = 不能绿（2026-09-03 validate_schema 降级骗绿事故同族根除；此前删掉 CI 的 pip 步骤即可让 YAML 门零文件校验照绿）；`pages.yml` 部署前守门补装 PyYAML（此前部署链路上该门恒空转）；新增 `YamlGateDependencyTests` 钉住 fail-loud 行为。
   - **引用提取单一实现**：两个校验器的链接提取逻辑收敛至 `scripts/_gate_common.py`——此前两份实现宽严已漂移（query 剥离与 URL 解码仅仓库面有）；补查引用式链接定义 `[x]: path` 与 skills 内 md 的 html `<img src>` / `<source srcset>`（两侧此前均为盲区）；引用/链接报错补行号（与 eval 侧检查口径对齐）；frontmatter description 兼容多行块标量（`>-` 折叠写法此前可整体绕过 300 字符上限）。

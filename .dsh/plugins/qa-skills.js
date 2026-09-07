@@ -26,7 +26,9 @@ const skillsDir = resolve(dirname(fileURLToPath(import.meta.url)), '../../skills
 const DEPENDENCY_UNIT = 'core';
 
 /**
- * 拆分 SKILL.md：frontmatter 字段（仅支持单行 key: value）与指令正文。
+ * 拆分 SKILL.md：frontmatter 字段（单行 key: value，兼容 YAML 块标量 | / > 及其
+ * chomp 变体——折叠后续缩进行，与 scripts/validate_skills.py 的 _fm_scalar 同口径）
+ * 与指令正文。
  * @param {string} raw - SKILL.md 原始内容。
  * @returns {{name?: string, description?: string, whenToUse?: string, body: string}}
  */
@@ -35,9 +37,22 @@ const parseSkill = (raw) => {
   if (!match) return { body: raw.trim() };
 
   const fields = {};
-  for (const line of match[1].split(/\r?\n/)) {
-    const field = line.match(/^([A-Za-z][\w-]*):\s*(.+)$/);
-    if (field) fields[field[1]] = field[2].trim().replace(/^["'](.*)["']$/, '$1');
+  const lines = match[1].split(/\r?\n/);
+  for (let i = 0; i < lines.length; i++) {
+    const field = lines[i].match(/^([A-Za-z][\w-]*):\s*(.*)$/);
+    if (!field) continue;
+    let value = field[2].trim();
+    if (/^[|>][\d+-]*$/.test(value)) {
+      const folded = [];
+      for (let j = i + 1; j < lines.length; j++) {
+        const l = lines[j];
+        if (/^\s+\S/.test(l)) folded.push(l.trim());
+        else if (l.trim() === '') continue; // 块标量内的空行不打断
+        else break;                          // 下一顶级 key，块结束
+      }
+      value = folded.join(' ');
+    }
+    if (value) fields[field[1]] = value.replace(/^["'](.*)["']$/, '$1');
   }
   return { ...fields, body: match[2].trim() };
 };

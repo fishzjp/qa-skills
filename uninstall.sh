@@ -7,12 +7,17 @@
 #   ./uninstall.sh --auto             自动选择第一个检测到的安装目录（归属校验与确认逻辑不变）
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 # 安装单元清单与 install.sh 同一真相源：skills/ 下凡含 SKILL.md 的目录（含 core/）
 SKILL_DIRS=()
 for d in "$REPO_ROOT"/skills/*/; do
   [ -f "${d}SKILL.md" ] && SKILL_DIRS+=("$(basename "$d")")
 done
+# skills/ 缺失/为空时宁可报错也不静默只删 VERSION 就报成功
+[ "${#SKILL_DIRS[@]}" -ge 1 ] || {
+  echo "❌ 未在 $(basename "$REPO_ROOT")/skills/ 下识别到任何安装单元（目录缺失或为空），无法确定卸载清单。" >&2
+  exit 1
+}
 SRC_ROOT="$REPO_ROOT/skills"
 
 usage() { sed -n '2,7p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }

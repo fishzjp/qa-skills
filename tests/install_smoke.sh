@@ -14,12 +14,12 @@ TD="$(mktemp -d)"
 trap 'rm -rf "$TD"' EXIT
 
 "$REPO_ROOT/install.sh" --target "$TD/copy" > /dev/null
-UNITS="$(ls "$TD/copy" | grep -v '^qa-skills.VERSION$')"
-N_UNITS="$(printf '%s\n' $UNITS | grep -c . || true)"
+ls "$TD/copy" | grep -v '^qa-skills.VERSION$' > "$TD/units.txt"
+N_UNITS="$(wc -l < "$TD/units.txt" | tr -d ' ')"
 [ "$N_UNITS" -ge 12 ] || { echo "❌ 安装单元数 $N_UNITS < 12（11 skill + core），install.sh 清单疑似缺损" >&2; exit 1; }
-for u in $UNITS; do
+while IFS= read -r u; do
   [ -f "$TD/copy/$u/SKILL.md" ] || { echo "❌ copy 安装缺少 $u/SKILL.md" >&2; exit 1; }
-done
+done < "$TD/units.txt"
 [ -f "$TD/copy/core/evidence.md" ] || { echo "❌ copy 安装缺少 core/evidence.md（core 指纹）" >&2; exit 1; }
 [ -f "$TD/copy/qa-skills.VERSION" ] || { echo "❌ copy 安装缺少 qa-skills.VERSION 版本标识" >&2; exit 1; }
 
@@ -47,19 +47,28 @@ if "$REPO_ROOT/uninstall.sh" --target "$TD/danger/into-repo" > /dev/null 2>&1; t
 fi
 [ -f "$SENTINEL" ] || { echo "❌ 自毁守卫失效：uninstall 破坏了仓库源文件" >&2; exit 1; }
 
+# 自毁守卫（别名路径口径）：仓库本体经 symlink 别名访问时，SRC_ROOT 与 TARGET 解析
+# 必须落在同一路径口径上——2026-09-07 二轮审查实测逻辑/物理混用会绕过守卫
+ln -s "$REPO_ROOT" "$TD/repo-alias"
+if "$TD/repo-alias/install.sh" --target "$TD/repo-alias/skills" > /dev/null 2>&1; then
+  echo "❌ 自毁守卫失效：经别名路径把安装目标指回仓库 skills/ 未被拒绝" >&2
+  exit 1
+fi
+[ -f "$SENTINEL" ] || { echo "❌ 自毁守卫失效：别名路径下仓库源文件已被破坏" >&2; exit 1; }
+
 "$REPO_ROOT/install.sh" --target "$TD/link" --link > /dev/null
-for u in $UNITS; do
+while IFS= read -r u; do
   [ -L "$TD/link/$u" ] || { echo "❌ --link 安装 $u 不是软链" >&2; exit 1; }
   [ "$(readlink "$TD/link/$u")" = "$REPO_ROOT/skills/$u" ] || { echo "❌ --link 安装 $u 未指向本仓库" >&2; exit 1; }
-done
+done < "$TD/units.txt"
 
 "$REPO_ROOT/uninstall.sh" --target "$TD/copy" > /dev/null
 "$REPO_ROOT/uninstall.sh" --target "$TD/link" > /dev/null
-for u in $UNITS; do
+while IFS= read -r u; do
   for mode in copy link; do
     { [ ! -e "$TD/$mode/$u" ] && [ ! -L "$TD/$mode/$u" ]; } || { echo "❌ 卸载残留 $mode/$u" >&2; exit 1; }
   done
-done
+done < "$TD/units.txt"
 [ ! -f "$TD/copy/qa-skills.VERSION" ] || { echo "❌ 卸载残留版本标识" >&2; exit 1; }
 
 echo "✅ 安装器冒烟通过（copy/link 安装、重装幂等、防误删拒绝、双向卸载干净，共 $N_UNITS 个单元）"
