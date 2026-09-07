@@ -5,6 +5,10 @@
 
 ## [Unreleased]
 
+### 新增
+
+- **examples 扩容至五组 On/Off 对照（B7 首批）**：在原 test-case-writing 对照外新增四组真实评测产出——api-testing（判分覆盖 0.94 vs 0.72，**真实执行通过率 0.97 vs 0.51**）、automated-e2e-testing（覆盖近但执行成功率 0.56 vs 0.39 的诚实信号）、qa 编排（九阶段含阶段 0 探索旁路 vs 通用八阶段框架）、exploratory-testing（证据分级风险清单 vs 泛化骨架）；选样规则=双臂各取中位样本（不挑最好 On、不丑化 Off），泄漏扫描零命中，examples/README 重构为五组索引+逐组判读指南+产出溯源表（run/通道/选样口径可核查）。
+
 ## [0.8.0] - 2026-09-07
 
 ### 新增
