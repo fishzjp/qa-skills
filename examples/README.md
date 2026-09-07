@@ -67,12 +67,12 @@
 
 ## 产出溯源（可核查口径）
 
-| 组 | 黄金集任务 | 采样来源（本地评测链路 run） | 模型通道 | 选样 |
+| 组 | 黄金集任务 | 采样来源 | 模型 | 选样 |
 |----|------|------|------|------|
-| 1 | tcw-coupon-prd | 验证轮 | oc:glm-5.2（历史口径） | 验证轮代表采样 |
-| 2 | api-openapi-coupon | `20260901_minreg_m2b` | dfic:deepseek-v4-flash，n=3 | 双臂中位样本 |
-| 3 | e2e-markmap-to-spec | `20260901_minreg_m2b` | 同上 | 双臂中位样本 |
-| 4 | qa-doc-collab-pipeline | `20260905_minreg_qamemory` | 同上 | 双臂中位样本 |
-| 5 | exp-docshare-permission | `20260905_minreg_qamemory` | 同上 | 双臂中位样本 |
+| 1 | tcw-coupon-prd | 验证轮 | glm-5.2（历史版本口径，详见 Release 说明） | 验证轮代表采样 |
+| 2 | api-openapi-coupon | 本地评测链路 2026-09 轮次 | deepseek-v4-flash，双臂 n=3 | 双臂中位样本 |
+| 3 | e2e-markmap-to-spec | 本地评测链路 2026-09 轮次 | deepseek-v4-flash，双臂 n=3 | 双臂中位样本 |
+| 4 | qa-doc-collab-pipeline | 本地评测链路 2026-09 轮次 | deepseek-v4-flash，双臂 n=3 | 双臂中位样本 |
+| 5 | exp-docshare-permission | 本地评测链路 2026-09 轮次 | deepseek-v4-flash，双臂 n=3 | 双臂中位样本 |
 
 评测方法学、任务池与原始数据在维护者本地评测链路维护、不随仓库分发；对外数字以 README 实测效果表与 Release 增益矩阵快照为准。

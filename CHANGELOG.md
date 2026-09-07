@@ -5,6 +5,15 @@
 
 ## [Unreleased]
 
+## [0.8.1] - 2026-09-07
+
+### 修复
+
+- **双语 description 的 YAML 非法写法致标准解析器宿主拒载（0.8.0 缺陷，本版修复）**：0.8.0 的 8 个双语 description 以裸 plain scalar 书写，值内 ASCII `": "` 序列被手写解析器（校验器 / dsh / 评测 harness）放行，但宿主侧标准 YAML 解析器（js-yaml / `yaml` npm 包 / PyYAML）全部拒绝——装了 0.8.0 的宿主可能无法加载这批 skill，skills.sh 索引面同样受影响。修复 = 全部 12 个 frontmatter description 按 YAML 规范以双引号包裹（内部引号转义），解析值与 0.8.0 逐字符等价（零内容变化）。
+- **守门骗绿根除（同族事故第三例）**：validate_skills 的 frontmatter 检查此为手写行解析，与标准解析器口径分裂——非法 YAML 放行。现增加 strict YAML 门（PyYAML safe_load + 手写解析值比对不一致即 FAIL），**缺 PyYAML 时整门 FAIL**（fail-loud，与 validate_repo 同口径）；CI 安装依赖步骤上移至首个校验之前；新增 4 个正反例回归测试（裸 ": " 必 FAIL / 双引号包裹+转义 PASS / 引号不配对 FAIL / 单引号翻倍 PASS）。
+- **dsh 插件 parseSkill 剥引号后同步反转义 `\"` 与 `\\`**：否则双引号标量会把字面反斜杠注入宿主上下文（与校验器 _fm_scalar 同口径）。
+
+
 ### 新增
 
 - **examples 扩容至五组 On/Off 对照（B7 首批）**：在原 test-case-writing 对照外新增四组真实评测产出——api-testing（判分覆盖 0.94 vs 0.72，**真实执行通过率 0.97 vs 0.51**）、automated-e2e-testing（覆盖近但执行成功率 0.56 vs 0.39 的诚实信号）、qa 编排（九阶段含阶段 0 探索旁路 vs 通用八阶段框架）、exploratory-testing（证据分级风险清单 vs 泛化骨架）；选样规则=双臂各取中位样本（不挑最好 On、不丑化 Off），泄漏扫描零命中，examples/README 重构为五组索引+逐组判读指南+产出溯源表（run/通道/选样口径可核查）。
@@ -529,7 +538,8 @@ v2 改造：从两个 skill 升级为全生命周期 QA Agent Skills 框架。
 - 双轨产物：markmap（人执行）+ Test Case Schema（机器消费）
 - 早期迭代：test-case-writing 代码驱动增强、两层审查架构、二阶交叉覆盖
 
-[Unreleased]: https://github.com/fishzjp/qa-skills/compare/v0.8.0...HEAD
+[Unreleased]: https://github.com/fishzjp/qa-skills/compare/v0.8.1...HEAD
+[0.8.1]: https://github.com/fishzjp/qa-skills/compare/v0.8.0...v0.8.1
 [0.8.0]: https://github.com/fishzjp/qa-skills/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/fishzjp/qa-skills/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/fishzjp/qa-skills/compare/v0.5.1...v0.6.0

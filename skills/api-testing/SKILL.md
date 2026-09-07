@@ -2,8 +2,8 @@
 name: api-testing
 slug: api-testing
 displayName: API 接口测试
-version: 0.8.0
-description: API testing from OpenAPI/Swagger or case schemas: parameters, boundaries, auth, idempotency, concurrency, error responses, data consistency; runnable scripts; k6 handoff. Not for: Web UI flows, manual case writing. 接口级测试：参数/边界/鉴权/幂等/并发/错误响应/数据一致性，产出脚本与结果；含 k6 压测。不用于：Web UI、手动用例。
+version: 0.8.1
+description: "API testing from OpenAPI/Swagger or case schemas: parameters, boundaries, auth, idempotency, concurrency, error responses, data consistency; runnable scripts; k6 handoff. Not for: Web UI flows, manual case writing. 接口级测试：参数/边界/鉴权/幂等/并发/错误响应/数据一致性，产出脚本与结果；含 k6 压测。不用于：Web UI、手动用例。"
 ---
 
 # API 测试（api-testing）

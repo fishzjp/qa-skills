@@ -25,13 +25,14 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Skills 架构红线校验（frontmatter / ≤500 行 / When NOT to Use / 引用完整性 / JSON）
-        run: python3 scripts/validate_skills.py
-
-      # validate_repo 的 YAML 门与产品单测的零用例防骗绿检查都依赖 PyYAML（runner 默认不带；
-      # validate_repo 对缺失依赖按 FAIL 处理——门禁缺依赖 = 门没跑 = 不能绿）
+      # PyYAML 是 validate_skills frontmatter YAML 门、validate_repo 的 YAML 门与产品单测的
+      # 零用例防骗绿检查的共同依赖（runner 默认不带；两个校验器对缺失依赖均按 FAIL 处理——
+      # 门禁缺依赖 = 门没跑 = 不能绿），因此必须先于第一个校验 step 安装
       - name: 安装测试依赖
         run: python3 -m pip install --quiet "pyyaml>=6.0"
+
+      - name: Skills 架构红线校验（frontmatter 含 YAML 合法性 / ≤500 行 / When NOT to Use / 引用完整性 / JSON）
+        run: python3 scripts/validate_skills.py
 
       - name: 仓库面守门（py 语法 / yml 合法性 / json 合法性 / 门面文档链接 / 落地页资产）
         run: python3 scripts/validate_repo.py

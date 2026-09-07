@@ -34,6 +34,11 @@ import subprocess
 import sys
 from pathlib import Path
 
+try:
+    import yaml  # noqa: N813 —— frontmatter 严格校验用（缺依赖 = 整门 FAIL，见 main）
+except ImportError:
+    yaml = None
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _gate_common import extract_local_refs, find_git, visible_lines  # noqa: E402
 
@@ -82,6 +87,23 @@ def check_frontmatter(text, dirname, errors):
     fm = m.group(1)
     name = re.search(r"^name:\s*(.+)$", fm, re.M)
     desc = _fm_scalar(fm, "description")
+    # YAML 合法性门：手写行解析（上方 _fm_scalar）与标准解析器口径可能分裂——
+    # 宿主侧（Claude Code / skills CLI / skills.sh）用标准 YAML 库，frontmatter
+    # 写成合法 YAML 是"能被装上"的前提。2026-09-07 事故：plain scalar 内含 ": "
+    # 的 description 手写解析放行、标准解析器全炸（0.8.0 短暂携带后 0.8.1 修复）。
+    if yaml is not None:
+        try:
+            data = yaml.safe_load(fm)
+        except Exception as e:
+            errors.append(f"{dirname}/SKILL.md: frontmatter 不是合法 YAML（标准解析器拒绝，宿主将无法加载）: {e}")
+            data = None
+        if isinstance(data, dict):
+            parsed_desc = data.get("description")
+            if not isinstance(parsed_desc, str) or len(parsed_desc.strip()) < 20:
+                errors.append(f"{dirname}/SKILL.md: frontmatter 经 YAML 解析后 description 缺失或过短")
+            elif desc is not None and parsed_desc.strip() != desc.strip():
+                errors.append(f"{dirname}/SKILL.md: description 手写解析值与 YAML 解析值不一致"
+                              f"（口径漂移）：{desc[:40]!r} vs {parsed_desc[:40]!r}")
     if not name:
         errors.append(f"{dirname}/SKILL.md: frontmatter 缺 name")
     elif name.group(1).strip() != dirname:
@@ -110,6 +132,13 @@ def _fm_scalar(fm, key):
             elif line.strip():
                 break  # 下一顶级 key，块标量结束
         val = " ".join(folded)
+    else:
+        # 引号包裹标量：剥配对包裹引号并做对应反转义（与 dsh parseSkill 同口径），
+        # 300 字符上限按 YAML 解析后的内容长度计——与标准解析器一致
+        if len(val) >= 2 and val[0] == '"' and val[-1] == '"':
+            val = val[1:-1].replace('\\"', '"').replace("\\\\", "\\")
+        elif len(val) >= 2 and val[0] == "'" and val[-1] == "'":
+            val = val[1:-1].replace("''", "'")
     return val
 
 
@@ -258,6 +287,12 @@ def check_tracked_files(errors):
 
 def main():
     errors = []
+
+    # frontmatter YAML 合法性门依赖 PyYAML——缺依赖 = 门没跑 = 不能绿（与 validate_repo 同口径）
+    if yaml is None:
+        print("FAIL: PyYAML 未安装，frontmatter YAML 合法性门无法执行（pip install \"pyyaml>=6.0\"）。"
+              "缺失依赖时放行 = 非法 frontmatter 会被标准解析器宿主静默拒载（2026-09-07 事故口径），按 fail-loud 处理。")
+        return 2
 
     # 红线 11：skills/ 下每个一级子目录必须含 SKILL.md——skill 目录的最低合法形态
     #（core 亦满足；临时杂物放 skills/ 下会逃过全部 per-skill 红线）

@@ -2,8 +2,8 @@
 name: test-strategy
 slug: test-strategy
 displayName: 测试策略
-version: 0.8.0
-description: "How should this be tested?" Evidence-backed risk map → scope and depth across functional domains and 10 testing-type axes; includes carry signals, excludes reasons. Not for: writing cases, requirement-analysis, pipeline (qa). 回答“这个功能应该怎么测”：风险挂证据（Risk Map），译为功能域+类型域十轴的范围与深度。不用于：写用例、需求建模、流水线。
+version: 0.8.1
+description: "\"How should this be tested?\" Evidence-backed risk map → scope and depth across functional domains and 10 testing-type axes; includes carry signals, excludes reasons. Not for: writing cases, requirement-analysis, pipeline (qa). 回答“这个功能应该怎么测”：风险挂证据（Risk Map），译为功能域+类型域十轴的范围与深度。不用于：写用例、需求建模、流水线。"
 ---
 
 # 测试策略（test-strategy）

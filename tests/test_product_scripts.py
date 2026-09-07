@@ -283,6 +283,48 @@ class ScanSignalsUnitTests(unittest.TestCase):
         self.assertNotIn('"', scan_signals.sanitize('他说"满100减20"'))
 
 
+@unittest.skipUnless(validate_skills.yaml is not None, "PyYAML 缺失时 YAML 门按 fail-loud 降级，正反例测试不适用")
+class FrontmatterYamlGateTests(unittest.TestCase):
+    """check_frontmatter 的 YAML 合法性门：手写行解析放行、标准解析器拒绝的 frontmatter 必须 FAIL。
+
+    事故口径（2026-09-07）：description 值内含 ": " 的 plain scalar 被手写解析放行、
+    宿主侧标准 YAML 解析器（js-yaml / 'yaml' npm 包 / PyYAML）全量拒绝——非法 frontmatter
+    会在宿主加载 skill 时炸掉。此门保证 skills/ 内所有 frontmatter 通过标准解析器。
+    """
+
+    def setUp(self):
+        self.errors = []
+
+    def _check(self, description_line):
+        fm = f"name: alpha\nversion: 0.8.1\n{description_line}\n"
+        return validate_skills.check_frontmatter(f"---\n{fm}---\n正文", "alpha", self.errors)
+
+    def test_plain_scalar_with_colon_space_fails(self):
+        """手写解析放行、标准解析器拒绝的写法（值内裸 ": "）→ 必须进 errors。"""
+        self._check('description: End-to-end QA entry: "test this feature fully" works')
+        self.assertTrue(any("不是合法 YAML" in e for e in self.errors), self.errors)
+
+    def test_double_quoted_wrapped_description_passes(self):
+        """双引号包裹 + 内部引号转义 → 无错误，_fm_scalar 与 YAML 解析值一致。"""
+        version = self._check('description: "End-to-end QA entry: \\"test this feature fully\\" works well enough here"')
+        self.assertEqual(self.errors, [], self.errors)
+        self.assertEqual(version, "0.8.1")
+        desc = validate_skills._fm_scalar('name: alpha\ndescription: "a: \\"b\\""', "description")
+        self.assertEqual(desc, 'a: "b"')
+
+    def test_unterminated_quote_fails(self):
+        """包裹引号不配对（YAML 解析报错）→ 必须进 errors。"""
+        self._check('description: "没有闭合引号的描述文字在这里足够长')
+        self.assertTrue(any("不是合法 YAML" in e for e in self.errors), self.errors)
+
+    def test_single_quoted_with_apostrophe_passes(self):
+        """单引号标量内 ASCII 单引号翻倍写法 → 通过且还原正确。"""
+        self._check("description: 'Review others'' work for coverage and executability, long enough text'")
+        self.assertEqual(self.errors, [], self.errors)
+        desc = validate_skills._fm_scalar("description: 'Review others'' work'", "description")
+        self.assertEqual(desc, "Review others' work")
+
+
 class ValidateSkillsRefResolutionTests(unittest.TestCase):
     """validate_skills 的引用解析基准（消费方 SKILL.md 目录约定）。"""
 

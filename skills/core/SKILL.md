@@ -2,8 +2,8 @@
 name: core
 slug: core
 displayName: QA 共享知识库
-version: 0.8.0
-description: qa-skills shared knowledge base — dependency, NOT triggerable: executability standards, evidence grading, risk model, type matrix, templates, scripts. Never invoke standalone; always install with the skills, or references break. 共享知识库（依赖单元，非触发 skill）：承载全系列引用的方法/模板/脚本。任何测试任务不要独立触发；装其他 skill 必须连装。
+version: 0.8.1
+description: "qa-skills shared knowledge base — dependency, NOT triggerable: executability standards, evidence grading, risk model, type matrix, templates, scripts. Never invoke standalone; always install with the skills, or references break. 共享知识库（依赖单元，非触发 skill）：承载全系列引用的方法/模板/脚本。任何测试任务不要独立触发；装其他 skill 必须连装。"
 ---
 
 # qa-skills 共享知识库（core）

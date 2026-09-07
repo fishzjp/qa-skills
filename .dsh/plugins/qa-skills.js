@@ -52,7 +52,14 @@ const parseSkill = (raw) => {
       }
       value = folded.join(' ');
     }
-    if (value) fields[field[1]] = value.replace(/^["'](.*)["']$/, '$1');
+    if (value) {
+      // 剥配对包裹引号；双引号标量须反转义 \" 与 \\（与 validate_skills._fm_scalar 同口径），
+      // 否则带引号包裹的 description 会把字面反斜杠注入宿主上下文
+      const unquoted = value.replace(/^["'](.*)["']$/, '$1');
+      fields[field[1]] = value.startsWith('"')
+        ? unquoted.replace(/\\"/g, '"').replace(/\\\\/g, '\\')
+        : unquoted;
+    }
   }
   return { ...fields, body: match[2].trim() };
 };

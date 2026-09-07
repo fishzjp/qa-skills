@@ -2,8 +2,8 @@
 name: requirement-analysis
 slug: requirement-analysis
 displayName: 需求分析
-version: 0.8.0
-description: Model a requirement/system: extract goals, scope, roles, rules, exceptions, dependencies from PRD, docs, bugs, code; outputs a structured model with clarifications. Not for: writing cases, strategy decisions, the pipeline. 建模需求/系统：从 PRD、文档、Bug、代码提炼目标/范围/角色/规则/异常/依赖。不用于：直接写用例、策略、流水线。
+version: 0.8.1
+description: "Model a requirement/system: extract goals, scope, roles, rules, exceptions, dependencies from PRD, docs, bugs, code; outputs a structured model with clarifications. Not for: writing cases, strategy decisions, the pipeline. 建模需求/系统：从 PRD、文档、Bug、代码提炼目标/范围/角色/规则/异常/依赖。不用于：直接写用例、策略、流水线。"
 ---
 
 # 需求分析（requirement-analysis）
