@@ -244,22 +244,23 @@ skills/        the product (11 skills + shared core/)
                executability / testing-principles / report-template / case-format / coverage /
                schema-extraction / clarify-pattern / test-type-matrix (decision matrix) /
                triage (failure triage) / pipeline-integration (headless & CI conventions)
-               + methods/ (4 design-method guides) + scripts/ (schema validator + type-signal scanner)
+               + methods/ (5 design-method guides) + scripts/ (schema validator + type-signal scanner)
   requirement-analysis/  test-strategy/  test-case-writing/  test-case-review/
   automated-e2e-testing/  api-testing/  exploratory-testing/  bug-analysis/  regression-testing/
   qa-memory/
 .dsh/          dsh plugin trio (manifest in package.json's dsh.bundle)
-assets/        visual assets (hero images, landing-page artwork in landing/, share image og.jpg, social preview)
+assets/        visual assets (README hero images, share image og.jpg, social preview)
 examples/      Skill On/Off output comparison
-scripts/       CI architecture-redline validator (validate_skills.py)
-tests/         regression tests for shipped scripts (validate_schema / scan_signals / validate_skills)
+scripts/       gate scripts (validate_skills.py architecture red lines + validate_repo.py repo-level gate)
+tests/         regression tests & installer smoke (test_product_scripts / test_memory_validator /
+               test_repo_gates / install_smoke.sh)
 index.html     website landing page (GitHub Pages build source)
 ```
 </details>
 
 ## Community
 
-- [Contributing guide](./CONTRIBUTING.md) — architecture red lines; local check `python3 scripts/validate_skills.py` (same as CI)
+- [Contributing guide](./CONTRIBUTING.md) — architecture red lines; local checks `python3 scripts/validate_skills.py` + `python3 scripts/validate_repo.py` (same as CI)
 - 💬 [Discussions](https://github.com/fishzjp/qa-skills/discussions) for Q&A; [Issues](https://github.com/fishzjp/qa-skills/issues) for confirmed bugs and concrete requests
 - 🛡️ Security: private reporting per [SECURITY.md](./.github/SECURITY.md)
 - 📜 [Code of Conduct](./.github/CODE_OF_CONDUCT.md) · 📋 [CHANGELOG](./CHANGELOG.md)

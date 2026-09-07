@@ -32,6 +32,21 @@ if "$REPO_ROOT/install.sh" --target "$TD/guard" > /dev/null 2>&1; then
   exit 1
 fi
 
+# 自毁守卫（物理路径口径）：--target 为链进仓库 skills/ 的 symlink 必须拒绝，且源文件毫发无损
+mkdir -p "$TD/danger"
+ln -s "$REPO_ROOT/skills" "$TD/danger/into-repo"
+SENTINEL="$REPO_ROOT/skills/qa/SKILL.md"
+if "$REPO_ROOT/install.sh" --target "$TD/danger/into-repo" > /dev/null 2>&1; then
+  echo "❌ 自毁守卫失效：symlink 指向仓库 skills/ 未被拒绝" >&2
+  exit 1
+fi
+[ -f "$SENTINEL" ] || { echo "❌ 自毁守卫失效：仓库源文件已被破坏" >&2; exit 1; }
+if "$REPO_ROOT/uninstall.sh" --target "$TD/danger/into-repo" > /dev/null 2>&1; then
+  echo "❌ 自毁守卫失效：uninstall 对仓库内 symlink 目标未拒绝" >&2
+  exit 1
+fi
+[ -f "$SENTINEL" ] || { echo "❌ 自毁守卫失效：uninstall 破坏了仓库源文件" >&2; exit 1; }
+
 "$REPO_ROOT/install.sh" --target "$TD/link" --link > /dev/null
 for u in $UNITS; do
   [ -L "$TD/link/$u" ] || { echo "❌ --link 安装 $u 不是软链" >&2; exit 1; }

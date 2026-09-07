@@ -8,12 +8,11 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SKILL_DIRS=(
-  qa core
-  requirement-analysis test-strategy test-case-writing test-case-review
-  automated-e2e-testing api-testing exploratory-testing bug-analysis regression-testing
-  qa-memory
-)
+# 安装单元清单与 install.sh 同一真相源：skills/ 下凡含 SKILL.md 的目录（含 core/）
+SKILL_DIRS=()
+for d in "$REPO_ROOT"/skills/*/; do
+  [ -f "${d}SKILL.md" ] && SKILL_DIRS+=("$(basename "$d")")
+done
 SRC_ROOT="$REPO_ROOT/skills"
 
 usage() { sed -n '2,7p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
@@ -55,8 +54,8 @@ fi
 
 [ -d "$TARGET" ] || { echo "❌ 目录不存在: $TARGET" >&2; exit 1; }
 
-# 防自毁：目标是本仓库 skills/ 源目录（或其内）时直接拒绝
-TARGET_ABS="$(cd "$TARGET" && pwd)"
+# 防自毁：目标是本仓库 skills/ 源目录（或其内）时直接拒绝（pwd -P 解析 symlink 物理路径，与 install.sh 同口径）
+TARGET_ABS="$(cd "$TARGET" && pwd -P)"
 case "$TARGET_ABS" in
   "$SRC_ROOT"|"$SRC_ROOT"/*)
     echo "❌ 拒绝：目标目录是本仓库的 skills/ 源目录。" >&2; exit 1 ;;

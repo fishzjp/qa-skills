@@ -14,46 +14,30 @@ validate_skills 守 skills/ 内容架构；本脚本守"仓库机体"——5 个
   5. 落地页资产：index.html 引用的本地 src/href/srcset 必须存在。pages.yml 只负责搬运
      （cp 不校验引用完整性），引用了不存在的配图 = CI 绿、线上破图
 
-无 git 环境时 git 类校验显式打印跳过（不静默假绿）；未装 PyYAML 时 YAML 门降级跳过并提示
-（CI 中由"安装测试依赖"步骤保证全量运行）。
+无 git 环境时 git 类校验显式打印跳过（不静默假绿）；未装 PyYAML 时 YAML 门 **FAIL 而非跳过**
+（2026-09-03 骗绿事故后的纪律：门禁缺依赖 = 门没跑 = 不能绿。CI 由「安装测试依赖」步骤保证）。
 用法：python3 scripts/validate_repo.py（仓库根或任意目录均可）
 退出码：0 通过 / 1 有违规
 """
 import json
-import re
-import shutil
 import subprocess
 import sys
-import urllib.parse
 from pathlib import Path
 
 try:
     import yaml  # type: ignore
-except ImportError:  # 本地裸环境降级；CI 由 workflow 安装 pyyaml 保证全量
+except ImportError:
     yaml = None
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _gate_common import extract_local_refs, find_git  # noqa: E402
+
 REPO = Path(__file__).resolve().parents[1]
-
-MD_LINK_PATTERN = re.compile(r'\]\(([^()\s]+)(?:\s+"[^"]*")?\)')
-HTML_ATTR_PATTERN = re.compile(r'(?:src|href)\s*=\s*["\']([^"\']+)["\']')
-SRCSET_PATTERN = re.compile(r'srcset\s*=\s*["\']([^"\']+)["\']')
-SKIP_PREFIXES = ("http://", "https://", "mailto:", "#", "data:")
-
-
-def _find_git():
-    """定位 git 可执行文件：优先 PATH，退化到 macOS 常见绝对路径；均不存在返回 None。"""
-    git = shutil.which("git")
-    if git:
-        return git
-    for cand in ("/usr/bin/git", "/usr/local/bin/git", "/opt/homebrew/bin/git"):
-        if Path(cand).exists():
-            return cand
-    return None
 
 
 def tracked_files(suffixes, errors):
     """git ls-files 枚举跟踪文件并按后缀过滤；无 git 返回 None（调用方显式跳过）。"""
-    git = _find_git()
+    git = find_git()
     if not git:
         return None
     r = subprocess.run([git, "ls-files", "-z"], cwd=REPO, capture_output=True,
@@ -85,7 +69,10 @@ def check_python(root, files, errors):
 def check_yaml(files, errors):
     n = 0
     if yaml is None:
-        print("(i) 未安装 PyYAML——YAML 合法性校验跳过（pip install pyyaml 启用）")
+        # 门禁缺依赖 = 门没跑 = 不能绿（2026-09-03 validate_schema 降级骗绿事故同族）。
+        # CI 由「安装测试依赖」步骤保证；本地裸环境 pip install pyyaml 后重跑。
+        errors.append("未安装 PyYAML——YAML 合法性门无法执行（pip install pyyaml 后重跑；"
+                      "workflow 由「安装测试依赖」步骤保证）")
         return 0
     for f in files:
         try:
@@ -114,38 +101,14 @@ def check_json(files, errors):
     return n
 
 
-def local_targets(text):
-    """提取文本中的本地相对目标：[(原文, 剥离锚点/查询串并 URL 解码的路径)]。
-
-    外链、锚点、data: 跳过；srcset 值按逗号拆候选、取每个候选的首个 URL（ descriptors 丢弃）。
-    """
-    refs = []
-    refs.extend(m.group(1) for m in MD_LINK_PATTERN.finditer(text))
-    refs.extend(m.group(1) for m in HTML_ATTR_PATTERN.finditer(text))
-    for m in SRCSET_PATTERN.finditer(text):
-        for cand in m.group(1).split(","):
-            cand = cand.strip()
-            if cand:
-                refs.append(cand.split()[0])
-    out = []
-    for ref in refs:
-        if ref.startswith(SKIP_PREFIXES):
-            continue
-        path = ref.split("#", 1)[0].split("?", 1)[0]
-        if not path:
-            continue
-        out.append((ref, urllib.parse.unquote(path)))
-    return out
-
-
 def check_md_links(root, errors):
     """根目录 *.md 的本地链接 / 图片目标存在性（相对基准 = 仓库根，与站内 ./x.md 写法一致）。"""
     n = 0
     for md in sorted(root.glob("*.md")):
-        for raw, path in local_targets(md.read_text(encoding="utf-8-sig")):
+        for line_no, raw, path in extract_local_refs(md.read_text(encoding="utf-8-sig")):
             n += 1
             if not (root / path.lstrip("/")).exists():
-                errors.append(f"{md.name}: 链接目标不存在 ({raw})")
+                errors.append(f"{md.name}:{line_no}: 链接目标不存在 ({raw})")
     return n
 
 
@@ -156,10 +119,10 @@ def check_html_assets(root, errors):
         print("(i) 未检出 index.html——跳过落地页资产校验")
         return 0
     n = 0
-    for raw, path in local_targets(page.read_text(encoding="utf-8-sig")):
+    for line_no, raw, path in extract_local_refs(page.read_text(encoding="utf-8-sig")):
         n += 1
         if not (root / path.lstrip("/")).exists():
-            errors.append(f"index.html: 引用的资源不存在 ({raw})")
+            errors.append(f"index.html:{line_no}: 引用的资源不存在 ({raw})")
     return n
 
 
@@ -169,7 +132,7 @@ def main():
 
     py_files = tracked_files((".py",), errors)
     if py_files is None:
-        if not _find_git():
+        if not find_git():
             print("(i) 未检出 git——Python 语法校验跳过")
     else:
         n_py = check_python(REPO, py_files, errors)

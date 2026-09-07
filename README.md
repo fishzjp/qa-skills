@@ -244,22 +244,23 @@ skills/                  产品本体（11 个 skill + core 共享知识库）
                          executability / testing-principles / report-template / case-format /
                          coverage / schema-extraction / clarify-pattern / test-type-matrix（类型决策矩阵）/
                          triage（失败分流）/ pipeline-integration（非交互与 CI 集成）
-                         + methods/（4 篇方法细则）+ scripts/（schema 校验器 + 类型信号扫描器）
+                         + methods/（5 篇方法细则）+ scripts/（schema 校验器 + 类型信号扫描器）
   requirement-analysis/  test-strategy/  test-case-writing/
   test-case-review/      automated-e2e-testing/  api-testing/
   exploratory-testing/   bug-analysis/  regression-testing/  qa-memory/
 .dsh/                    dsh 插件三件套（清单见 package.json 的 dsh.bundle）
-assets/                  视觉资产（hero 图、落地页配图 landing/、分享图 og.jpg、社交预览图）
+assets/                  视觉资产（README 头图 hero、分享图 og.jpg、社交预览图 social-preview）
 examples/                Skill On / Off 产出对照
-scripts/                 CI 架构红线校验器（validate_skills.py）
-tests/                   随产品分发脚本的回归测试（validate_schema / scan_signals / validate_skills）
+scripts/                 守门脚本（validate_skills.py 架构红线 + validate_repo.py 仓库面守门）
+tests/                   回归测试与安装器冒烟（test_product_scripts / test_memory_validator /
+                         test_repo_gates / install_smoke.sh）
 index.html               官网落地页（GitHub Pages 构建源）
 ```
 </details>
 
 ## 贡献与社区
 
-- **贡献指南与架构红线**：[CONTRIBUTING.md](./CONTRIBUTING.md)；本地自检 `python3 scripts/validate_skills.py`（与 CI 同一校验）
+- **贡献指南与架构红线**：[CONTRIBUTING.md](./CONTRIBUTING.md)；本地自检 `python3 scripts/validate_skills.py` + `python3 scripts/validate_repo.py`（与 CI 同一校验）
 - 🐛 缺陷 / 💡 功能建议：先到 [Discussions](https://github.com/fishzjp/qa-skills/discussions)（问答与经验分享），确认后提 [Issue](https://github.com/fishzjp/qa-skills/issues)
 - 🛡️ 安全漏洞：请勿公开讨论，按[安全策略](./.github/SECURITY.md)私密报告
 - 📜 行为准则：[CODE_OF_CONDUCT.md](./.github/CODE_OF_CONDUCT.md) · 📋 版本历史：[CHANGELOG.md](./CHANGELOG.md)

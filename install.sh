@@ -19,14 +19,16 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# 框架的全部安装单元：11 个 skill + core/（共享知识库，各 skill 相对引用，必须一起装）
-# 源路径统一在 skills/ 下
-SKILL_DIRS=(
-  qa core
-  requirement-analysis test-strategy test-case-writing test-case-review
-  automated-e2e-testing api-testing exploratory-testing bug-analysis regression-testing
-  qa-memory
-)
+# 安装单元单一真相源：skills/ 下凡含 SKILL.md 的目录即安装单元（含 core/）——
+# 新增 / 下线 skill 不需要改本脚本与 uninstall.sh 的清单，消除"改一处漏一处"的失败模式
+SKILL_DIRS=()
+for d in "$REPO_ROOT"/skills/*/; do
+  [ -f "${d}SKILL.md" ] && SKILL_DIRS+=("$(basename "$d")")
+done
+[ "${#SKILL_DIRS[@]}" -ge 12 ] || {
+  echo "❌ skills/ 下仅识别到 ${#SKILL_DIRS[@]} 个安装单元（应 ≥12：11 个 skill + core）——仓库不完整？" >&2
+  exit 1
+}
 SRC_ROOT="$REPO_ROOT/skills"
 
 # 归属校验：目标位置的单元确实是本框架装的才允许覆盖删除——
@@ -114,8 +116,9 @@ else
 fi
 
 mkdir -p "$TARGET"
-# 防自毁：目标等于或位于本仓库 skills/ 源目录内时拒绝（src==dst 会先删源文件，随后复制失败）
-TARGET_ABS="$(cd "$TARGET" && pwd)"
+# 防自毁：目标等于或位于本仓库 skills/ 源目录内时拒绝（src==dst 会先删源文件，随后复制失败）。
+# pwd -P 解析物理路径：--target 若是链进仓库的 symlink，逻辑路径守卫会被绕过（2026-09-07 审查修复）
+TARGET_ABS="$(cd "$TARGET" && pwd -P)"
 case "$TARGET_ABS" in
   "$SRC_ROOT"|"$SRC_ROOT"/*)
     echo "❌ 拒绝安装：目标目录位于本仓库的 skills/ 源目录内，会破坏源文件。请换一个安装目标。" >&2

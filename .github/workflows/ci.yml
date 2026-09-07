@@ -29,9 +29,9 @@ jobs:
         run: python3 scripts/validate_skills.py
 
       # validate_repo 的 YAML 门与产品单测的零用例防骗绿检查都依赖 PyYAML（runner 默认不带；
-      # validate_schema 无 PyYAML 时按设计降级为基础 lint，零用例测试会必挂）
+      # validate_repo 对缺失依赖按 FAIL 处理——门禁缺依赖 = 门没跑 = 不能绿）
       - name: 安装测试依赖
-        run: python3 -m pip install --quiet pyyaml
+        run: python3 -m pip install --quiet "pyyaml>=6.0"
 
       - name: 仓库面守门（py 语法 / yml 合法性 / json 合法性 / 门面文档链接 / 落地页资产）
         run: python3 scripts/validate_repo.py
@@ -54,6 +54,7 @@ jobs:
     name: PR 自动打标
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: read
       pull-requests: write

@@ -1,8 +1,8 @@
 # AGENTS.md — qa-skills 项目指令
 
 > 本文件是**维护者的迭代 SOP**。"评测三轨道"及各处 `eval/` 引用描述的是本地维护的评测链路
-> （2026-08-22 起不随公开仓库分发，公开仓库只含 skills 产品内容）；公开侧证据链为每版 Release
-> 附带的增益矩阵快照。
+> （2026-08-22 起不随公开仓库分发，公开仓库只含 skills 产品内容）；公开侧证据链为按里程碑
+> 随 Release 附带的增益矩阵快照。
 
 ## 使命（所有工作的对齐点）
 
@@ -42,8 +42,16 @@ bench 的产出是"改哪里"，不是总分。聚合数字（如覆盖 +8.7pp�
 - 任务池轮换（30–50 任务抽半跑，季度换血），防 skill 对着题库优化。
 - 迭代涉及的任务做双人 GT 复核——GT 错标会让飞轮朝错误方向持续优化，是最危险的失败模式。
 - 日常真实使用中的触发失败 / 产出不佳案例，每周沉淀 2–3 个进任务池（dogfooding 反哺）。
-- 每版 Release 配增益矩阵快照（跨模型 On/Off 对比）与迭代记录——这是 skill bench 的自然形态，
+- 里程碑版 Release 配增益矩阵快照（跨模型 On/Off 对比）与迭代记录——这是 skill bench 的自然形态，
   也是"安装这个 skill 会发生什么"的纵向证据。
+
+## 门禁入口（维护者本地 ≠ CI）
+
+CI 与贡献者入口（CONTRIBUTING 自检）只覆盖已跟踪面：`unittest discover tests -p "test_*.py"`（74 例）
++ 两个校验器 + 安装器冒烟。`tests/test_harness.py`（harness 单测，随 eval/ 本地维护、gitignore）
+**只能用 pytest 跑**：`python3 -m pytest tests/ -q`（145 例，含上述 74）。改 skill / 加 skill 后
+本地合入前必须跑 pytest 口径——2026-09-07 审查教训：qa-memory 合入使 harness 断言红了一次，
+unittest 入口永远看不到它，红灯静默 9 天。
 
 ## 报告与对外发布的定位
 

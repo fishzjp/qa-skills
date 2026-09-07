@@ -38,7 +38,7 @@
 ## 提交前自检
 
 - [ ] 未引入任何真实环境地址、账号、密钥、内部系统名
-- [ ] `python3 scripts/validate_skills.py` 通过（与 CI 同一校验：frontmatter / description ≤300 字符 / SKILL.md ≤500 行 / When NOT to Use / core 依赖单元声明 / 引用完整含 md 链接 / 无跨 skill 引用 / 版本一致 / JSON 合法 / 无 eval 越界引用 / 跟踪面白名单）
+- [ ] `python3 scripts/validate_skills.py` 通过（与 CI 同一校验：frontmatter / description ≤300 字符 / SKILL.md ≤500 行 / When NOT to Use / core 依赖单元声明 / 引用完整含 md 链接与引用式定义 / 无跨 skill 引用 / 版本一致 / JSON 合法 / 无 eval 越界引用 / 跟踪面白名单 / skills 目录形态）
 - [ ] `python3 scripts/validate_repo.py` 通过（仓库面守门：py 语法 / yml 合法性 / json / README 双语等门面文档链接 / 落地页资产引用）
 - [ ] 改动 install.sh / uninstall.sh 的，`bash tests/install_smoke.sh` 通过（copy/link 安装、重装幂等、防误删、卸载干净）
 - [ ] 改动后的 skill 仍符合 [Agent Skill 规范](https://docs.claude.com/en/docs/claude-code/skills)：每个 skill 有 `SKILL.md`，frontmatter 含 `name` 与 `description`

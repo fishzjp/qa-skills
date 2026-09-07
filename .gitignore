@@ -20,10 +20,11 @@ explore-*.png
 .DS_Store
 Thumbs.db
 
-# Agent 会话工具产物（ZCode 计划/会话目录、TRAE 本地工具目录、Claude Code 本地设置）
+# Agent 会话工具产物（ZCode 计划/会话目录、TRAE 本地工具目录、Claude Code 本地设置、设计钩子豁免）
 .zcode/
 .trae/
 .claude/
+.impeccable/
 
 # Python（若配合测试数据脚本使用）
 __pycache__/
@@ -38,12 +39,6 @@ venv/
 
 # 实验记录不进公开仓库（2026-08-22 决定：GitHub 只放 skills 相关内容，
 # 评测产物/运行归档/分析报告/校准标注等敏感记录只留本地）
-eval/results/runs/
-eval/results/analyses/
-eval/results/probes/
-eval/results/contamination/
-eval/results/calibration/
-eval/results/LATEST.md
 eval/
 # 本地 eval harness 测试依赖 eval/（不随仓库分发）；产品脚本回归测试 tests/test_product_scripts.py 入库
 /tests/test_harness.py

@@ -13,8 +13,8 @@
      a) 反引号 + 前缀引用：`../`、`references/`、`templates/`、`core/`，
         兼容 core 文件的 skills 根相对写法
      b) 反引号 + 文件相对裸引用：core/**/*.md 内的 `x.md`、`methods/x.md`、`../x.md`
-     c) markdown 链接 / 图片：](path.md) 形态（全 skills 范围；外链与纯锚点跳过；
-        目标存在时同样过红线 6 归属判定）
+     c) markdown 链接（行内 ](...) 与引用式 [x]: path）/ html <img src> / <source srcset>
+        （全 skills 范围；外链与纯锚点跳过；目标存在时同样过红线 6 归属判定）
      中文产物名与代码块内示例不在校验范围
   6. 禁止跨 skill 引用：任何 skill 的文件不得引用兄弟 skill 目录内的文件——
      被多 skill 消费的方法/格式/规则一律下沉 core/（skill 自包含红线）
@@ -23,26 +23,28 @@
   9. 产品自包含：skills/ 内不得引用 eval/ 等本地评测链路路径（公开分发面 = skills 产品本体）
  10. 跟踪面白名单：git 跟踪的每个文件必须落在白名单内（根目录既有文件 + 产品目录前缀）——
      临时文件、测试数据、实验报告、开发报告、开发计划等与 skills 无关的内容不得入库
+ 11. skills/ 下每个一级子目录必须含 SKILL.md（合法安装单元的最低形态；临时杂物不得放 skills/ 下）
 
 用法：python3 scripts/validate_skills.py （仓库根或任意目录均可）
 退出码：0 通过 / 1 有违规
 """
 import json
 import re
-import shutil
 import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _gate_common import extract_local_refs, find_git  # noqa: E402
+
 REPO = Path(__file__).resolve().parents[1]
-SKILLS_ROOT = REPO / "skills"   # 产品本体（10 个 skill + core/ 共享库）统一在此
+SKILLS_ROOT = REPO / "skills"   # 产品本体（11 个 skill + core/ 共享库）统一在此
 MAX_LINES = 500
 MAX_DESC_CHARS = 300
-REF_PATTERN = re.compile(r"`((?:\.\./|references/|templates/|core/)[\w./-]+\.(?:md|json|py|ts|tsx|ya?ml))`")
+REF_PATTERN = re.compile(r"`((?:\.\./|references/|templates/|core/)[\w./-]+\.(?:md|json|py|ya?ml))`")
 CORE_BARE_PATTERN = re.compile(r"`((?:\.\./)?(?:[\w-]+/)*[\w-]+\.(?:md|py))`")
-MD_LINK_PATTERN = re.compile(r'\]\(([^()\s]+)(?:\s+"[^"]*")?\)')
 FRONTMATTER = re.compile(r"\A---\n(.*?)\n---\n", re.S)
-MD_EXTS = (".md", ".json", ".py", ".ts", ".tsx", ".yml", ".yaml")
+MD_EXTS = (".md", ".json", ".py", ".yml", ".yaml")
 
 # 红线 10 白名单：白名单制而非黑名单关键词——临时文件命名不可枚举，
 # 且 test-case-writing、report-template 等合法文件名含 test/report 字样会被关键词误杀。
@@ -78,27 +80,36 @@ def check_frontmatter(text, dirname, errors):
         return None
     fm = m.group(1)
     name = re.search(r"^name:\s*(.+)$", fm, re.M)
-    desc = re.search(r"^description:\s*(.+)$", fm, re.M)
+    desc = _fm_scalar(fm, "description")
     if not name:
         errors.append(f"{dirname}/SKILL.md: frontmatter 缺 name")
     elif name.group(1).strip() != dirname:
         errors.append(f"{dirname}/SKILL.md: name '{name.group(1).strip()}' 与目录名 '{dirname}' 不一致")
-    if not desc or len(desc.group(1).strip()) < 20:
+    if not desc or len(desc.strip()) < 20:
         errors.append(f"{dirname}/SKILL.md: frontmatter 缺 description 或过短（需含触发词与反触发，≥20 字）")
-    elif len(desc.group(1)) > MAX_DESC_CHARS:
-        errors.append(f"{dirname}/SKILL.md: description {len(desc.group(1))} 字符超过 {MAX_DESC_CHARS} 上限"
+    elif len(desc) > MAX_DESC_CHARS:
+        errors.append(f"{dirname}/SKILL.md: description {len(desc)} 字符超过 {MAX_DESC_CHARS} 上限"
                       "（description 常驻每个会话上下文，机制细节移入正文 When to Use）")
     ver = re.search(r"^version:\s*(.+)$", fm, re.M)
     return ver.group(1).strip() if ver else None
 
 
-def _is_under(path: Path, root: Path) -> bool:
-    """path 是否位于 root 之下（Path.is_relative_to 的 3.8 兼容实现）。"""
-    try:
-        path.relative_to(root)
-        return True
-    except ValueError:
-        return False
+def _fm_scalar(fm, key):
+    """读取 frontmatter 单值标量，兼容 YAML 块标量（| / > 及其 chomp 变体）——
+    仅取首行的正则会把多行 description 整体漏出 300 字符上限检查。"""
+    m = re.search(rf"^{key}:[ \t]*(.*)$", fm, re.M)
+    if not m:
+        return None
+    val = m.group(1).strip()
+    if re.fullmatch(r"[|>](?:\d?[+-]?|[+-]?\d?)", val):
+        folded = []
+        for line in fm[m.end():].splitlines():
+            if line.startswith((" ", "\t")):
+                folded.append(line.strip())
+            elif line.strip():
+                break  # 下一顶级 key，块标量结束
+        val = " ".join(folded)
+    return val
 
 
 def resolve_ref(md_path: Path, ref: str):
@@ -113,7 +124,7 @@ def resolve_ref(md_path: Path, ref: str):
     （另作 SKILLS_ROOT 兜底，兼容 skills 根相对写法）。
     """
     md_real = md_path.resolve()
-    in_core = _is_under(md_real, (SKILLS_ROOT / "core").resolve())
+    in_core = md_real.is_relative_to((SKILLS_ROOT / "core").resolve())
     owner = None if in_core else owning_skill_dir(md_path)
     candidates = []  # (基准目录, basis)
     if owner is not None and owner != md_path.parent:
@@ -131,70 +142,67 @@ def resolve_ref(md_path: Path, ref: str):
     return None, None
 
 
-def check_target(md_path, ref, errors):
-    """引用目标存在性 + 路径约定 + 跨 skill 红线（红线 5/6）。"""
-    rel = md_path.relative_to(REPO)
+def check_target(md_path, ref, errors, line_no=None):
+    """引用目标存在性 + 路径约定 + 跨 skill 红线（红线 5/6）。line_no 仅供报错定位。"""
+    where = f"{md_path.relative_to(REPO)}" + (f":{line_no}" if line_no else "")
     target, basis = resolve_ref(md_path, ref)
     if target is None:
-        err = f"{rel}: 引用的文件不存在 `{ref}`"
+        err = f"{where}: 引用的文件不存在 `{ref}`"
         if err not in errors:
             errors.append(err)
         return
     if basis == "self":
         # 按"相对消费方 SKILL.md"约定解析不到、仅按文件自身解析得到——目标虽在，
         # 但 agent 以文件自身为基准解析时行为与写法绑定，两套基准并存是解析歧义源
-        err = (f"{rel}: 路径基准违反约定 `{ref}`——文档内相对路径应相对消费方 "
+        err = (f"{where}: 路径基准违反约定 `{ref}`——文档内相对路径应相对消费方 "
                f"SKILL.md 所在目录书写（见 core/test-type-matrix.md 路径口径注）")
         if err not in errors:
             errors.append(err)
         return
     target = target.resolve()
     root = SKILLS_ROOT.resolve()   # resolve 统一符号链接展开（macOS /var 等），否则前缀判定失效
-    if not _is_under(target, root):
+    if not target.is_relative_to(root):
         return
-    if _is_under(target, root / "core"):
+    if target.is_relative_to(root / "core"):
         return  # core 共享层：其 SKILL.md 仅为安装依赖单元，不算跨引用
     src_owner = owning_skill_dir(md_path)
     tgt_owner = owning_skill_dir(target)
     if tgt_owner is not None and tgt_owner != src_owner:
-        bad = f"{rel}: 跨 skill 引用 `{ref}`（属于 {tgt_owner.name}/）——被多 skill 消费的内容应下沉 core/"
+        bad = f"{where}: 跨 skill 引用 `{ref}`（属于 {tgt_owner.name}/）——被多 skill 消费的内容应下沉 core/"
         if bad not in errors:
             errors.append(bad)
 
 
 def check_references(md_path, errors):
-    """反引号引用（前缀形态全库 skills/**/*.md + 裸相对形态仅 core）。"""
-    text = md_path.read_text(encoding="utf-8")
-    for m in REF_PATTERN.finditer(text):
-        check_target(md_path, m.group(1), errors)
-    in_core = _is_under(md_path.resolve(), (SKILLS_ROOT / "core").resolve())
-    if in_core:
-        for m in CORE_BARE_PATTERN.finditer(text):
-            ref = m.group(1)
-            if "/" not in ref and not ref.startswith("../"):
-                continue  # 纯文件名提及（无路径成分）不强制视为引用，避免误伤术语
-            check_target(md_path, ref, errors)
+    """反引号引用（前缀形态全库 skills/**/*.md + 裸相对形态仅 core），报错带行号。"""
+    in_core = md_path.resolve().is_relative_to((SKILLS_ROOT / "core").resolve())
+    for i, line in enumerate(md_path.read_text(encoding="utf-8").splitlines(), 1):
+        for m in REF_PATTERN.finditer(line):
+            check_target(md_path, m.group(1), errors, i)
+        if in_core:
+            for m in CORE_BARE_PATTERN.finditer(line):
+                ref = m.group(1)
+                if "/" not in ref and not ref.startswith("../"):
+                    continue  # 纯文件名提及（无路径成分）不强制视为引用，避免误伤术语
+                check_target(md_path, ref, errors, i)
 
 
 def check_md_links(md_path, errors):
-    """markdown 链接 / 图片目标的本地存在性（外链、锚点、含占位符的模板串跳过）。
+    """markdown 链接（行内 + 引用式定义）/ html img 目标的本地存在性（外链、锚点、
+    含占位符的模板串跳过），报错带行号。
 
     目标存在时同样过红线 6 归属判定——防止用链接形态绕过反引号形态的跨 skill 检查。
     """
     rel = md_path.relative_to(REPO)
-    for m in MD_LINK_PATTERN.finditer(md_path.read_text(encoding="utf-8")):
-        raw = m.group(1)
-        if raw.startswith(("http://", "https://", "mailto:", "#")):
+    for line_no, raw, path in extract_local_refs(md_path.read_text(encoding="utf-8")):
+        if not path.lower().endswith(MD_EXTS):
             continue
-        path_part = raw.split("#", 1)[0]
-        if not path_part.lower().endswith(MD_EXTS):
-            continue
-        if any(ch in path_part for ch in "{}<>:*|"):
+        if any(ch in path for ch in "{}<>:*|"):
             continue  # 模板占位符 / 通配描述不在校验范围
-        if not (md_path.parent / path_part).exists():
-            errors.append(f"{rel}: 链接目标不存在 ({raw})")
+        if not (md_path.parent / path).exists():
+            errors.append(f"{rel}:{line_no}: 链接目标不存在 ({raw})")
         else:
-            check_target(md_path, path_part, errors)
+            check_target(md_path, path, errors, line_no)
 
 
 def check_versions(errors, versions):
@@ -218,23 +226,12 @@ def check_versions(errors, versions):
                           "（发版时三处同步：全部 SKILL.md / package.json / CHANGELOG）")
 
 
-def _find_git():
-    """定位 git 可执行文件：优先 PATH，退化到 macOS 常见绝对路径；均不存在返回 None。"""
-    git = shutil.which("git")
-    if git:
-        return git
-    for cand in ("/usr/bin/git", "/usr/local/bin/git", "/opt/homebrew/bin/git"):
-        if Path(cand).exists():
-            return cand
-    return None
-
-
 def check_tracked_files(errors):
     """红线 10：仓库跟踪面白名单——git ls-files 全量枚举，白名单外即违规。
 
     无 git 环境时显式打印跳过并明示，避免静默空转假绿。
     """
-    git = _find_git()
+    git = find_git()
     if not git:
         print("(i) 未检出 git——跳过跟踪面白名单校验")
         return
@@ -257,6 +254,13 @@ def check_tracked_files(errors):
 
 def main():
     errors = []
+
+    # 红线 11：skills/ 下每个一级子目录必须含 SKILL.md——skill 目录的最低合法形态
+    #（core 亦满足；临时杂物放 skills/ 下会逃过全部 per-skill 红线）
+    for d in sorted(SKILLS_ROOT.iterdir()):
+        if d.is_dir() and not (d / "SKILL.md").exists():
+            errors.append(f"skills/{d.name}/: 目录缺 SKILL.md——skill 目录必须含 SKILL.md"
+                          "（临时/非产品内容勿放 skills/ 下）")
 
     # 红线 4：core/ 是纯共享引用层——SKILL.md 允许存在（作为安装器可识别的依赖单元），
     # 但必须声明"不独立触发"，防止共享知识库被当成面向任务的 skill 使用
@@ -318,7 +322,7 @@ def main():
     check_tracked_files(errors)
 
     skills = [d for d in skill_dirs() if d.name != "core"]
-    n_core = sum(1 for m in all_mds if _is_under(m.resolve(), (SKILLS_ROOT / "core").resolve()))
+    n_core = sum(1 for m in all_mds if m.resolve().is_relative_to((SKILLS_ROOT / "core").resolve()))
     print(f"校验 {len(skills)} 个 skill + core/ {n_core} 个共享文档（引用校验覆盖全部 {len(all_mds)} 个 md）")
     if errors:
         print(f"\n❌ {len(errors)} 处违规：")
@@ -326,7 +330,8 @@ def main():
             print(f"  - {e}")
         return 1
     print("✅ 架构红线全部通过（frontmatter / ≤500 行 / When NOT to Use / core 依赖单元声明 / "
-          "引用完整含 md 链接 / 无跨 skill 引用 / 版本一致 / JSON 合法 / 无 eval 越界引用 / 跟踪面白名单）")
+          "引用完整含 md 链接与引用式定义 / 无跨 skill 引用 / 版本一致 / JSON 合法 / 无 eval 越界引用 / "
+          "跟踪面白名单 / skills 目录形态）")
     return 0
 
 
