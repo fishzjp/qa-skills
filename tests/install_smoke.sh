@@ -16,7 +16,7 @@ trap 'rm -rf "$TD"' EXIT
 "$REPO_ROOT/install.sh" --target "$TD/copy" > /dev/null
 ls "$TD/copy" | grep -v '^qa-skills.VERSION$' > "$TD/units.txt"
 N_UNITS="$(wc -l < "$TD/units.txt" | tr -d ' ')"
-[ "$N_UNITS" -ge 12 ] || { echo "❌ 安装单元数 $N_UNITS < 12（11 skill + core），install.sh 清单疑似缺损" >&2; exit 1; }
+[ "$N_UNITS" -ge 12 ] || { echo "❌ 安装单元数 $N_UNITS < 13（12 skill + core），install.sh 清单疑似缺损" >&2; exit 1; }
 while IFS= read -r u; do
   [ -f "$TD/copy/$u/SKILL.md" ] || { echo "❌ copy 安装缺少 $u/SKILL.md" >&2; exit 1; }
 done < "$TD/units.txt"

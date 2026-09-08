@@ -15,7 +15,7 @@
 
 <p align="center">
   <a href="https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml"><img src="https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="./skills/"><img src="https://img.shields.io/badge/skills-11-blue" alt="Skills"></a>
+  <a href="./skills/"><img src="https://img.shields.io/badge/skills-12-blue" alt="Skills"></a>
   <a href="https://www.skills.sh/fishzjp/qa-skills"><img src="https://img.shields.io/badge/skills.sh-npx%20skills%20add-black" alt="Install via skills.sh"></a>
   <a href="https://github.com/fishzjp/qa-skills/releases"><img src="https://img.shields.io/badge/release-gain%20matrix%20snapshot-orange" alt="Release gain matrix"></a>
   <a href="https://github.com/fishzjp/qa-skills/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
@@ -33,7 +33,7 @@
 npx skills add fishzjp/qa-skills --skill '*'
 ```
 
-> However you install, `core/` — the shared knowledge base dependency unit (not an executable skill) — must come along: installing any single skill without core breaks the relative-path references. To fix a partial install, re-run `npx skills add fishzjp/qa-skills --skill '*'` (or copy the `core/` directory manually). Option 1's `--skill '*'` full install is verified: all 11 skills + core land in place, references intact.
+> However you install, `core/` — the shared knowledge base dependency unit (not an executable skill) — must come along: installing any single skill without core breaks the relative-path references. To fix a partial install, re-run `npx skills add fishzjp/qa-skills --skill '*'` (or copy the `core/` directory manually). Option 1's `--skill '*'` full install is verified: all 12 skills + core land in place, references intact.
 
 **Option 2: the universal install script** (auto-detects agent skills directories)
 
@@ -55,7 +55,7 @@ dsh plugin --profile web add dsh-qa-skills
 <summary><strong>Manual install, upgrade & uninstall</strong></summary>
 
 - Manual install: `cp -r skills/* <your skills directory>/` — **`core/` must be copied along**, every skill references it by relative path.
-- Verify: `ls <your skills directory>` should show 11 skill directories + `core/` + `qa-skills.VERSION`.
+- Verify: `ls <your skills directory>` should show 12 skill directories + `core/` + `qa-skills.VERSION`.
 - Upgrade: `./install.sh --target <dir> --link` installs symlinks — `git pull` updates in place.
 - Uninstall: `./uninstall.sh`.
 </details>
@@ -239,7 +239,7 @@ Pre-registered gates: 4/7 under the same-family judge, 5/8 under the heterogeneo
 <summary><strong>Repository layout</strong></summary>
 
 ```text
-skills/        the product (11 skills + shared core/)
+skills/        the product (12 skills + shared core/)
   qa/          orchestration entry (thin, no domain knowledge)
   core/        shared knowledge base (installed as a dependency alongside skills, no task triggering): evidence / risk-model /
                executability / testing-principles / report-template / case-format / coverage /
@@ -248,7 +248,7 @@ skills/        the product (11 skills + shared core/)
                + methods/ (5 design-method guides) + scripts/ (schema validator + type-signal scanner)
   requirement-analysis/  test-strategy/  test-case-writing/  test-case-review/
   automated-e2e-testing/  api-testing/  exploratory-testing/  bug-analysis/  regression-testing/
-  qa-memory/
+  qa-memory/             test-reliability/ (flaky & suite-reliability governance)
 .dsh/          dsh plugin trio (manifest in package.json's dsh.bundle)
 assets/        visual assets (README hero images, share image og.jpg, social preview) + landing-page self-hosted fonts in fonts/
 examples/      Skill On/Off output comparison

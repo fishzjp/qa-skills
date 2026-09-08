@@ -9,7 +9,7 @@ description: "qa-skills shared knowledge base — dependency, NOT triggerable: e
 # qa-skills 共享知识库（core）
 
 本目录是框架的公共层：不定义工作流、不面向用户触发，仅被 `skills/` 下其余
-11 个 skill（qa / requirement-analysis / test-strategy / …）以相对路径
+12 个 skill（qa / requirement-analysis / test-strategy / …）以相对路径
 `../core/<file>` 按需引用。单一维护源，多 skill 复用。
 
 ## 共享文档
@@ -34,6 +34,6 @@ description: "qa-skills shared knowledge base — dependency, NOT triggerable: e
 ## When NOT to Use
 
 - 任何具体测试任务（写用例、定策略、查 Bug 等）**都不要触发本 skill**：
-  它不包含工作流，独立使用没有产出。对应任务请用其余 11 个 skill 之一。
+  它不包含工作流，独立使用没有产出。对应任务请用其余 12 个 skill 之一。
 - 本 skill 仅在两种情况下被触及：① 其余 skill 工作流按需引用上述文件；
   ② 安装/校验场景（作为安装依赖单元被安装器识别）。

@@ -1,7 +1,7 @@
 {
   "name": "dsh-qa-skills",
   "version": "0.8.1",
-  "description": "DeepSeek Harness (dsh) plugin: 11 testing skills (requirement analysis, test strategy, case writing/review, E2E/API automation, exploratory, regression, bug analysis, pipeline orchestration, project QA memory) + shared core knowledge base — a full QA pipeline as agent skills.",
+  "description": "DeepSeek Harness (dsh) plugin: 12 testing skills (requirement analysis, test strategy, case writing/review, E2E/API automation, exploratory, regression, bug analysis, flaky/suite-reliability governance, pipeline orchestration, project QA memory) + shared core knowledge base — a full QA pipeline as agent skills.",
   "type": "module",
   "main": ".dsh/plugins/qa-skills.js",
   "scripts": {

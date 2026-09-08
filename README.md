@@ -15,7 +15,7 @@
 
 <p align="center">
   <a href="https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml"><img src="https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="./skills/"><img src="https://img.shields.io/badge/skills-11-blue" alt="Skills"></a>
+  <a href="./skills/"><img src="https://img.shields.io/badge/skills-12-blue" alt="Skills"></a>
   <a href="https://www.skills.sh/fishzjp/qa-skills"><img src="https://img.shields.io/badge/skills.sh-npx%20skills%20add-black" alt="Install via skills.sh"></a>
   <a href="https://github.com/fishzjp/qa-skills/releases"><img src="https://img.shields.io/badge/release-%E5%A2%9E%E7%9B%8A%E7%9F%A9%E9%98%B5%E5%BF%AB%E7%85%A7-orange" alt="Release gain matrix"></a>
   <a href="https://github.com/fishzjp/qa-skills/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a>
@@ -33,7 +33,7 @@
 npx skills add fishzjp/qa-skills --skill '*'
 ```
 
-> 无论哪种方式，`core/`（共享知识库，不是可独立触发的 skill）必须一起装——单装任何一个 skill 而不带 core，相对路径引用会断；误装补救 = 补跑一次 `npx skills add fishzjp/qa-skills --skill '*'`（或手动补拷 `core/` 目录）。方式一的 `--skill '*'` 全量安装已实测：11 个 skill + core 全部就位、引用完好。
+> 无论哪种方式，`core/`（共享知识库，不是可独立触发的 skill）必须一起装——单装任何一个 skill 而不带 core，相对路径引用会断；误装补救 = 补跑一次 `npx skills add fishzjp/qa-skills --skill '*'`（或手动补拷 `core/` 目录）。方式一的 `--skill '*'` 全量安装已实测：12 个 skill + core 全部就位、引用完好。
 
 **方式二：安装脚本**（自动检测宿主 skills 目录）
 
@@ -55,7 +55,7 @@ dsh plugin --profile web add dsh-qa-skills
 <summary><strong>手动安装、升级与卸载</strong></summary>
 
 - 手动安装：`cp -r skills/* <skills 目录>/`——**`core/` 必须一起复制**，各 skill 以相对路径引用它。
-- 验证：`ls <skills 目录>` 应见 11 个 skill 目录 + `core/` + `qa-skills.VERSION`。
+- 验证：`ls <skills 目录>` 应见 12 个 skill 目录 + `core/` + `qa-skills.VERSION`。
 - 升级：`./install.sh --target <目录> --link` 软链安装，`git pull` 后即更新。
 - 卸载：`./uninstall.sh`。
 </details>
@@ -239,7 +239,7 @@ PRD / 代码
 <summary><strong>仓库结构</strong></summary>
 
 ```text
-skills/                  产品本体（11 个 skill + core 共享知识库）
+skills/                  产品本体（12 个 skill + core 共享知识库）
   qa/                    编排入口（薄，无领域知识）
   core/                  共享知识库（作为依赖随 skill 一并安装，不独立触发）：evidence / risk-model /
                          executability / testing-principles / report-template / case-format /
@@ -248,7 +248,8 @@ skills/                  产品本体（11 个 skill + core 共享知识库）
                          + methods/（5 篇方法细则）+ scripts/（schema 校验器 + 类型信号扫描器）
   requirement-analysis/  test-strategy/  test-case-writing/
   test-case-review/      automated-e2e-testing/  api-testing/
-  exploratory-testing/   bug-analysis/  regression-testing/  qa-memory/
+  exploratory-testing/   bug-analysis/  regression-testing/
+  qa-memory/             test-reliability/（flaky 与套件可靠性治理）
 .dsh/                    dsh 插件三件套（清单见 package.json 的 dsh.bundle）
 assets/                  视觉资产（README 头图 hero、分享图 og.jpg、社交预览图 social-preview）+ 落地页自托管字体 fonts/
 examples/                Skill On / Off 产出对照

@@ -21,7 +21,7 @@
 
 | # | 宿主目录 | 安装形态 | 结果 | 凭证 |
 |---|---|---|---|---|
-| 1 | 共享目录（沙箱实测） | 整仓 `--skill '*'` | ✅ 11 skill + core 就位、`../core/` 引用完好 | 2026-09-07 营销批（7fce53f） |
+| 1 | 共享目录（沙箱实测） | 整仓 `--skill '*'` | ✅ 12 skill + core 就位、`../core/` 引用完好 | 2026-09-07 营销批（7fce53f） |
 | 2 | 共享目录（沙箱实测） | 单装 `--skill qa` | ❌ 不带 core（引用断，设计内）→ README 警示随行 | 同上 |
 | 3 | Claude Code（`~/.claude/skills`，裸 HOME 沙箱） | 整仓 `--skill '*' -g -a claude-code` | ✅ 12 单元全就位、core 文档在位 | 2026-09-07 C0 批（0.8.0） |
 | 4 | Codex 目标（`-a codex`，裸 HOME 沙箱） | 整仓 `--skill '*'` | ✅ 12 单元落位共享目录 `~/.agents/skills`（CLI 对 Codex 的承载形态，未建 `~/.codex/`）、85 处 `../core/` 引用全通、core 完整 | 2026-09-08 C0 收官批 |
@@ -70,7 +70,7 @@
 ```bash
 V_NEW="0.7.0"; V_OLD="0.6.0"   # ← 换成本次目标值
 # 函数级说明：锚定 frontmatter 整行做版本替换，避免 sed 撞上正文中的历史版本字样
-grep -rl "^version: ${V_OLD}$" skills/*/SKILL.md | wc -l        # 预检 SYNC COUNT = SKILL.md 文件数（当前 12：11 个 skill + core 依赖单元）
+grep -rl "^version: ${V_OLD}$" skills/*/SKILL.md | wc -l        # 预检 SYNC COUNT = SKILL.md 文件数（当前 13：12 个 skill + core 依赖单元）
 sed -i '' "s/^version: ${V_OLD}$/version: ${V_NEW}/" skills/*/SKILL.md
 sed -i '' "s/\"version\": \"${V_OLD}\"/\"version\": \"${V_NEW}\"/" package.json
 git diff --stat                                                  # 复验：每个文件仅 version 行变动

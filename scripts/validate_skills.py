@@ -43,7 +43,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _gate_common import extract_local_refs, find_git, visible_lines  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
-SKILLS_ROOT = REPO / "skills"   # 产品本体（11 个 skill + core/ 共享库）统一在此
+SKILLS_ROOT = REPO / "skills"   # 产品本体（12 个 skill + core/ 共享库）统一在此
 MAX_LINES = 500
 MAX_DESC_CHARS = 300
 REF_PATTERN = re.compile(r"`((?:\.\./|references/|templates/|core/)[\w./-]+\.(?:md|json|py|ya?ml))`")

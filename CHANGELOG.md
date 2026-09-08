@@ -7,6 +7,10 @@
 
 ### 新增
 
+- **新 skill `test-reliability`（flaky 与套件可靠性治理，第 12 个 skill）**：回答"这套测试的结果还能不能信"——单条 flaky 判定（复跑矩阵 M1–M6 取证）→ 根因四分类（S1 时序等待/S2 共享状态/S3 环境/S4 并发竞态）→ 隔离与门禁语义（quarantine 可见、不计分母但必须披露）→ 重试诚实语义（重试绿≠修复，clean/retry/quarantine 三项分开统计）→ 套件健康度机读摘要（挂 `core/report-template` 机读段）。配 `references/flaky-playbook.md`（判定树含**非平稳信号复核强制闸门**：失败率趋势/外部变更相关/阈值穿越任一命中即翻转为真失败候选上抛——防"真缺陷穿着 flaky 外衣"潜伏）。出生双语 description（296 字符）；合入证据链：入池 2 任务（rel-quarantine-verdict / rel-retry-gate-health，r1 审计全采纳）→ On/Off 门（首轮 FAIL→失败模式归类→playbook 修订→On 臂复验 P05 正控 0%→100%、纪律点 On=1.0 vs Off=0.833，P15 全防形态裁定 KILL 未触发）→ 最弱模型门（dfic:deepseek-v4-flash 同档替换，On 各指标不劣于 Off）→ X26 触发屏（34/35 零新增错判）。判定权归属与实验记录见 GATES §6 与 E1_RULE.md。
+
+### 新增
+
 - **Skill 描述双语化 C0 批 0 收官（11/12）**：回炉单元 `automated-e2e-testing` / `exploratory-testing` / `qa-memory` 完成双语化上线（全部 ≤300 字符红线、双引号包裹合规）。预注册逐个过门（EXPECTED v1.9 X26 路由屏，temperature=0 确定性仪器，B0=33/35 错误集 {R24 既有混淆, R28 边界样本}）：exploratory-testing 34/35（顺带修复 R28，零新增错判）、qa-memory 33/35（错误集与 B0 一致，`test-case-writing` 指针反触发显式化）、automated-e2e-testing 33/35（错误集与 B0 一致）。**教训（实测两次证实）：双语化压缩不得丢失语义锚点与单元名指针反触发**——e2e 首版删去"写自动化前的业务熟悉踩点"锚点、exploratory 首版删去"（automated-e2e-testing 工作流零）"指针，均立即触发 R26 新增错判，回滚后携锚点/指针重写方过门。**bug-analysis 维持中文原文**：三个差异显著的双语变体（273/298/263 字符）均稳定触发组合刃口新增错判（R26 对 bug 双语化敏感），按预注册回滚缓议并登记 X20 观测、深轮再议——宁缺毋滥，不对路由屏过拟合。同批：安装形态宿主广度格实测通过（`npx skills add -g -a codex` 裸 HOME 沙箱：12 单元全就位、85 处 `../core/` 引用全通），RELEASING 矩阵更新。
 
 ## [0.8.1] - 2026-09-07
