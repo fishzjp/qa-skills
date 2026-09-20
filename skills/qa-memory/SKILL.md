@@ -2,7 +2,7 @@
 name: qa-memory
 slug: qa-memory
 displayName: QA 项目知识库
-version: 0.8.1
+version: 0.9.0
 description: "Maintain the .qa/ knowledge base of cross-session QA knowledge (quirks, flaky verdicts, defect patterns, contract changes); read before test tasks. Not for: pipeline state, case files (test-case-writing). 维护被测项目 .qa/ 跨会话知识库（环境怪癖、flaky、缺陷模式、契约变更）读写治理；任务前先读取。不用于：流水线状态、用例文件读写（test-case-writing）。"
 ---
 

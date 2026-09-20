@@ -82,7 +82,8 @@ git diff --stat                                                  # 复验：每�
 
 | 触发条件 | 必做同步 |
 |----------|----------|
-| 新增 / 下线 skill 单元 | 安装器清单自动派生自 `skills/*/SKILL.md`（install.sh / uninstall.sh 无需改清单）；package.json description 中的 skill 计数与枚举；双语 README 结构树计数与行列排布；`tests/install_smoke.sh` 的单元数下限与 bug_report.yml 问题区域下拉（如适用） |
+| 定版触及 `index.html`（或每版例行） | `index.html` JSON-LD `softwareVersion` 随版本号同步（0.9.0 审查发现该字段曾停更两个版本——GEO 层的机器可读事实不得陈旧） |
+| 新增 / 下线 skill 单元 | 安装器清单自动派生自 `skills/*/SKILL.md`（install.sh / uninstall.sh 无需改清单）；package.json description 中的 skill 计数与枚举；双语 README 结构树计数与行列排布；`tests/install_smoke.sh` 的单元数下限与 bug_report.yml 问题区域下拉（如适用）；`index.html` ticker 枚举与 featureList 能力项 |
 | 新增 / 下线 core 共享文档 | 双语 README 结构树 core 行的文档枚举；涉及指纹文件的更名需同改 `install.sh`/`uninstall.sh` 的 `owns_unit` 判据 |
 | core 文档在触发措辞上影响其他 skill | 相互指向的 description / When NOT to Use 同步修订 |
 
@@ -104,6 +105,7 @@ minor 及以上追加（本地链路）：按分级门跑模型矩阵 + in-situ�
 ### §4 隔离面审查 —— 进公开仓最后一道
 
 - [ ] `git status --short` 暂存面不含 `eval/`、`tests/`、`.in-situ-lab/` 等本地评测产物（.gitignore 已隔离，但要肉眼复核）
+- [ ] `npm pack --dry-run` 清单中的 skills/ 单元集合 == `git ls-files skills/` 的单元集合（install.sh 与 pack 按工作区取文件，未跟踪的 SKILL.md 草稿会静默进安装清单与发包——2026-09-19 审查实证：B1 草稿在 skills/ 窗口期内若发版即随包发布；草稿一律放 eval/plans/ 暂存区，过门合入时再进 skills/）
 - [ ] 无真实环境地址、账号、密钥、内部系统名（CONTRIBUTING 自检第 1 条）
 - [ ] 跟踪面白名单校验通过（validate_skills.py 红线 10 随 §3 测试关自动执行；`git ls-files` 中不得出现临时文件、测试数据、实验·开发报告、开发计划等与 skills 无关内容，白名单维护规则见 CONTRIBUTING 架构红线 8）
 

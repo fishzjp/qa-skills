@@ -2,7 +2,7 @@
 name: regression-testing
 slug: regression-testing
 displayName: 回归测试
-version: 0.8.1
+version: 0.9.0
 description: "After a code change (diff/fix/requirement change), decide what to regression-test: changed files → functions → features → cases traceability; outputs a ranked list. Not for: editing case files (test-case-writing), long-term strategy (test-strategy). 代码变更后判断回归哪些测试：沿改动分析链产出分级回归清单。不用于：用例增量修改、长期策略。"
 ---
 

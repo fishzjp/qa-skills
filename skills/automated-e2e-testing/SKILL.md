@@ -2,7 +2,7 @@
 name: automated-e2e-testing
 slug: automated-e2e-testing
 displayName: E2E 自动化测试
-version: 0.8.1
+version: 0.9.0
 description: "Turn manual cases into Playwright E2E automation run in a browser: page objects, helpers, bug evidence, reports. Not for: API tests, exploratory sessions, bug root-cause. 将手动用例转为 Playwright E2E 自动化并真实执行；含写自动化前的业务熟悉踩点、Page Object/Helper、Bug 证据与报告条目。不用于：API 接口测试、独立探索会话（exploratory-testing）、Bug 根因。"
 ---
 
