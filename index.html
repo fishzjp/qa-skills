@@ -20,6 +20,24 @@
 <meta property="og:locale" content="zh_CN">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://fishzjp.github.io/qa-skills/og.jpg">
+<meta property="og:locale:alternate" content="en_US">
+<script>
+/* 语言预解析（中英切换·上半）：URL ?lang= > localStorage > 默认中文。
+   在 head 同步执行 = 首帧渲染前给 <html> 挂 .lang-en，CSS 据此互斥显示
+   .zh-only/.en-only（内容都平铺在 HTML 里，无 JS / 爬虫看到中文成品）；
+   EN 时同步 lang 属性与标题/描述。切换动作在下半：initLangToggle 写存储后 reload */
+(function () {
+  var m = location.search.match(/[?&]lang=(en|zh)/);
+  var lang = m && m[1];
+  try { if (!lang) lang = localStorage.getItem('qa-lang'); } catch (e) {}
+  if (lang !== 'en') return;
+  document.documentElement.classList.add('lang-en');
+  document.documentElement.lang = 'en';
+  document.title = 'qa-skills — Make AI work like a senior QA engineer';
+  var d = document.querySelector('meta[name="description"]');
+  if (d) d.setAttribute('content', 'qa-skills is a QA engineering skill framework for AI agents. Installed into Claude Code and other coding assistants, the AI works like a senior QA engineer: understanding requirements, mapping risk, writing cases, running automation, locating defects, reporting.');
+})();
+</script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -83,7 +101,7 @@
     {
       "@type": "Question",
       "name": "支持英文吗？",
-      "acceptedAnswer": { "@type": "Answer", "text": "产品本体当前是中文，英文层在路线图上；需求描述与被测代码为中英混合时可正常工作。" }
+      "acceptedAnswer": { "@type": "Answer", "text": "落地页与 README 已支持英文；12 个 Skill 中 11 个的 description 已双语（bug-analysis 暂缓），Skill 指令正文当前仍是中文。需求描述与被测代码为中英混合时可正常工作。" }
     }
   ]
 }
@@ -283,6 +301,32 @@
   @media (max-width: 760px) {
     .nav-links a:not(.nav-github) { display: none; }
   }
+
+  /* 语言切换按钮：button 不是 a，760px 断点只藏文字链接，它常驻可见 */
+  .nav-lang {
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    padding: 0 11px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: transparent;
+    color: var(--text-2);
+    font-family: var(--font-display);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .nav-lang:hover { color: var(--text); border-color: rgba(255, 255, 255, 0.32); }
+
+  /* ---- 中英双语互斥（head 预解析脚本挂 html.lang-en，切换走 reload）----
+     两语内容平铺在同一位置按类互斥显示；无 JS 时恒为默认中文。
+     !important 压过元素自身的 display 规则（按钮/胶囊等 inline-flex 面） ---- */
+  html:not(.lang-en) .en-only { display: none !important; }
+  html.lang-en .zh-only { display: none !important; }
 
   /* ============ Hero ============ */
   .hero {
@@ -2151,17 +2195,20 @@
       qa·skills
     </a>
     <div class="nav-links">
-      <a href="#what">它是什么</a>
-      <a href="#how">怎么工作</a>
-      <a href="#skills">六大能力</a>
-      <a href="#proof">实测效果</a>
-      <a href="#faq">常见问题</a>
-      <a href="#install">安装</a>
-      <a class="nav-github" href="https://github.com/fishzjp/qa-skills" target="_blank" rel="noopener" aria-label="GitHub 仓库" title="GitHub 仓库">
+      <a href="#what"><span class="zh-only">它是什么</span><span class="en-only">What it is</span></a>
+      <a href="#how"><span class="zh-only">怎么工作</span><span class="en-only">How it works</span></a>
+      <a href="#skills"><span class="zh-only">六大能力</span><span class="en-only">Capabilities</span></a>
+      <a href="#proof"><span class="zh-only">实测效果</span><span class="en-only">Measured</span></a>
+      <a href="#faq"><span class="zh-only">常见问题</span><span class="en-only">FAQ</span></a>
+      <a href="#install"><span class="zh-only">安装</span><span class="en-only">Install</span></a>
+      <a class="nav-github" href="https://github.com/fishzjp/qa-skills" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub">
         <svg width="19" height="19" viewBox="0 0 16 16" aria-hidden="true">
           <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"></path>
         </svg>
       </a>
+      <button class="nav-lang" type="button" aria-label="切换语言 / Switch language">
+        <span class="zh-only">EN</span><span class="en-only">中文</span>
+      </button>
     </div>
   </div>
   <div class="scroll-progress" aria-hidden="true"></div>
@@ -2174,20 +2221,27 @@
   <div class="container">
     <div class="hero-badge reveal in">
       <span class="pill-dot" aria-hidden="true"></span>
-      开源 · MIT · 兼容 <b>Claude Code</b>、<b>DeepSeek Harness</b> 等 AI 编程助手
+      <span class="zh-only">开源 · MIT · 兼容 <b>Claude Code</b>、<b>DeepSeek Harness</b> 等 AI 编程助手</span>
+      <span class="en-only">Open source · MIT · works with <b>Claude Code</b>, <b>DeepSeek Harness</b> and other AI coding agents</span>
     </div>
-    <h1 class="reveal d1 in" style="position: relative;">让测试工程<br>成为 AI 的本能</h1>
-    <p class="sub reveal d2 in">
+    <h1 class="reveal d1 in" style="position: relative;"><span class="zh-only">让测试工程</span><span class="en-only">Make test engineering</span><br><span class="zh-only">成为 AI 的本能</span><span class="en-only">an instinct for AI</span></h1>
+    <p class="sub reveal d2 in zh-only">
       一套面向 AI Agent 的测试工程 Skill 框架。<br>
       装进编程助手，AI 就能按资深工程师的方式做测试：<br class="nb">
       读需求、排风险、写用例、跑自动化、出报告。
     </p>
+    <p class="sub reveal d2 in en-only">
+      A QA engineering skill framework for AI agents.<br>
+      Installed into your coding agent, the AI tests like a senior engineer:<br class="nb">
+      read requirements, map risk, write cases, run automation, report.
+    </p>
     <div class="hero-cta reveal d3 in">
-      <a class="btn btn-primary" href="#install">一行命令安装</a>
-      <a class="btn btn-ghost" href="#what">了解更多 <span class="arr">→</span></a>
+      <a class="btn btn-primary" href="#install"><span class="zh-only">一行命令安装</span><span class="en-only">Install in one line</span></a>
+      <a class="btn btn-ghost" href="#what"><span class="zh-only">了解更多</span><span class="en-only">Learn more</span> <span class="arr">→</span></a>
     </div>
     <p class="hero-proof reveal d4 in">
-      实测：用例合格率 <b>26% → 98%</b><span class="sep">·</span>已上架 <b>skills.sh</b> / <b>npm</b><span class="sep">·</span>MIT 开源免费
+      <span class="zh-only">实测：用例合格率 <b>26% → 98%</b><span class="sep">·</span>已上架 <b>skills.sh</b> / <b>npm</b><span class="sep">·</span>MIT 开源免费</span>
+      <span class="en-only">Measured: case pass rate <b>26% → 98%</b><span class="sep">·</span>on <b>skills.sh</b> / <b>npm</b><span class="sep">·</span>MIT, free &amp; open source</span>
     </p>
   </div>
 
@@ -2206,21 +2260,21 @@
         <div class="window-body">
           <div class="win-pane-chat">
             <div class="msg msg-user">
-              <div class="avatar">你</div>
+              <div class="avatar"><span class="zh-only">你</span><span class="en-only">You</span></div>
               <div class="msg-body">
                 <div class="role">USER</div>
-                <div class="bubble">帮我测试这个需求：优惠券到期后自动失效。<br>仓库：<code>acme/shop</code></div>
+                <div class="bubble"><span class="zh-only">帮我测试这个需求：优惠券到期后自动失效。<br>仓库：<code>acme/shop</code></span><span class="en-only">Test this requirement: coupons auto-expire after their deadline.<br>Repo: <code>acme/shop</code></span></div>
               </div>
             </div>
             <div class="msg msg-agent">
               <div class="avatar" style="position: relative;">AI</div>
               <div class="msg-body">
-                <div class="role">AGENT · 已装载 qa-skills</div>
+                <div class="role">AGENT · <span class="zh-only">已装载 qa-skills</span><span class="en-only">qa-skills loaded</span></div>
                 <div class="pipeline-list">
-                  <div class="pl-item done"><span class="st"></span><span>需求分析 <span class="pl-note">2 个歧义点已向你确认</span></span></div>
-                  <div class="pl-item done"><span class="st"></span><span>测试策略 <span class="pl-note">高危：到期竞态、时区边界</span></span></div>
-                  <div class="pl-item done"><span class="st"></span><span>用例设计 <span class="pl-note">schema.yaml + 脑图已产出</span></span></div>
-                  <div class="pl-item running"><span class="st"></span><span>用例评审 <span class="pl-note">覆盖基准逐条复审中…</span></span></div>
+                  <div class="pl-item done"><span class="st"></span><span><span class="zh-only">需求分析 <span class="pl-note">2 个歧义点已向你确认</span></span><span class="en-only">Requirement analysis <span class="pl-note">2 ambiguities confirmed with you</span></span></span></div>
+                  <div class="pl-item done"><span class="st"></span><span><span class="zh-only">测试策略 <span class="pl-note">高危：到期竞态、时区边界</span></span><span class="en-only">Test strategy <span class="pl-note">High risk: expiry races, timezone edges</span></span></span></div>
+                  <div class="pl-item done"><span class="st"></span><span><span class="zh-only">用例设计 <span class="pl-note">schema.yaml + 脑图已产出</span></span><span class="en-only">Case design <span class="pl-note">schema.yaml + mind map emitted</span></span></span></div>
+                  <div class="pl-item running"><span class="st"></span><span><span class="zh-only">用例评审 <span class="pl-note">覆盖基准逐条复审中…</span></span><span class="en-only">Case review <span class="pl-note">Re-checking against coverage baseline…</span></span></span></div>
                 </div>
               </div>
             </div>
@@ -2230,7 +2284,7 @@
               <span class="on">markmap.md</span>
               <span style="position: relative;">schema.yaml</span>
             </div>
-            <div class="code-area mmap-area" style="position: relative;"><svg class="mmap-svg" id="mmapSvg" aria-hidden="true" width="764" height="435" viewBox="0 0 764 435"><path d="M 262.921875 217.5 C 288.921875 217.5, 274.921875 90, 300.921875 90" fill="none" stroke="rgba(91,163,245,0.55)" stroke-width="1.5"></path><path d="M 262.921875 217.5 C 288.921875 217.5, 274.921875 192, 300.921875 192" fill="none" stroke="rgba(139,124,255,0.55)" stroke-width="1.5"></path><path d="M 262.921875 217.5 C 288.921875 217.5, 274.921875 319.5, 300.921875 319.5" fill="none" stroke="rgba(57,197,207,0.55)" stroke-width="1.5"></path><path d="M 382.921875 90 C 408.921875 90, 394.921875 90, 420.921875 90" fill="none" stroke="rgba(91,163,245,0.55)" stroke-width="1.5"></path><path d="M 382.921875 192 C 408.921875 192, 394.921875 141, 420.921875 141" fill="none" stroke="rgba(139,124,255,0.55)" stroke-width="1.5"></path><path d="M 382.921875 192 C 408.921875 192, 394.921875 192, 420.921875 192" fill="none" stroke="rgba(139,124,255,0.55)" stroke-width="1.5"></path><path d="M 382.921875 192 C 408.921875 192, 394.921875 243, 420.921875 243" fill="none" stroke="rgba(139,124,255,0.55)" stroke-width="1.5"></path><path d="M 382.921875 319.5 C 408.921875 319.5, 394.921875 294, 420.921875 294" fill="none" stroke="rgba(57,197,207,0.55)" stroke-width="1.5"></path><path d="M 382.921875 319.5 C 408.921875 319.5, 394.921875 345, 420.921875 345" fill="none" stroke="rgba(57,197,207,0.55)" stroke-width="1.5"></path></svg><div class="mmap" id="mmapTree" style="transform: none; margin-left: 0px; margin-right: 0px; transform-origin: left center;"><div class="mmap-row"><div class="mmap-node root">到期后自动变为「已结束」[P1]</div><div class="mmap-col"><div class="mmap-row"><div class="mmap-node lv1 c1">前置条件</div><div class="mmap-col"><div class="mmap-row"><div class="mmap-node c1">固定时间段已发布券 · 结束时间设为 10 分钟后</div></div></div></div><div class="mmap-row"><div class="mmap-node lv1 c2">操作步骤</div><div class="mmap-col"><div class="mmap-row"><div class="mmap-node c2">① 记录结束时间</div></div><div class="mmap-row"><div class="mmap-node c2">② 等待到期</div></div><div class="mmap-row"><div class="mmap-node c2">③ 刷新列表查状态</div></div></div></div><div class="mmap-row"><div class="mmap-node lv1 c3">预期结果</div><div class="mmap-col"><div class="mmap-row"><div class="mmap-node c3">到期后 1 小时内 → 状态「已结束」</div></div><div class="mmap-row"><div class="mmap-node c3">超 1 小时未变 → 判失败</div></div></div></div></div></div></div></div>
+            <div class="code-area mmap-area" style="position: relative;"><svg class="mmap-svg" id="mmapSvg" aria-hidden="true" width="764" height="435" viewBox="0 0 764 435"><path d="M 262.921875 217.5 C 288.921875 217.5, 274.921875 90, 300.921875 90" fill="none" stroke="rgba(91,163,245,0.55)" stroke-width="1.5"></path><path d="M 262.921875 217.5 C 288.921875 217.5, 274.921875 192, 300.921875 192" fill="none" stroke="rgba(139,124,255,0.55)" stroke-width="1.5"></path><path d="M 262.921875 217.5 C 288.921875 217.5, 274.921875 319.5, 300.921875 319.5" fill="none" stroke="rgba(57,197,207,0.55)" stroke-width="1.5"></path><path d="M 382.921875 90 C 408.921875 90, 394.921875 90, 420.921875 90" fill="none" stroke="rgba(91,163,245,0.55)" stroke-width="1.5"></path><path d="M 382.921875 192 C 408.921875 192, 394.921875 141, 420.921875 141" fill="none" stroke="rgba(139,124,255,0.55)" stroke-width="1.5"></path><path d="M 382.921875 192 C 408.921875 192, 394.921875 192, 420.921875 192" fill="none" stroke="rgba(139,124,255,0.55)" stroke-width="1.5"></path><path d="M 382.921875 192 C 408.921875 192, 394.921875 243, 420.921875 243" fill="none" stroke="rgba(139,124,255,0.55)" stroke-width="1.5"></path><path d="M 382.921875 319.5 C 408.921875 319.5, 394.921875 294, 420.921875 294" fill="none" stroke="rgba(57,197,207,0.55)" stroke-width="1.5"></path><path d="M 382.921875 319.5 C 408.921875 319.5, 394.921875 345, 420.921875 345" fill="none" stroke="rgba(57,197,207,0.55)" stroke-width="1.5"></path></svg><div class="mmap" id="mmapTree" style="transform: none; margin-left: 0px; margin-right: 0px; transform-origin: left center;"><div class="mmap-row"><div class="mmap-node root"><span class="zh-only">到期后自动变为「已结束」[P1]</span><span class="en-only">Auto-flips to “Ended” after expiry [P1]</span></div><div class="mmap-col"><div class="mmap-row"><div class="mmap-node lv1 c1"><span class="zh-only">前置条件</span><span class="en-only">Preconditions</span></div><div class="mmap-col"><div class="mmap-row"><div class="mmap-node c1"><span class="zh-only">固定时间段已发布券 · 结束时间设为 10 分钟后</span><span class="en-only">Published fixed-window coupon · ends in 10 min</span></div></div></div></div><div class="mmap-row"><div class="mmap-node lv1 c2"><span class="zh-only">操作步骤</span><span class="en-only">Steps</span></div><div class="mmap-col"><div class="mmap-row"><div class="mmap-node c2"><span class="zh-only">① 记录结束时间</span><span class="en-only">① Record end time</span></div></div><div class="mmap-row"><div class="mmap-node c2"><span class="zh-only">② 等待到期</span><span class="en-only">② Wait for expiry</span></div></div><div class="mmap-row"><div class="mmap-node c2"><span class="zh-only">③ 刷新列表查状态</span><span class="en-only">③ Refresh list, check status</span></div></div></div></div><div class="mmap-row"><div class="mmap-node lv1 c3"><span class="zh-only">预期结果</span><span class="en-only">Expected</span></div><div class="mmap-col"><div class="mmap-row"><div class="mmap-node c3"><span class="zh-only">到期后 1 小时内 → 状态「已结束」</span><span class="en-only">Within 1h after expiry → status “Ended”</span></div></div><div class="mmap-row"><div class="mmap-node c3"><span class="zh-only">超 1 小时未变 → 判失败</span><span class="en-only">Still unchanged after 1h → fail</span></div></div></div></div></div></div></div></div>
           </div>
         </div>
         <!-- 描边旋转流光与屏幕玻璃反光：压在窗口内容之上，纯装饰 -->
@@ -2260,25 +2314,33 @@
     <div class="duo">
       <div class="duo-text reveal">
         <div class="kicker">01 · Why</div>
-        <h2>软件发布之前，<br>总得有人先把住质量关</h2>
-        <p>
+        <h2><span class="zh-only">软件发布之前，</span><span class="en-only">Before any release ships,</span><br><span class="zh-only">总得有人先把住质量关</span><span class="en-only">someone has to hold the line on quality</span></h2>
+        <p class="zh-only">
           每一款软件上线前，都要回答成百上千个「如果」：
           并发下单会不会超卖？优惠券到期会不会自动失效？接口异常时数据会不会错乱？
         </p>
-        <p>
+        <p class="en-only">
+          Before launch, every piece of software has to answer hundreds of “what ifs”:
+          Will concurrent orders oversell? Will coupons expire on their own? Will data corrupt when APIs fail?
+        </p>
+        <p class="zh-only">
           干这件事的，是<strong>软件测试工程师</strong>：
           在缺陷到达用户之前发现它、定位它，再确认它被修好。
         </p>
-        <p><strong>qa-skills 做的，就是让 AI 助手学会这套本事。</strong></p>
+        <p class="en-only">
+          That job belongs to the <strong>QA engineer</strong>:
+          find defects before users do, localize them, and verify the fix.
+        </p>
+        <p><span class="zh-only"><strong>qa-skills 做的，就是让 AI 助手学会这套本事。</strong></span><span class="en-only"><strong>qa-skills teaches that craft to your AI agent.</strong></span></p>
       </div>
       <div class="duo-media reveal d1">
         <div class="glass-card file-tree" aria-hidden="true">
-          <div class="ft-title">上线前要回答的问题</div>
-          <div><span class="dir">并发下单</span> <span class="indent">···</span> 高峰期会不会超卖？</div>
-          <div><span class="dir">优惠券到期</span> <span class="indent">···</span> 失效有没有空窗期？</div>
-          <div><span class="dir">接口重试</span> <span class="indent">···</span> 会不会重复扣款？</div>
-          <div><span class="dir">权限变更</span> <span class="indent">···</span> 旧会话还能不能用？</div>
-          <div><span class="dir">历史回归</span> <span class="indent">···</span> 修好的缺陷会不会复发？</div>
+          <div class="ft-title"><span class="zh-only">上线前要回答的问题</span><span class="en-only">Questions to answer before launch</span></div>
+          <div><span class="dir zh-only">并发下单</span><span class="dir en-only">Concurrent orders</span> <span class="indent">···</span> <span class="zh-only">高峰期会不会超卖？</span><span class="en-only">Oversell at peak?</span></div>
+          <div><span class="dir zh-only">优惠券到期</span><span class="dir en-only">Coupon expiry</span> <span class="indent">···</span> <span class="zh-only">失效有没有空窗期？</span><span class="en-only">Any gap before invalidation?</span></div>
+          <div><span class="dir zh-only">接口重试</span><span class="dir en-only">API retries</span> <span class="indent">···</span> <span class="zh-only">会不会重复扣款？</span><span class="en-only">Double charges?</span></div>
+          <div><span class="dir zh-only">权限变更</span><span class="dir en-only">Permission changes</span> <span class="indent">···</span> <span class="zh-only">旧会话还能不能用？</span><span class="en-only">Do old sessions still work?</span></div>
+          <div><span class="dir zh-only">历史回归</span><span class="dir en-only">Regressions</span> <span class="indent">···</span> <span class="zh-only">修好的缺陷会不会复发？</span><span class="en-only">Will fixed defects resurface?</span></div>
         </div>
       </div>
     </div>
@@ -2290,46 +2352,63 @@
   <div class="container">
     <div class="section-head reveal fb">
       <div class="kicker">02 · Problem</div>
-      <h2>能写，更要能执行。</h2>
-      <p>
+      <h2><span class="zh-only">能写，更要能执行。</span><span class="en-only">Writing cases is easy. Executing them is the bar.</span></h2>
+      <p class="zh-only">
         通用大模型写出的用例，常常看着专业、实际没法执行：<br>
         判定模糊、<span class="nb">占位符</span>没替换、时限没说清、入口是编的。<br>
         <strong>这是能力问题，更是纪律问题。</strong>
+      </p>
+      <p class="en-only">
+        Cases from general-purpose models often look professional but can't run:<br>
+        vague verdicts, <span class="nb">placeholders</span> left in, unstated timeouts, made-up entry points.<br>
+        <strong>That's a capability gap — and a discipline gap.</strong>
       </p>
     </div>
     <div class="compare">
       <div class="glass-card compare-card reveal">
         <div class="card-top">
-          <span class="card-tag tag-bad">✗ 无 Skill 的模型产出</span>
+          <span class="card-tag tag-bad"><span class="zh-only">✗ 无 Skill 的模型产出</span><span class="en-only">✗ Model output, no skills</span></span>
           <span class="card-idx">CASE-001</span>
         </div>
-        <h3>判定模糊，无法执行</h3>
-        <p class="lead">预期结果不可判定，等于没有验证：</p>
-        <div class="quote-box quote-bad">
+        <h3><span class="zh-only">判定模糊，无法执行</span><span class="en-only">Vague verdict, unrunnable</span></h3>
+        <p class="lead"><span class="zh-only">预期结果不可判定，等于没有验证：</span><span class="en-only">An undecidable expected result is no verification at all:</span></p>
+        <div class="quote-box quote-bad zh-only">
           「检查优惠券功能<em>是否正常</em>」<br>
           「正常」是什么标准？谁判定？等多久算超时？
         </div>
-        <p class="quote-verdict"><strong>判定不了的用例，</strong>覆盖再全也计零分。</p>
+        <div class="quote-box quote-bad en-only">
+          “<em>Check that</em> the coupon feature <em>works correctly</em>”<br>
+          What's the bar for “correctly”? Who decides? How long before timeout?
+        </div>
+        <p class="quote-verdict"><span class="zh-only"><strong>判定不了的用例，</strong>覆盖再全也计零分。</span><span class="en-only"><strong>A case that can't be judged</strong> scores zero — however broad its coverage.</span></p>
       </div>
       <div class="glass-card compare-card reveal d1">
         <div class="card-top">
-          <span class="card-tag tag-good">✓ qa-skills 的真实产出</span>
+          <span class="card-tag tag-good"><span class="zh-only">✓ qa-skills 的真实产出</span><span class="en-only">✓ Real qa-skills output</span></span>
           <span class="card-idx">TC-03-05</span>
         </div>
-        <h3>步骤精确，判定可量化</h3>
-        <p class="lead">前置、步骤、预期、时限，四要素齐备：</p>
-        <div class="quote-box quote-good">
+        <h3><span class="zh-only">步骤精确，判定可量化</span><span class="en-only">Precise steps, measurable verdicts</span></h3>
+        <p class="lead"><span class="zh-only">前置、步骤、预期、时限，四要素齐备：</span><span class="en-only">Preconditions, steps, expected results, timeouts — all four present:</span></p>
+        <div class="quote-box quote-good zh-only">
           「选一张 <em>10 分钟后到期</em> 的已发布优惠券，等待到期。<br>
           预期：<em>1 小时内</em>状态自动变为「已结束」，<br>
           超过 1 小时即判失败。」
         </div>
-        <p class="quote-verdict"><strong>任何测试人员拿到就能执行，</strong>不用讲解。</p>
+        <div class="quote-box quote-good en-only">
+          “Pick a published coupon expiring <em>in 10 minutes</em>, and wait.<br>
+          Expected: status flips to “Ended” automatically <em>within 1 hour</em>;<br>
+          any longer counts as a failure.”
+        </div>
+        <p class="quote-verdict"><span class="zh-only"><strong>任何测试人员拿到就能执行，</strong>不用讲解。</span><span class="en-only"><strong>Any tester can execute it as-is,</strong> no briefing needed.</span></p>
       </div>
     </div>
     <p class="compare-note reveal fb" data-illuminate>
-      产出标准只有一条：<br>
+      <span class="zh-only">产出标准只有一条：<br>
       任何一个没接触过这个需求的人，拿到文件就能直接执行。
-      <small>背后是 8 条可执行性硬标准，评测中一票否决。</small>
+      <small>背后是 8 条可执行性硬标准，评测中一票否决。</small></span>
+      <span class="en-only">One output bar only:<br>
+      anyone who never touched this requirement can pick up the file and run it.
+      <small>Backed by 8 hard executability standards — veto power in evaluation.</small></span>
     </p>
   </div>
 </section>
@@ -2339,49 +2418,56 @@
   <div class="container">
     <div class="section-head reveal fb">
       <div class="kicker">03 · What</div>
-      <h2>不是软件，<br>是一套装进 AI 的工作方法。</h2>
-      <p>
+      <h2><span class="zh-only">不是软件，</span><span class="en-only">Not software —</span><br><span class="zh-only">是一套装进 AI 的工作方法。</span><span class="en-only">a working method installed into AI.</span></h2>
+      <p class="zh-only">
         由 <span class="nb"><strong style="color:var(--text)">12 个 QA Skill</strong></span> 和一个共享知识库（core/）组成，全部是 Markdown 指令文件。
         放对目录就能生效。
+      </p>
+      <p class="en-only">
+        <span class="nb"><strong style="color:var(--text)">12 QA skills</strong></span> plus a shared knowledge base (core/), all plain Markdown instruction files.
+        Drop them in the right directory and they take effect.
       </p>
     </div>
     <div class="mount-diagram reveal">
       <div class="glass-card file-tree">
-        <div class="ft-title">qa-skills/ · Markdown 指令</div>
+        <div class="ft-title"><span class="zh-only">qa-skills/ · Markdown 指令</span><span class="en-only">qa-skills/ · Markdown instructions</span></div>
         <div><span class="dir">skills/</span></div>
         <div class="indent">├─ <span class="file hot">requirement-analysis/</span></div>
         <div class="indent">├─ <span class="file hot">test-strategy/</span></div>
         <div class="indent">├─ <span class="file hot">test-case-writing/</span></div>
         <div class="indent">├─ <span class="file hot">automated-e2e-testing/</span></div>
         <div class="indent">├─ <span class="file">bug-analysis/ · regression-testing/ …</span></div>
-        <div><span class="dir">core/</span> <span class="file"><em>共享知识库 · 8 条硬标准</em></span></div>
+        <div><span class="dir">core/</span> <span class="file"><span class="zh-only"><em>共享知识库 · 8 条硬标准</em></span><span class="en-only"><em>shared knowledge · 8 hard standards</em></span></span></div>
       </div>
       <!-- 装载连接线：细线 + 竖排小字由 CSS 绘制（.mount-arrow 及其伪元素） -->
-      <div class="mount-arrow" aria-hidden="true" style="position: relative;">装载</div>
+      <div class="mount-arrow" aria-hidden="true" style="position: relative;"><span class="zh-only">装载</span><span class="en-only">loads</span></div>
       <div class="glass-card agent-core">
-        <div class="ac-title">AI Agent · 装载后获得</div>
-        <div class="ac-cap">先澄清什么，歧义点逐条向人确认</div>
-        <div class="ac-cap">依据什么排风险，每个评级给证据</div>
-        <div class="ac-cap">哪些类型必测，哪些明确不测</div>
-        <div class="ac-cap">每条结论标注几级证据，可追溯</div>
-        <div class="ac-cap">产出写成文件，中断可接力</div>
+        <div class="ac-title"><span class="zh-only">AI Agent · 装载后获得</span><span class="en-only">AI Agent · what it gains</span></div>
+        <div class="ac-cap"><span class="zh-only">先澄清什么，歧义点逐条向人确认</span><span class="en-only">What to clarify first — ambiguities confirmed with a human</span></div>
+        <div class="ac-cap"><span class="zh-only">依据什么排风险，每个评级给证据</span><span class="en-only">How risks are ranked — every rating shows evidence</span></div>
+        <div class="ac-cap"><span class="zh-only">哪些类型必测，哪些明确不测</span><span class="en-only">Which test types are in, which are explicitly out</span></div>
+        <div class="ac-cap"><span class="zh-only">每条结论标注几级证据，可追溯</span><span class="en-only">Every conclusion tagged with evidence level, traceable</span></div>
+        <div class="ac-cap"><span class="zh-only">产出写成文件，中断可接力</span><span class="en-only">Outputs written to files — resume across sessions</span></div>
       </div>
     </div>
     <div class="cards" style="margin-top:72px">
       <div class="glass-card card reveal">
         <div class="card-top"><span class="card-kicker">modular</span><span class="card-idx">01</span></div>
-        <h3>12 个 QA Skill + 共享知识库</h3>
-        <p>需求分析、策略、用例、评审、执行、缺陷、回归，每个环节一个专属 Skill，按需加载。</p>
+        <h3><span class="zh-only">12 个 QA Skill + 共享知识库</span><span class="en-only">12 QA skills + shared knowledge base</span></h3>
+        <p class="zh-only">需求分析、策略、用例、评审、执行、缺陷、回归，每个环节一个专属 Skill，按需加载。</p>
+        <p class="en-only">One dedicated skill per stage — requirements, strategy, cases, review, execution, defects, regression — loaded on demand.</p>
       </div>
       <div class="glass-card card reveal d1">
         <div class="card-top"><span class="card-kicker">file-based</span><span class="card-idx">02</span></div>
-        <h3>一条自动接力的流水线</h3>
-        <p>每个阶段的产出都写成文件，不靠对话记忆。中断了，新开一个对话接着跑。</p>
+        <h3><span class="zh-only">一条自动接力的流水线</span><span class="en-only">A pipeline that hands off automatically</span></h3>
+        <p class="zh-only">每个阶段的产出都写成文件，不靠对话记忆。中断了，新开一个对话接着跑。</p>
+        <p class="en-only">Every stage writes its output to files, not chat memory. Interrupted? Start a new session and continue.</p>
       </div>
       <div class="glass-card card reveal d2">
         <div class="card-top"><span class="card-kicker">human-gated</span><span class="card-idx">03</span></div>
-        <h3>关键决定，由你拍板</h3>
-        <p>需求没写清的，先问你；Bug 怎么定性、预算设多少，AI 助手只提案、不代答。你的裁决会记录在案，后续不得推翻。</p>
+        <h3><span class="zh-only">关键决定，由你拍板</span><span class="en-only">Key decisions stay with you</span></h3>
+        <p class="zh-only">需求没写清的，先问你；Bug 怎么定性、预算设多少，AI 助手只提案、不代答。你的裁决会记录在案，后续不得推翻。</p>
+        <p class="en-only">Unclear requirements? It asks you first. Bug severity, budget caps — the agent proposes, never decides. Your rulings are recorded and never overridden later.</p>
       </div>
     </div>
   </div>
@@ -2392,23 +2478,26 @@
   <div class="container">
     <div class="section-head reveal fb">
       <div class="kicker">04 · How</div>
-      <h2>一句指令，从需求到报告。</h2>
-      <p>
+      <h2><span class="zh-only">一句指令，从需求到报告。</span><span class="en-only">One instruction, requirement to report.</span></h2>
+      <p class="zh-only">
         对 AI 助手说「帮我测试这个需求」，从需求到报告各环节自动接力，每个环节都有明确的产出物（完整流水线共九个阶段，含探索旁路与回归验证）。
+      </p>
+      <p class="en-only">
+        Say “test this requirement” to your agent and the stages chain automatically, each with a concrete deliverable (the full pipeline has nine stages, including the exploratory bypass and regression verification).
       </p>
     </div>
     <div class="steps-pin">
       <div class="steps">
         <div class="line-pulse" aria-hidden="true"></div>
         <div class="pin-fill" aria-hidden="true"></div>
-        <div class="step reveal"><div class="dot">1</div><p>需求分析</p><small>不懂就先问</small></div>
-        <div class="step reveal d1"><div class="dot">2</div><p>测试策略</p><small>锁定高危区域</small></div>
-        <div class="step reveal d1"><div class="dot">3</div><p>用例设计</p><small>人和机器都能读</small></div>
-        <div class="step reveal d2"><div class="dot">4</div><p>用例评审</p><small>再挑一遍错</small></div>
-        <div class="step reveal d2"><div class="dot">5</div><p>自动执行</p><small>浏览器 + 接口</small></div>
-        <div class="step reveal d3"><div class="dot">6</div><p>缺陷分析</p><small>追到出错代码</small></div>
-        <div class="step reveal d3"><div class="dot">7</div><p>回归 + 报告</p><small>证据齐全</small></div>
-        <div class="pin-status" aria-hidden="true"><span class="ps-idx">01 / 07</span><span class="ps-name">需求分析</span></div>
+        <div class="step reveal"><div class="dot">1</div><p><span class="zh-only">需求分析</span><span class="en-only">Requirement analysis</span></p><small><span class="zh-only">不懂就先问</span><span class="en-only">Ask before assuming</span></small></div>
+        <div class="step reveal d1"><div class="dot">2</div><p><span class="zh-only">测试策略</span><span class="en-only">Test strategy</span></p><small><span class="zh-only">锁定高危区域</span><span class="en-only">Lock the high-risk zones</span></small></div>
+        <div class="step reveal d1"><div class="dot">3</div><p><span class="zh-only">用例设计</span><span class="en-only">Case design</span></p><small><span class="zh-only">人和机器都能读</span><span class="en-only">Readable by humans and machines</span></small></div>
+        <div class="step reveal d2"><div class="dot">4</div><p><span class="zh-only">用例评审</span><span class="en-only">Case review</span></p><small><span class="zh-only">再挑一遍错</span><span class="en-only">One more pass for defects</span></small></div>
+        <div class="step reveal d2"><div class="dot">5</div><p><span class="zh-only">自动执行</span><span class="en-only">Automation</span></p><small><span class="zh-only">浏览器 + 接口</span><span class="en-only">Browser + API</span></small></div>
+        <div class="step reveal d3"><div class="dot">6</div><p><span class="zh-only">缺陷分析</span><span class="en-only">Defect analysis</span></p><small><span class="zh-only">追到出错代码</span><span class="en-only">Down to the failing line</span></small></div>
+        <div class="step reveal d3"><div class="dot">7</div><p><span class="zh-only">回归 + 报告</span><span class="en-only">Regression + report</span></p><small><span class="zh-only">证据齐全</span><span class="en-only">Evidence included</span></small></div>
+        <div class="pin-status" aria-hidden="true"><span class="ps-idx">01 / 07</span><span class="ps-name"><span class="zh-only">需求分析</span><span class="en-only">Requirement analysis</span></span></div>
       </div>
     </div>
   </div>
@@ -2419,39 +2508,46 @@
   <div class="container">
     <div class="section-head reveal fb">
       <div class="kicker">05 · Skills</div>
-      <h2>从用例到回归，<br>每道工序都有对应的 Skill。</h2>
-      <p>每个 Skill 单独可用，也能串成完整流水线。需要哪一段，就用哪一段。</p>
+      <h2><span class="zh-only">从用例到回归，</span><span class="en-only">From cases to regression,</span><br><span class="zh-only">每道工序都有对应的 Skill。</span><span class="en-only">every stage has its own skill.</span></h2>
+      <p class="zh-only">每个 Skill 单独可用，也能串成完整流水线。需要哪一段，就用哪一段。</p>
+      <p class="en-only">Each skill works standalone or as part of the full pipeline. Use exactly the stage you need.</p>
     </div>
     <div class="cards">
       <div class="glass-card card reveal">
         <div class="card-top"><span class="card-kicker">test-case-writing</span><span class="card-idx">01</span></div>
-        <h3>用例设计</h3>
-        <p>代码优先：先读实现、审出潜在缺陷，再落笔。产出两份，markmap 脑图给人读，schema.yaml 给机器校验。</p>
+        <h3><span class="zh-only">用例设计</span><span class="en-only">Case design</span></h3>
+        <p class="zh-only">代码优先：先读实现、审出潜在缺陷，再落笔。产出两份，markmap 脑图给人读，schema.yaml 给机器校验。</p>
+        <p class="en-only">Code-first: read the implementation, hunt latent bugs, then write. Two deliverables — a markmap for humans, schema.yaml for machines.</p>
       </div>
       <div class="glass-card card reveal d1">
         <div class="card-top"><span class="card-kicker">test-strategy</span><span class="card-idx">02</span></div>
-        <h3>测试策略</h3>
-        <p>风险评级必须给出证据；性能、安全、并发等十个类型，逐一决定测还是不测，每个决定都留下记录。说不清依据的策略，等于没有策略。</p>
+        <h3><span class="zh-only">测试策略</span><span class="en-only">Test strategy</span></h3>
+        <p class="zh-only">风险评级必须给出证据；性能、安全、并发等十个类型，逐一决定测还是不测，每个决定都留下记录。说不清依据的策略，等于没有策略。</p>
+        <p class="en-only">Risk ratings must cite evidence; ten test types — performance, security, concurrency and more — each explicitly tested or not, every decision on record. A strategy that can't explain itself is no strategy.</p>
       </div>
       <div class="glass-card card reveal d2">
         <div class="card-top"><span class="card-kicker">test-case-review</span><span class="card-idx">03</span></div>
-        <h3>用例评审</h3>
-        <p>把所有能测的点列全，作为基准逐条复审：覆盖够不够、能不能执行，直接修订文件并留下审查记录。</p>
+        <h3><span class="zh-only">用例评审</span><span class="en-only">Case review</span></h3>
+        <p class="zh-only">把所有能测的点列全，作为基准逐条复审：覆盖够不够、能不能执行，直接修订文件并留下审查记录。</p>
+        <p class="en-only">Enumerate every testable point as a baseline, then re-review line by line: coverage enough? executable? Files get revised in place with a review record.</p>
       </div>
       <div class="glass-card card reveal">
         <div class="card-top"><span class="card-kicker">automated-e2e · api-testing</span><span class="card-idx">04</span></div>
-        <h3>自动化执行</h3>
-        <p>用例转成可运行的 Playwright / pytest 代码：按 Page Object 规范组织，测试数据自己造、跑完自己清。</p>
+        <h3><span class="zh-only">自动化执行</span><span class="en-only">Automation</span></h3>
+        <p class="zh-only">用例转成可运行的 Playwright / pytest 代码：按 Page Object 规范组织，测试数据自己造、跑完自己清。</p>
+        <p class="en-only">Cases become runnable Playwright / pytest code: Page Object conventions, self-built test data, self-cleaning after runs.</p>
       </div>
       <div class="glass-card card reveal d1">
         <div class="card-top"><span class="card-kicker">bug-analysis</span><span class="card-idx">05</span></div>
-        <h3>缺陷分析</h3>
-        <p>先复现，再读代码定位到出错的那一行，然后分析影响面、给出回归建议。产出的 Bug 条目带根因、带证据。</p>
+        <h3><span class="zh-only">缺陷分析</span><span class="en-only">Defect analysis</span></h3>
+        <p class="zh-only">先复现，再读代码定位到出错的那一行，然后分析影响面、给出回归建议。产出的 Bug 条目带根因、带证据。</p>
+        <p class="en-only">Reproduce first, then read the code down to the failing line, analyze blast radius, recommend regression scope. Bug entries carry root cause and evidence.</p>
       </div>
       <div class="glass-card card reveal d2">
         <div class="card-top"><span class="card-kicker">regression-testing</span><span class="card-idx">06</span></div>
-        <h3>回归测试</h3>
-        <p>从代码改动推算波及范围，生成回归清单。防止修一个、坏三个。</p>
+        <h3><span class="zh-only">回归测试</span><span class="en-only">Regression testing</span></h3>
+        <p class="zh-only">从代码改动推算波及范围，生成回归清单。防止修一个、坏三个。</p>
+        <p class="en-only">Derive regression scope from the code diff and generate the retest list. Stop fixing one thing and breaking three.</p>
       </div>
     </div>
   </div>
@@ -2462,61 +2558,75 @@
   <div class="container">
     <div class="section-head reveal fb">
       <div class="kicker">06 · Proof</div>
-      <h2>每一个数字，都来自实测。</h2>
-      <p>同一批任务，同一个模型，唯一差异是装没装 qa-skills。<br>数字如实披露，包括不好看的那些。</p>
+      <h2><span class="zh-only">每一个数字，都来自实测。</span><span class="en-only">Every number comes from measurement.</span></h2>
+      <p class="zh-only">同一批任务，同一个模型，唯一差异是装没装 qa-skills。<br>数字如实披露，包括不好看的那些。</p>
+      <p class="en-only">Same tasks, same model; the only difference is whether qa-skills is installed.<br>All numbers disclosed as measured — the unflattering ones too.</p>
     </div>
     <div class="stats">
       <div class="glass-card stat reveal">
         <div class="num"><span data-count="98">98</span>%</div>
-        <h3>用例合格率</h3>
-        <p>格式与内容逐条核对</p>
-        <span class="delta">不装时 26%</span>
+        <h3><span class="zh-only">用例合格率</span><span class="en-only">Case pass rate</span></h3>
+        <p><span class="zh-only">格式与内容逐条核对</span><span class="en-only">format &amp; content checked item by item</span></p>
+        <span class="delta"><span class="zh-only">不装时 26%</span><span class="en-only">26% without</span></span>
       </div>
       <div class="glass-card stat reveal d1">
         <div class="num"><span data-count="75">75</span>%</div>
-        <h3>植入缺陷检出率</h3>
-        <p>代码审查任务实测</p>
-        <span class="delta">换一套裁判评：100%</span>
+        <h3><span class="zh-only">植入缺陷检出率</span><span class="en-only">Seeded-bug detection</span></h3>
+        <p><span class="zh-only">代码审查任务实测</span><span class="en-only">measured on code-review tasks</span></p>
+        <span class="delta"><span class="zh-only">换一套裁判评：100%</span><span class="en-only">100% under an alternate judge</span></span>
       </div>
       <div class="glass-card stat reveal d2">
         <div class="num" style="position: relative;"><span data-count="7">7</span><sub>/ 9</sub></div>
-        <h3>E2E 用例真实执行通过</h3>
-        <p>单任务×3 采样真浏览器实测</p>
-        <span class="delta">不装时 0/9</span>
+        <h3><span class="zh-only">E2E 用例真实执行通过</span><span class="en-only">E2E cases passing real runs</span></h3>
+        <p><span class="zh-only">单任务×3 采样真浏览器实测</span><span class="en-only">real-browser runs, 1 task × 3 samples</span></p>
+        <span class="delta"><span class="zh-only">不装时 0/9</span><span class="en-only">0/9 without</span></span>
       </div>
       <div class="glass-card stat reveal d3">
         <div class="num">0.<span data-count="88">88</span></div>
-        <h3>类型查全率</h3>
-        <p>最弱模型上实测</p>
-        <span class="delta">不装时为 0</span>
+        <h3><span class="zh-only">类型查全率</span><span class="en-only">Test-type recall</span></h3>
+        <p><span class="zh-only">最弱模型上实测</span><span class="en-only">measured on the weakest model</span></p>
+        <span class="delta"><span class="zh-only">不装时为 0</span><span class="en-only">0 without</span></span>
       </div>
     </div>
-    <p class="fine-print reveal fb">
+    <p class="fine-print reveal fb zh-only">
       Token 成本约 3.3 倍。覆盖提升：写用例 <span class="nb">+8.7pp</span>、<span class="nb">全任务 +13.2pp</span>、找缺陷 <span class="nb">+9.7pp</span>。
       完整数据见 README，里程碑版 Release 附跨模型增益矩阵快照。
     </p>
+    <p class="fine-print reveal fb en-only">
+      Token cost ≈ 3.3×. Coverage gains: case writing <span class="nb">+8.7pp</span>, <span class="nb">all tasks +13.2pp</span>, defect finding <span class="nb">+9.7pp</span>.
+      Full data in the README; milestone releases ship a cross-model gain-matrix snapshot.
+    </p>
     <div class="human-in-loop glass-card reveal">
       <div>
-        <h3>它知道，什么该由你决定。</h3>
-        <p>
+        <h3><span class="zh-only">它知道，什么该由你决定。</span><span class="en-only">It knows what's yours to decide.</span></h3>
+        <p class="zh-only">
           需求有歧义，先澄清；执行走人工还是自动化，你选；
           Bug 怎么定性、预算上限设多少，你说了算。
           这四类检查点，AI 助手<strong>只提案、不代答</strong>。
         </p>
-        <p>
+        <p class="en-only">
+          Ambiguous requirements get clarified first; manual or automated execution, you pick;
+          bug severity, budget caps — you decide.
+          At these four checkpoints the agent <strong>proposes, never decides</strong>.
+        </p>
+        <p class="zh-only">
           每一次裁决都记录在案，后续阶段照办，不得推翻。
           <strong>拍板的，始终是你。</strong>
+        </p>
+        <p class="en-only">
+          Every ruling is recorded; later stages comply, no override.
+          <strong>The call is always yours.</strong>
         </p>
       </div>
       <div class="glass-card decision-demo">
         <div class="dd-title">Decision required · checkpoint 2/4</div>
-        <div class="dd-row"><b>Bug 定性</b><span>P1 逻辑缺陷 · 影响结算主流程 · 附出错代码行</span></div>
-        <div class="dd-row"><b>回归建议</b><span>补充结算边界用例 ×3，纳入本轮回归</span></div>
+        <div class="dd-row"><b><span class="zh-only">Bug 定性</span><span class="en-only">Bug call</span></b><span><span class="zh-only">P1 逻辑缺陷 · 影响结算主流程 · 附出错代码行</span><span class="en-only">P1 logic defect · hits the main settlement flow · failing line attached</span></span></div>
+        <div class="dd-row"><b><span class="zh-only">回归建议</span><span class="en-only">Regression</span></b><span><span class="zh-only">补充结算边界用例 ×3，纳入本轮回归</span><span class="en-only">Add 3 settlement-edge cases to this regression round</span></span></div>
         <div class="dd-actions">
-          <span class="dd-btn ok">批准执行</span>
-          <span class="dd-btn">驳回，换个方案</span>
+          <span class="dd-btn ok"><span class="zh-only">批准执行</span><span class="en-only">Approve</span></span>
+          <span class="dd-btn"><span class="zh-only">驳回，换个方案</span><span class="en-only">Reject, propose another</span></span>
         </div>
-        <div class="dd-log">14:32 裁决已记录 → decisions.yaml<br>后续阶段照办，不得推翻</div>
+        <div class="dd-log"><span class="zh-only">14:32 裁决已记录 → decisions.yaml<br>后续阶段照办，不得推翻</span><span class="en-only">14:32 ruling recorded → decisions.yaml<br>later stages comply, no override</span></div>
       </div>
     </div>
   </div>
@@ -2527,33 +2637,40 @@
   <div class="container">
     <div class="section-head reveal fb">
       <div class="kicker">07 · FAQ</div>
-      <h2>装之前的疑虑，<br>逐条如实回答。</h2>
-      <p>包括不那么好听的答案——Token 更贵、英文层还在路上，都直接写在这里。</p>
+      <h2><span class="zh-only">装之前的疑虑，</span><span class="en-only">Every pre-install doubt,</span><br><span class="zh-only">逐条如实回答。</span><span class="en-only">answered honestly.</span></h2>
+      <p class="zh-only">包括不那么好听的答案——Token 更贵、Skill 正文还没双语，都直接写在这里。</p>
+      <p class="en-only">Including the unflattering ones — tokens cost more, skill bodies aren't bilingual yet.</p>
     </div>
     <div class="faq-list">
       <details class="glass-card faq-item reveal">
-        <summary>qa-skills 是什么？要花钱吗？<span class="faq-icon" aria-hidden="true"></span></summary>
-        <div class="faq-a">一套装进 AI 编程助手的测试工程方法：12 个 Skill + 一个共享知识库，全部是 Markdown 指令文件。不是软件，没有账号和订阅，MIT 协议免费开源。它确实会多花 Token——约为不装时的 3.3 倍，这笔账我们在首页如实写着。</div>
+        <summary><span class="zh-only">qa-skills 是什么？要花钱吗？</span><span class="en-only">What is qa-skills? Does it cost money?</span><span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-a zh-only">一套装进 AI 编程助手的测试工程方法：12 个 Skill + 一个共享知识库，全部是 Markdown 指令文件。不是软件，没有账号和订阅，MIT 协议免费开源。它确实会多花 Token——约为不装时的 3.3 倍，这笔账我们在首页如实写着。</div>
+        <div class="faq-a en-only">A QA engineering method installed into your AI coding assistant: 12 skills + a shared knowledge base, all Markdown instruction files. Not software — no account, no subscription, MIT-licensed and free. It does cost more tokens — about 3.3× the unskilled runs — and we state that openly on this page.</div>
       </details>
       <details class="glass-card faq-item reveal">
-        <summary>我的 AI 助手能用吗？<span class="faq-icon" aria-hidden="true"></span></summary>
-        <div class="faq-a">Skill 是纯 Markdown（frontmatter + 相对路径引用），不依赖宿主特性：Claude Code 端到端实测通过，<code>npx skills add fishzjp/qa-skills --skill '*'</code> 一行装到 Claude Code / Cursor / Codex / OpenCode 等 70+ 宿主。宿主不支持子代理时，流水线自动退化为顺序会话 + 文件衔接，正确性不受影响。</div>
+        <summary><span class="zh-only">我的 AI 助手能用吗？</span><span class="en-only">Will it work with my AI assistant?</span><span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-a zh-only">Skill 是纯 Markdown（frontmatter + 相对路径引用），不依赖宿主特性：Claude Code 端到端实测通过，<code>npx skills add fishzjp/qa-skills --skill '*'</code> 一行装到 Claude Code / Cursor / Codex / OpenCode 等 70+ 宿主。宿主不支持子代理时，流水线自动退化为顺序会话 + 文件衔接，正确性不受影响。</div>
+        <div class="faq-a en-only">Skills are plain Markdown (frontmatter + relative-path references) with no host-specific dependencies: verified end-to-end on Claude Code, and <code>npx skills add fishzjp/qa-skills --skill '*'</code> installs into Claude Code / Cursor / Codex / OpenCode and 70+ other hosts. Where the host lacks subagents, the pipeline degrades to sequential sessions joined by files — correctness is unaffected.</div>
       </details>
       <details class="glass-card faq-item reveal">
-        <summary>AI 产出的用例，真的能直接执行吗？<span class="faq-icon" aria-hidden="true"></span></summary>
-        <div class="faq-a">这是本框架唯一的产出标准：没读过需求、没人讲解的人，拿着文件能直接开工。背后是 8 条可执行性硬标准，评测中一票否决——判定模糊、占位符未替换、虚构入口的用例，覆盖再全也计零分。实测：无 Skill 时用例合格率 26%，装后 98%。</div>
+        <summary><span class="zh-only">AI 产出的用例，真的能直接执行吗？</span><span class="en-only">Can the AI's cases really run as-is?</span><span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-a zh-only">这是本框架唯一的产出标准：没读过需求、没人讲解的人，拿着文件能直接开工。背后是 8 条可执行性硬标准，评测中一票否决——判定模糊、占位符未替换、虚构入口的用例，覆盖再全也计零分。实测：无 Skill 时用例合格率 26%，装后 98%。</div>
+        <div class="faq-a en-only">That is the framework's one output bar: someone who never read the requirement and got no walkthrough can pick up the file and start working. Behind it are 8 hard executability standards with veto power in evaluation — vague verdicts, leftover placeholders or made-up entry points score zero no matter the coverage. Measured: 26% case pass rate without skills, 98% with.</div>
       </details>
       <details class="glass-card faq-item reveal">
-        <summary>装完还要学一遍怎么用吗？<span class="faq-icon" aria-hidden="true"></span></summary>
-        <div class="faq-a">不需要。对 AI 助手说「帮我测试这个需求：{需求描述 + 仓库地址}」，流水线就从需求理解跑到测试报告；只要其中一段产出（写用例 / 审查 / 回归范围）时，直接说需求。需求歧义、执行策略、Bug 定性、预算上限这四类决策由你拍板，AI 只提案、不代答。</div>
+        <summary><span class="zh-only">装完还要学一遍怎么用吗？</span><span class="en-only">Is there a setup tutorial to go through?</span><span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-a zh-only">不需要。对 AI 助手说「帮我测试这个需求：{需求描述 + 仓库地址}」，流水线就从需求理解跑到测试报告；只要其中一段产出（写用例 / 审查 / 回归范围）时，直接说需求。需求歧义、执行策略、Bug 定性、预算上限这四类决策由你拍板，AI 只提案、不代答。</div>
+        <div class="faq-a en-only">No. Say “Test this requirement: {description + repo URL}” to your agent and the pipeline runs from requirement understanding to test report; when you need just one stage (case writing / review / regression scope), state the need directly. Four decision types stay with you — requirement ambiguities, execution strategy, bug severity, budget caps; the AI proposes, never decides.</div>
       </details>
       <details class="glass-card faq-item reveal">
-        <summary>我的代码和数据会被上传吗？<span class="faq-icon" aria-hidden="true"></span></summary>
-        <div class="faq-a">qa-skills 本身零运行时、零遥测：装进来的只有 Markdown 文件，没有任何网络调用；测试产出与 .qa/ 项目知识库都存在你自己的仓库里，随你的 git 管控。（AI 助手本身如何处理数据，取决于你选的宿主与模型服务商，与本框架无关。）</div>
+        <summary><span class="zh-only">我的代码和数据会被上传吗？</span><span class="en-only">Will my code and data get uploaded?</span><span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-a zh-only">qa-skills 本身零运行时、零遥测：装进来的只有 Markdown 文件，没有任何网络调用；测试产出与 .qa/ 项目知识库都存在你自己的仓库里，随你的 git 管控。（AI 助手本身如何处理数据，取决于你选的宿主与模型服务商，与本框架无关。）</div>
+        <div class="faq-a en-only">qa-skills itself is zero-runtime and zero-telemetry: what gets installed is only Markdown files, with no network calls; test outputs and the .qa/ project knowledge base live in your own repo under your own git. (How your AI assistant handles data depends on the host and model provider you choose — outside this framework.)</div>
       </details>
       <details class="glass-card faq-item reveal">
-        <summary>支持英文吗？<span class="faq-icon" aria-hidden="true"></span></summary>
-        <div class="faq-a">产品本体当前是中文——这是如实边界，英文层在路线图上。需求描述与被测代码为中英混合时可正常工作。如果你希望现在就用英文协作，欢迎到 <a href="https://github.com/fishzjp/qa-skills/discussions" target="_blank" rel="noopener">Discussions</a> 告诉我们你的场景，这会直接影响英文层的优先级。</div>
+        <summary><span class="zh-only">支持英文吗？</span><span class="en-only">Does it support English?</span><span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-a zh-only">落地页与 README 已支持英文；12 个 Skill 中 11 个的 description 已双语（bug-analysis 暂缓），Skill 指令正文当前仍是中文。需求描述与被测代码为中英混合时可正常工作。希望 Skill 正文也完整双语？欢迎到 <a href="https://github.com/fishzjp/qa-skills/discussions" target="_blank" rel="noopener">Discussions</a> 告诉我们你的场景，这会直接影响优先级。</div>
+        <div class="faq-a en-only">This page and the README are available in English; 11 of the 12 skill descriptions are bilingual (bug-analysis pending), while the skill instruction bodies are still Chinese. Mixed Chinese/English requirements and code under test work fine. Want fully bilingual bodies? Tell us your use case in <a href="https://github.com/fishzjp/qa-skills/discussions" target="_blank" rel="noopener">Discussions</a> — it directly moves the priority.</div>
       </details>
     </div>
   </div>
@@ -2564,38 +2681,48 @@
   <div class="container">
     <div class="section-head reveal fb">
       <div class="kicker">08 · Install</div>
-      <h2>两步接入你的 AI 助手</h2>
-      <p>不需要账号，不需要订阅。两条命令，一句话。</p>
+      <h2><span class="zh-only">两步接入你的 AI 助手</span><span class="en-only">Two steps to your AI assistant</span></h2>
+      <p class="zh-only">不需要账号，不需要订阅。两条命令，一句话。</p>
+      <p class="en-only">No account, no subscription. Two commands, one sentence.</p>
     </div>
     <div class="install-grid">
       <div class="glass-card install-card reveal">
         <div class="step-no">01</div>
-        <h3>一行命令，装进 AI 编程助手</h3>
-        <p>Claude Code / Cursor / Codex / OpenCode 等 <span class="nb">70+ 宿主</span>通用，全量安装（12 个 Skill + core 共享知识库）：</p>
+        <h3><span class="zh-only">一行命令，装进 AI 编程助手</span><span class="en-only">One command, installed into your coding agent</span></h3>
+        <p class="zh-only">Claude Code / Cursor / Codex / OpenCode 等 <span class="nb">70+ 宿主</span>通用，全量安装（12 个 Skill + core 共享知识库）：</p>
+        <p class="en-only">Works across <span class="nb">70+ hosts</span> — Claude Code / Cursor / Codex / OpenCode and more; full install (12 skills + the core shared knowledge base):</p>
         <div class="terminal">
-          <div class="terminal-bar"><i></i><i></i><i></i><button class="copy-btn" type="button">复制</button></div>
+          <div class="terminal-bar"><i></i><i></i><i></i><button class="copy-btn" type="button"><span class="zh-only">复制</span><span class="en-only">Copy</span></button></div>
           <pre><span class="dollar">$</span> npx skills add fishzjp/qa-skills --skill '*'</pre>
         </div>
-        <p style="margin-top:24px">不用 npx？克隆仓库跑安装脚本（自动检测宿主目录），也可按 README 手动复制文件：</p>
+        <p style="margin-top:24px" class="zh-only">不用 npx？克隆仓库跑安装脚本（自动检测宿主目录），也可按 README 手动复制文件：</p>
+        <p style="margin-top:24px" class="en-only">No npx? Clone the repo and run the install script (auto-detects host directories), or copy files manually per the README:</p>
         <div class="terminal">
-          <div class="terminal-bar"><i></i><i></i><i></i><button class="copy-btn" type="button">复制</button></div>
+          <div class="terminal-bar"><i></i><i></i><i></i><button class="copy-btn" type="button"><span class="zh-only">复制</span><span class="en-only">Copy</span></button></div>
           <pre><span class="dollar">$</span> git clone https://github.com/fishzjp/qa-skills.git
 <span class="dollar">$</span> cd qa-skills <span>&amp;&amp;</span> ./install.sh --auto</pre>
         </div>
-        <p style="margin-top:24px">用 <span class="nb">DeepSeek Harness</span>（dsh）？插件已上架 npm，一条命令装好：<code>dsh plugin --profile web add dsh-qa-skills</code></p>
-        <p class="install-note">无论哪种方式，<code>core/</code> 必须一起装（方式一已自带）——单装某个 skill 不带 core，相对引用会断。</p>
+        <p style="margin-top:24px" class="zh-only">用 <span class="nb">DeepSeek Harness</span>（dsh）？插件已上架 npm，一条命令装好：<code>dsh plugin --profile web add dsh-qa-skills</code></p>
+        <p style="margin-top:24px" class="en-only">On <span class="nb">DeepSeek Harness</span> (dsh)? The plugin is on npm, one command away: <code>dsh plugin --profile web add dsh-qa-skills</code></p>
+        <p class="install-note zh-only">无论哪种方式，<code>core/</code> 必须一起装（方式一已自带）——单装某个 skill 不带 core，相对引用会断。</p>
+        <p class="install-note en-only">Whichever way you install, <code>core/</code> must come along (Option 1 includes it) — a single skill without core breaks the relative references.</p>
       </div>
       <div class="glass-card install-card reveal d1">
         <div class="step-no">02</div>
-        <h3>对 AI 助手说一句话</h3>
-        <p>像给测试同事派活一样：</p>
+        <h3><span class="zh-only">对 AI 助手说一句话</span><span class="en-only">Say one sentence to your agent</span></h3>
+        <p class="zh-only">像给测试同事派活一样：</p>
+        <p class="en-only">Like handing work to a QA colleague:</p>
         <div class="chat-bubble">
-          <div class="who">你，对 AI 助手说</div>
-          <div class="say">「帮我测试这个需求：{需求描述 + 仓库地址}」<span class="cursor"></span></div>
+          <div class="who"><span class="zh-only">你，对 AI 助手说</span><span class="en-only">You, to your AI agent</span></div>
+          <div class="say"><span class="zh-only">「帮我测试这个需求：{需求描述 + 仓库地址}」</span><span class="en-only">“Test this requirement: {description + repo URL}”</span><span class="cursor"></span></div>
         </div>
-        <p style="margin-top:18px">
+        <p style="margin-top:18px" class="zh-only">
           需求分析、测试策略、用例设计、评审、执行、缺陷分析、回归与报告，
           流水线就此跑通。只需要其中某一步，直接说需求就行，不必走全流程。
+        </p>
+        <p style="margin-top:18px" class="en-only">
+          Requirement analysis, test strategy, case design, review, execution, defect analysis, regression and report —
+          the pipeline runs end to end. Need just one stage? Say so and skip the rest.
         </p>
       </div>
     </div>
@@ -2607,16 +2734,24 @@
 <footer>
   <div class="container">
     <div class="f-links">
-      <a href="https://github.com/fishzjp/qa-skills" target="_blank" rel="noopener">GitHub 仓库</a>
-      <a href="https://github.com/fishzjp/qa-skills/releases" target="_blank" rel="noopener">版本发布</a>
-      <a href="https://github.com/fishzjp/qa-skills/discussions" target="_blank" rel="noopener">社区讨论</a>
-      <a href="https://github.com/fishzjp/qa-skills/blob/main/README.md" target="_blank" rel="noopener">完整文档</a>
+      <a href="https://github.com/fishzjp/qa-skills" target="_blank" rel="noopener"><span class="zh-only">GitHub 仓库</span><span class="en-only">GitHub repo</span></a>
+      <a href="https://github.com/fishzjp/qa-skills/releases" target="_blank" rel="noopener"><span class="zh-only">版本发布</span><span class="en-only">Releases</span></a>
+      <a href="https://github.com/fishzjp/qa-skills/discussions" target="_blank" rel="noopener"><span class="zh-only">社区讨论</span><span class="en-only">Discussions</span></a>
+      <a href="https://github.com/fishzjp/qa-skills/blob/main/README.md" target="_blank" rel="noopener"><span class="zh-only">完整文档</span><span class="en-only">Full docs</span></a>
     </div>
-    <p>qa-skills · MIT 开源许可</p>
+    <p><span class="zh-only">qa-skills · MIT 开源许可</span><span class="en-only">qa-skills · MIT open-source license</span></p>
   </div>
 </footer>
 
 <script>
+  /* 语言态：head 内早期脚本已按 URL/localStorage 解析并给 <html> 加 .lang-en，此处读取一次供文案使用 */
+  var LANG_EN = document.documentElement.classList.contains('lang-en');
+  if (LANG_EN) {
+    var appWin = document.querySelector('.app-window[role="img"]');
+    if (appWin) appWin.setAttribute('aria-label',
+      'Illustration: with qa-skills loaded, the AI agent turns a requirement into executable test case files step by step');
+  }
+
   /**
    * 初始化滚动渐入动画：元素进入视口时加 .in 类触发过渡；
    * 尊重系统「减少动态效果」偏好——偏好开启时直接显示全部元素
@@ -2740,10 +2875,10 @@
         // 剪贴板只放可执行命令：剔除行首 "$ " 提示符，否则粘贴进终端直接报错
         text = text.split('\n').map(function (line) { return line.replace(/^\$\s/, ''); }).join('\n');
         var done = function () {
-          btn.textContent = '已复制';
+          btn.textContent = LANG_EN ? 'Copied' : '已复制'; // textContent 会覆盖双语 span，按语言态写回
           btn.classList.add('copied');
           setTimeout(function () {
-            btn.textContent = '复制';
+            btn.textContent = LANG_EN ? 'Copy' : '复制';
             btn.classList.remove('copied');
           }, 1600);
         };
@@ -2980,7 +3115,10 @@
             });
             node.replaceChild(frag, child);
           } else if (child.nodeType === 1 && child.tagName !== 'BR' && child.tagName !== 'SMALL') {
-            split(child); // <br> 原样保留；<small> 脚注保持常规渲染，不参与点亮
+            // 被语言门控隐藏的 span 不拆字：拆了会摊薄另一语言的点亮进度
+            var hiddenLang = (LANG_EN && child.classList.contains('zh-only')) ||
+                             (!LANG_EN && child.classList.contains('en-only'));
+            if (!hiddenLang) split(child); // <br> 原样保留；<small> 脚注保持常规渲染，不参与点亮
           }
         });
       })(el);
@@ -3177,7 +3315,9 @@
   }
 
   /* ---- 钉住式流水线叙事（#how.pin-on）：滚动进度 → 光束填充 + 阶段逐个点亮 ---- */
-  var pinStageNames = ['需求分析', '测试策略', '用例设计', '用例评审', '自动执行', '缺陷分析', '回归 + 报告'];
+  var pinStageNames = LANG_EN
+    ? ['Requirement analysis', 'Test strategy', 'Case design', 'Case review', 'Automation', 'Defect analysis', 'Regression + report']
+    : ['需求分析', '测试策略', '用例设计', '用例评审', '自动执行', '缺陷分析', '回归 + 报告'];
   var pinLastIdx = 0;
   function syncPinMode() {
     var how = document.getElementById('how');
@@ -3236,6 +3376,21 @@
     });
   }
 
+  /**
+   * 语言切换：写入 localStorage 后以 replace 重载到目标语言 URL。
+   * 重载而非原地改 class：逐字点亮、钉住叙事等基于测量的动效需要按新语言重新测量，
+   * replace 也避免切换在历史记录里堆叠
+   */
+  function initLangToggle() {
+    var btn = document.querySelector('.nav-lang');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var target = document.documentElement.classList.contains('lang-en') ? 'zh' : 'en';
+      try { localStorage.setItem('qa-lang', target); } catch (e) {}
+      location.replace(location.pathname + (target === 'en' ? '?lang=en' : '') + location.hash);
+    });
+  }
+
   /* ---- 区块小剧场：IO 进入视口加 .play，一次性编排交给 CSS（.fx 门控初始态） ---- */
   var playIO = 'IntersectionObserver' in window ? new IntersectionObserver(function (entries) {
     entries.forEach(function (entry) {
@@ -3267,6 +3422,7 @@
   initRevealOnScroll();
   initCountUp();
   initNavElevation();
+  initLangToggle();
   initCardSpotlight();
   initCopyButtons();
   initWindowSequence();
