@@ -9,7 +9,7 @@ import shutil
 from pathlib import Path
 from urllib.parse import unquote
 
-MD_LINK_PATTERN = re.compile(r'\]\(([^()\s]+)(?:\s+"[^"]*")?\)')
+MD_LINK_PATTERN = re.compile(r'\]\((<[^>\s]+>|[^()\s]+)(?:\s+(?:"[^"]*"|\'[^\']*\'))?\)')
 # 引用式链接定义：行首（≤3 空格）[label]: target——两个校验器此前都漏查这种形态。
 # 排除脚注（[^1]: …）与 wiki 外的误匹配；容许可选 ! 前缀（图片定义）与尾随 title
 MD_REF_DEF_PATTERN = re.compile(
@@ -17,7 +17,45 @@ MD_REF_DEF_PATTERN = re.compile(
 HTML_ATTR_PATTERN = re.compile(r'(?:src|href)\s*=\s*["\']([^"\']+)["\']')
 SRCSET_PATTERN = re.compile(r'srcset\s*=\s*["\']([^"\']+)["\']')
 SKIP_PREFIXES = ("http://", "https://", "mailto:", "#", "data:")
-_FENCE_OPEN = re.compile(r'^ {0,3}(```|~~~)')
+_FENCE_OPEN = re.compile(r"^ {0,3}(`{3,}|~{3,})")
+
+
+def _fence_state(text):
+    """逐行围栏状态机（CommonMark 对齐），掩码与闭合自检共用同一实现。
+
+    返回 (inside, unclosed)：inside = 每行是否处于围栏内（含开/闭栏行，供掩码）；
+    unclosed = 未闭合围栏的 (开栏行号, 标记) 或 None。
+
+    规则（2026-10-10 二轮对抗审查的三个逃逸形态修复）：
+    - 开栏 3+ 个 ` 或 ~（行首 ≤3 空格）；backtick 栏的 info string 含 ` 不算开栏、
+      tilde 栏 info 含 ~ 不算——"``` ```" 是普通段落而非开栏，否则其后的真实围栏
+      闭合会把中间可渲染内容整体掩掉（fail-silent 原形）；
+    - 闭合须同字符、长度 ≥ 开栏长度、行内除标记外无内容（```end 不是闭合栏）。
+    已知边界（如实登记）：错误开栏若被文档中途的真闭合栏"误闭合"，前段内容被静默
+    掩掉且状态机不报错——该形态无零误报的机器信号，依赖评审；本门只保证"到文件
+    尾未闭合"形态 fail-loud。
+    注：缩进代码块（4 空格）不在掩码范围——当前内容无此形态，示例勿用该写法。
+    """
+    lines = text.split("\n")
+    inside = [False] * len(lines)
+    in_fence, open_line = None, None
+    for i, line in enumerate(lines):
+        m = _FENCE_OPEN.match(line)
+        if in_fence is None:
+            if m:
+                info = line[m.end():].strip()
+                mark = m.group(1)
+                bad_info = "`" in info if mark[0] == "`" else "~" in info
+                if not bad_info:
+                    in_fence, open_line = mark, i + 1
+                    inside[i] = True
+        else:
+            inside[i] = True
+            if (m and m.group(1)[0] == in_fence[0] and len(m.group(1)) >= len(in_fence)
+                    and not line[m.end():].strip()):
+                in_fence = None
+    unclosed = (open_line, in_fence) if in_fence is not None else None
+    return inside, unclosed
 
 
 def mask_fenced(text):
@@ -26,20 +64,8 @@ def mask_fenced(text):
     docstring 承诺"代码块内示例不在校验范围"——引用提取与反引号引用检查都应基于
     掩码文本，否则围栏内的示例链接/路径定义会被误报。
     """
-    out, in_fence = [], None
-    for line in text.split("\n"):
-        m = _FENCE_OPEN.match(line)
-        if in_fence is None:
-            if m:
-                in_fence = m.group(1)
-                out.append("")
-            else:
-                out.append(line)
-        else:
-            out.append("")
-            if m and m.group(1) == in_fence:
-                in_fence = None
-    return "\n".join(out)
+    inside, _ = _fence_state(text)
+    return "\n".join("" if f else line for f, line in zip(inside, text.split("\n")))
 
 
 def fence_error(text):
@@ -50,32 +76,13 @@ def fence_error(text):
     未闭合围栏可废掉单文件整个引用门，2026-10-10 对抗审查实测构造确认）。
     调用方应先过本检查，把未闭合本身变成独立错误，而不是让后续内容静默逃检。
     """
-    in_fence, open_line = None, None
-    for i, line in enumerate(text.split("\n"), 1):
-        m = _FENCE_OPEN.match(line)
-        if in_fence is None:
-            if m:
-                in_fence, open_line = m.group(1), i
-        elif m and m.group(1) == in_fence:
-            in_fence = None
-    if in_fence is not None:
-        return open_line, in_fence
-    return None
+    return _fence_state(text)[1]
 
 
 def visible_lines(text):
     """[(行号, 行)]——跳过 fenced code block 内的行（行号保持原文位置）。"""
-    out, in_fence = [], None
-    for i, line in enumerate(text.split("\n"), 1):
-        m = _FENCE_OPEN.match(line)
-        if in_fence is None:
-            if m:
-                in_fence = m.group(1)
-            else:
-                out.append((i, line))
-        elif m and m.group(1) == in_fence:
-            in_fence = None
-    return out
+    inside, _ = _fence_state(text)
+    return [(i + 1, line) for i, (f, line) in enumerate(zip(inside, text.split("\n"))) if not f]
 
 
 def find_git():
@@ -112,6 +119,8 @@ def extract_local_refs(text):
     for line, ref in hits:
         if ref.startswith(SKIP_PREFIXES):
             continue
+        if ref.startswith("<") and ref.endswith(">"):
+            ref = ref[1:-1]  # CommonMark 尖括号目标形态 <path with space.md>
         path = unquote(ref.split("#", 1)[0].split("?", 1)[0])
         if not path:
             continue

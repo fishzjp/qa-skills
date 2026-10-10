@@ -11,23 +11,23 @@
 
 ### 新增（门禁加固）
 
-- **五路并发对抗审查（2026-10-10）后的校验器盲区机制化**——审查对双校验器做了 12 种破坏性构造实测，4 项"构造后双绿"的空洞全部补门，并加两项语义级核对与两项版本门，全部正反例实测钉住（tests/ 新增 28 用例）：
-  - **未闭合围栏 fail-silent 根除**：某文档意外留下未闭合 ``` 后，该行之后所有坏引用对两校验器静默不可见（mask_fenced 掩码的保守行为吞掉整个区间）——新增围栏闭合自检，未闭合本身即独立错误；
+- **五路并发对抗审查（2026-10-10）后的校验器盲区机制化**——审查对双校验器做了 12 种破坏性构造实测，4 项"构造后双绿"的空洞全部补门，并加两项语义级核对与两项版本门，全部正反例实测钉住：
+  - **未闭合围栏 fail-loud**（两个校验器都接入）：文档意外留下未闭合 ``` 时该行之后的内容对引用检查静默不可见（mask 掩码的保守行为吞掉整个区间）——围栏闭合自检让未闭合本身成为独立错误；围栏判定对齐 CommonMark（"``` ```" 不是开栏、```end 不是闭合栏、闭合长度 ≥ 开栏——修复后立即抓到 qa-memory entry-schemas.md 的嵌套围栏真 bug：两处 3 反引号嵌套示例在 GitHub 渲染上把 §1 后半至 §4 大部分内容吞进代码块，改 4 反引号外层）。**如实登记的能力边界**：错误开栏被中途真闭合栏"误闭合"时前段内容静默被掩、状态机不报——无零误报机器信号，依赖评审；
   - **落地页静态双语对门**（validate_repo）：zh-only/en-only 计数相等 + 序列相邻交替 + 同元素双挂检测——成对性此前只活在发版提交信息里的人工实测，删一个 en-only 照绿；
-  - **md 链接扫描扩面**（validate_repo）：从根目录 *.md 扩到 git 跟踪全部 .md，examples/ 与 .github/ 模板不再处于门禁真空（扩面即抓到真问题：PULL_REQUEST_TEMPLATE 的 ./CONTRIBUTING.md 相对链接在 blob 视图下断链，已改绝对 URL）；
-  - **When NOT to Use 段体非空**（validate_skills）：空标题段 = 反触发边界退化归零，此前只查标题存在；
-  - **节号指针核对**（validate_skills）：「`references/x.md`（第 2–3 节：判定树 + 证据表）」形态与目标文件实际节序比对——越界必红、带关键词说明的指针核关键词命中节题（审查实证的"结构绿、语义漂"：flaky-playbook 判定树+证据表实际在 §2–3 而正文写 1–2，本规则对该原形实测红）；无关键词的口语化指针不核（宁漏勿误）；
-  - **版本门补齐**：CHANGELOG 定版小节存在性（RELEASING 声称"三处同步机械强制"但实现只比 SKILL↔package.json——补齐名实相符）+ index.html JSON-LD softwareVersion 一致性（从发版人工检查单机制化为常驻门）；
-  - 附带小项：md 链接存在性不限后缀（.png/.sh 断链同样红）、反引号引用前缀白名单补 scripts/、frontmatter 重复键检测（手写解析取首个 vs YAML last-wins 的口径分裂）、check_target 归属判定在 symlink 环境（macOS tempdir /var→/private/var）下同 skill 误判跨引用的修复。
+  - **md 链接扫描扩面**（validate_repo）：从根目录 *.md 扩到 git 跟踪全部 .md（含围栏闭合自检），examples/ 与 .github/ 模板不再处于门禁真空；前导 `/` 的目标按仓库根基准（GitHub 渲染语义）；扩面即抓到真问题：PULL_REQUEST_TEMPLATE 的 ./CONTRIBUTING.md 相对链接在 blob 视图下断链，已改绝对 URL；
+  - **When NOT to Use 段体非空**（validate_skills，基于掩码文本）：空标题段或纯 HTML 注释段体 = 反触发边界退化归零，此前只查标题存在；围栏示例内的标题不算数；
+  - **节号指针核对**（validate_skills）：「`references/x.md`（第 2–3 节：判定树 + 证据表）」与「`../core/x.md` §2–3」两种形态与目标文件实际节序比对——越界必红、带关键词说明的指针核关键词命中节题、目标节图基于掩码文本（围栏内伪标题投毒抬节图/覆盖真节题两个攻击形态实测拦截）；无关键词的口语化"第 N 节"指针不核关键词（宁漏勿误，§ 形态与「第 N 节」双轨覆盖）；
+  - **版本门补齐**：CHANGELOG 定版小节存在性（掩码 + 节界锚定：围栏内伪节头不算、rc 前缀不顶替；RELEASING 声称"三处同步机械强制"但实现只比 SKILL↔package.json——补齐名实相符）+ index.html JSON-LD softwareVersion 一致性（只在 application/ld+json 块内取值——前方 JS 字面量注入不能遮蔽/伪造；从发版人工检查单机制化为常驻门）；
+  - 附带小项：md 链接存在性不限后缀（.png/.sh 断链同样红）+ 单引号 title / 尖括号目标形态提取、反引号引用前缀白名单补 scripts/、frontmatter 重复键检测（手写解析取首个 vs YAML last-wins 的口径分裂）、`|` 字面块标量保留换行（原空格折叠使多行 `|` 值恒报口径漂移误拒）、check_target 归属判定在 symlink 环境（macOS tempdir /var→/private/var）下同 skill 误判跨引用的修复。
 
 ### 修复
 
-- **test-reliability SKILL.md 两处节号指针**：工作流一"此时加载 flaky-playbook（判定树 + 证据表）"的节区间 1–2 → 2–3（证据表在 §3，姊妹指针自证）；边界行 triage"三层分工"节号 6 → 7（边界速查表在 §7，off-by-one）。
-- **install.sh 两项**：自毁守卫先于 mkdir（原先 --target 指向源树内新路径时会在拒绝前留下空目录；现字符串前缀判定先行 + mkdir 后物理路径复核 + 拒绝时清理刚建空目录，实测源树零残留）；cp 安装后清理 `__pycache__`（npm 面有 files 否定模式排除、本地安装面此前没有——脏工作副本的运行缓存不装进宿主）。
+- **test-reliability SKILL.md 三处节号/内容指针**：工作流一 playbook 节区间 1–2 → 2–3（证据表在 §3）；边界行 triage 第 6 → 第 7 节（边界速查表在 §7）；工作流一根因四分类括注拆正（类名×典型证据在 §3、修复模式在 §4——原文"修复模式见第 3 节"指错）。后两处为二轮复审发现的同族残留。
+- **install.sh 两项**：自毁守卫先于 mkdir（原先 --target 指向源树内新路径时会在拒绝前留下空目录；现字符串前缀判定先行 + mkdir 后物理路径复核 + 拒绝时沿拼写路径向上只删空目录——多级新建路径同样零残留，实测）；cp 安装后清理 `__pycache__`（npm 面有 files 否定模式排除、本地安装面此前没有——脏工作副本的运行缓存不装进宿主）。
 - **qa/SKILL.md 续跑判据的 `validate_schema.py` 补全路径** `../core/scripts/validate_schema.py`（续跑场景恰是"只持有本文件"的场景，裸文件名无从定位）。
 - **tests/test_memory_validator.py 死赋值修复**：`--init` 返回值原先立即被覆盖（从未断言），现断言 rc=0 且测试名按实际覆盖面更名（原测试名承诺的 valid-passes 分支已不存在）。
 - **index.html 语言切换保留无关 query 参数**（utm 等）——原先切换会整串丢弃只留 lang。
-- **`.dsh/plugins/qa-skills.js` 文件头注释计数 11 → 12**（随 npm 包分发的事实陈述，9d93d04 计数面同步漏掉的文件）；**bug_report.yml 问题区域下拉补 test-reliability**（RELEASING §2 明列的同步项，同批漏改）。
+- **`.dsh` 双文件计数 11 → 12**：plugins/qa-skills.js 文件头注释与 cordis.patch.yml 注释（同目录同事实陈述，首轮漏掉后者）；**bug_report.yml 问题区域下拉补 test-reliability**（RELEASING §2 明列的同步项）。
 
 ### 文档
 

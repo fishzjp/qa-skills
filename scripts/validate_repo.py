@@ -37,7 +37,7 @@ except ImportError:
     yaml = None
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _gate_common import extract_local_refs, find_git  # noqa: E402
+from _gate_common import extract_local_refs, fence_error, find_git  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -110,16 +110,25 @@ def check_json(files, errors):
 
 def check_md_links(root, files, errors):
     """git 跟踪全部 .md 的本地链接 / 图片目标存在性（相对基准 = 文件所在目录；
-    无 git 时退化只扫根目录 *.md，显式打印跳过面）。"""
+    前导 / 的目标按仓库根基准——GitHub 渲染语义，此前误按文件所在目录误报；
+    无 git 时退化只扫根目录 *.md，显式打印跳过面）。
+    附带围栏闭合自检：未闭合围栏会让其后链接静默逃检（本批扩面自带的缺口，
+    2026-10-10 二轮对抗审查实测构造确认）。"""
     if files is None:
         files = [p.name for p in sorted(root.glob("*.md"))]
         print("(i) 未检出 git——md 链接校验只扫根目录（examples/、.github/ 等不在范围）")
     n = 0
     for rel in files:
         md = root / rel
-        for line_no, raw, path in extract_local_refs(md.read_text(encoding="utf-8-sig")):
+        text = md.read_text(encoding="utf-8-sig")
+        fe = fence_error(text)
+        if fe:
+            errors.append(f"{rel}:{fe[0]}: 未闭合的 fenced code block（{fe[1]}）"
+                          "——其后链接静默逃检，先修围栏")
+        for line_no, raw, path in extract_local_refs(text):
             n += 1
-            if not (md.parent / path.lstrip("/")).exists():
+            base = root if path.startswith("/") else md.parent
+            if not (base / path.lstrip("/")).exists():
                 errors.append(f"{rel}:{line_no}: 链接目标不存在 ({raw})")
     return n
 
@@ -194,16 +203,24 @@ def check_jsonld_version(root, errors):
     pkg = root / "package.json"
     if not page.exists() or not pkg.exists():
         return False
-    m = re.search(r'"softwareVersion"\s*:\s*"([^"]+)"', page.read_text(encoding="utf-8-sig"))
+    # 只在 application/ld+json 块内取值：全文件首个命中会被前方 JS 字面量遮蔽
+    # （2026-10-10 二轮对抗审查实测构造：注入 const cfg={"softwareVersion":...} 即骗绿）
+    blocks = re.findall(
+        r'<script[^>]*type="application/ld\+json"[^>]*>(.*?)</script>',
+        page.read_text(encoding="utf-8-sig"), re.S | re.I)
+    found = [v for b in blocks
+             for v in re.findall(r'"softwareVersion"\s*:\s*"([^"]+)"', b)]
     try:
         pkg_version = json.loads(pkg.read_text(encoding="utf-8"))["version"]
     except (json.JSONDecodeError, KeyError) as e:
         errors.append(f"package.json: 无法读取版本号（{e}）")
         return True
-    if not m:
+    if not found:
         errors.append("index.html: 缺 JSON-LD softwareVersion 字段（GEO 层机器可读版本事实）")
-    elif m.group(1) != pkg_version:
-        errors.append(f"index.html: JSON-LD softwareVersion '{m.group(1)}' 与 package.json '{pkg_version}'"
+    elif len(found) > 1 and len(set(found)) > 1:
+        errors.append(f"index.html: 多个 JSON-LD 块的 softwareVersion 不一致（{sorted(set(found))}）")
+    elif found[0] != pkg_version:
+        errors.append(f"index.html: JSON-LD softwareVersion '{found[0]}' 与 package.json '{pkg_version}'"
                       " 不一致（定版时随版本号同步）")
     return True
 

@@ -115,6 +115,23 @@ class RootMdLinkCheckTests(unittest.TestCase):
                              md_rel=".github/PULL_REQUEST_TEMPLATE.md")
         self.assertEqual(errors, [])
 
+    def test_root_absolute_link_resolves_to_repo_root(self):
+        """前导 / 的目标按仓库根基准（GitHub 渲染语义）——子目录 md 的 /x 不按文件
+        所在目录误判（2026-10-10 二轮审查误报原形）。"""
+        errors = self._check("[贡献](/CONTRIBUTING.md)", {"CONTRIBUTING.md": "x"},
+                             md_rel=".github/PULL_REQUEST_TEMPLATE.md")
+        self.assertEqual(errors, [])
+        errors = self._check("[四零四](/nope-at-root.md)", {},
+                             md_rel="examples/README.md")
+        self.assertEqual(len(errors), 1)
+        self.assertIn("/nope-at-root.md", errors[0])
+
+    def test_unclosed_fence_in_md_flagged(self):
+        """validate_repo 的 md 扫描面接入围栏闭合自检——未闭合围栏让其后链接静默
+        逃检（2026-10-10 二轮审查：扩面自带的缺口）。"""
+        errors = self._check("```text\n[x](./real.md)\n[断](./ghost.md)", {})
+        self.assertTrue(any("未闭合" in e for e in errors), errors)
+
 
 class FenceErrorTests(unittest.TestCase):
     """未闭合围栏自检：mask_fenced / visible_lines 对未闭合围栏是"其后全部按代码块
@@ -132,6 +149,25 @@ class FenceErrorTests(unittest.TestCase):
         # ``` 开、~~~ 闭不匹配——同样视为未闭合
         fe = _gate_common.fence_error("~~~\ncode\n```\n正文")
         self.assertIsNotNone(fe)
+
+    def test_backtick_info_with_backticks_is_not_open(self):
+        # CommonMark：backtick 开栏的 info string 含反引号不算开栏——"``` ```" 是普通段落，
+        # 否则其后真实围栏的闭合会把中间可渲染内容整体掩掉（2026-10-10 二轮审查逃逸原形）
+        self.assertIsNone(_gate_common.fence_error("``` ```\n[x](./real.md)\n```py\nc\n```"))
+        # 中间行的引用必须可见（未被掩掉）
+        self.assertIn((2, "[x](./real.md)"), _gate_common.visible_lines(
+            "``` ```\n[x](./real.md)\n```py\nc\n```"))
+
+    def test_close_with_info_string_is_not_close(self):
+        # ```end 不是闭合栏（行内除标记外须无内容）
+        self.assertIsNotNone(_gate_common.fence_error("```py\nc\n```end"))
+
+    def test_longer_opener_needs_equal_or_longer_close(self):
+        # 4b 开栏：3b 不闭合、4b 闭合；嵌套示例的正确写法
+        text = "````markdown\n```yaml\nk: v\n```\n正文示例\n````"
+        self.assertIsNone(_gate_common.fence_error(text))
+        self.assertIsNotNone(_gate_common.fence_error(
+            "````markdown\n```yaml\nk: v\n```\n正文示例\ntail"))
 
 
 class BilingualPairTests(unittest.TestCase):
@@ -182,13 +218,17 @@ class BilingualPairTests(unittest.TestCase):
 
 class JsonldVersionTests(unittest.TestCase):
     """JSON-LD softwareVersion 与 package.json 一致（GEO 层版本事实曾停更两个版本，
-    从 RELEASING 人工检查单机制化为常驻门）。"""
+    从 RELEASING 人工检查单机制化为常驻门）。只在 application/ld+json 块内取值——
+    全文件首个命中可被前方 JS 字面量遮蔽（2026-10-10 二轮对抗审查实测构造）。"""
 
-    def _check(self, html_version, pkg_version="1.2.3"):
+    def _check(self, html_version, pkg_version="1.2.3", inject_js=None):
         with tempfile.TemporaryDirectory() as td:
             td = Path(td)
-            html = ('{"@type":"SoftwareApplication"' +
-                    (f',"softwareVersion":"{html_version}"' if html_version else "") + '}')
+            ld = ('{"@type":"SoftwareApplication"' +
+                  (f',"softwareVersion":"{html_version}"' if html_version else "") + '}')
+            html = ((f'<script>const cfg={{"softwareVersion":"{inject_js}"}};</script>'
+                     if inject_js else "") +
+                    f'<script type="application/ld+json">{ld}</script>')
             (td / "index.html").write_text(html, encoding="utf-8")
             (td / "package.json").write_text(f'{{"version": "{pkg_version}"}}', encoding="utf-8")
             errors = []
@@ -205,6 +245,15 @@ class JsonldVersionTests(unittest.TestCase):
     def test_missing_field_flagged(self):
         errors = self._check(None)
         self.assertTrue(any("缺 JSON-LD softwareVersion" in e for e in errors), errors)
+
+    def test_js_literal_cannot_mask_real_field(self):
+        """前方 JS 字面量版本与真字段不符——必须按 ld+json 块内的真字段判（不误报）。"""
+        self.assertEqual(self._check("0.9.0", pkg_version="0.9.0", inject_js="0.8.0"), [])
+
+    def test_js_literal_cannot_satisfy_gate(self):
+        """真字段陈旧 + 前方注入 JS 字面量伪装新版本——必须仍红（骗绿反例）。"""
+        errors = self._check("0.8.0", pkg_version="0.9.0", inject_js="0.9.0")
+        self.assertTrue(any("不一致" in e for e in errors), errors)
 
 
 class HtmlAssetCheckTests(unittest.TestCase):

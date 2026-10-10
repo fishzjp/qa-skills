@@ -40,7 +40,7 @@ except ImportError:
     yaml = None
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _gate_common import extract_local_refs, fence_error, find_git, visible_lines  # noqa: E402
+from _gate_common import extract_local_refs, fence_error, find_git, mask_fenced, visible_lines  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
 SKILLS_ROOT = REPO / "skills"   # 产品本体（12 个 skill + core/ 共享库）统一在此
@@ -53,8 +53,14 @@ FRONTMATTER = re.compile(r"\A---\n(.*?)\n---\n", re.S)
 # 同行紧邻的第 N 节（含可选区间与可选关键词说明）。用于节号指针核对（check_section_pointers）。
 SEC_PTR_PATTERN = re.compile(
     r"`((?:\.\./|references/|templates/|core/|scripts/)[\w./-]+\.(?:md|py|ya?ml))`"
-    r"[^`\n]{0,80}?第\s*(\d+)\s*(?:[–—-]\s*(\d+)\s*)?节"
-    r"(?:\s*[：:]\s*([^）\n]{1,80}))?"
+    r"[^`\n]{0,80}?第\s*(\d+)\s*(?:[–—\-到至]\s*(\d+)\s*)?节"
+    r"(?:\s*[：:]\s*([^()）\n]{1,80}))?"
+)
+# 「`references/x.md`（§2–3）」形态：仓内活跃写法（bug-analysis/regression-testing 等），
+# 只做越界层核对（无关键词惯例），节号指针核对的双轨覆盖
+SEC_PTR_SHA_PATTERN = re.compile(
+    r"`((?:\.\./|references/|templates/|core/|scripts/)[\w./-]+\.(?:md|py|ya?ml))`"
+    r"[^`\n]{0,80}?§\s*(\d+)(?:\s*[–—\-到至]\s*(\d+))?"
 )
 
 # 红线 10 白名单：白名单制而非黑名单关键词——临时文件命名不可枚举，
@@ -144,7 +150,9 @@ def _fm_scalar(fm, key):
                 folded.append(line.strip())
             elif line.strip():
                 break  # 下一顶级 key，块标量结束
-        val = " ".join(folded)
+        # `|` 字面块保留换行、`>` 折叠块空格连接——混用空格折叠会让多行 `|` 值
+        # 恒与 YAML 解析值不一致（2026-10-10 二轮审查：`|` 块恒报口径漂移误拒）
+        val = ("\n" if val[0] == "|" else " ").join(folded)
     else:
         # 引号包裹标量：剥配对包裹引号并做对应反转义（与 dsh parseSkill 同口径），
         # 300 字符上限按 YAML 解析后的内容长度计——与标准解析器一致
@@ -153,7 +161,6 @@ def _fm_scalar(fm, key):
         elif len(val) >= 2 and val[0] == "'" and val[-1] == "'":
             val = val[1:-1].replace("''", "'")
     return val
-
 
 def resolve_ref(md_path: Path, ref: str):
     """按项目路径约定解析文档内相对引用。
@@ -254,9 +261,11 @@ def check_md_links(md_path, errors):
 
 def check_when_not_to_use(text, dirname, errors):
     """红线 3：When NOT to Use——锚定真实二级标题形态，防 code fence 示例或正文顺带
-    提及骗过朴素子串闸；且段体非空（空标题段 = 反触发边界退化归零，
-    2026-10-10 对抗审查：此前只查标题存在不查内容）。
+    提及骗过朴素子串闸（基于掩码文本，围栏示例内的标题不算数）；且段体非空
+    （剥 HTML 注释后判空——纯注释段体渲染为空，反触发边界同样退化归零；
+    2026-10-10 审查：此前只查标题存在不查内容）。
     """
+    text = mask_fenced(text)
     m = re.search(r"^## +When NOT to Use\s*$", text, re.M)
     if not m:
         errors.append(f"{dirname}/SKILL.md: 缺 '## When NOT to Use' 二级标题段（须指明交给哪个 skill）")
@@ -264,6 +273,7 @@ def check_when_not_to_use(text, dirname, errors):
     tail = text[m.end():]
     nxt = re.search(r"^## ", tail, re.M)
     body = tail[:nxt.start()] if nxt else tail
+    body = re.sub(r"<!--.*?-->", "", body, flags=re.S)
     if not body.strip():
         errors.append(f"{dirname}/SKILL.md: 'When NOT to Use' 段内容为空（须指明交给哪个 skill）")
 
@@ -284,15 +294,29 @@ def check_section_pointers(md_path, errors):
 
     两层核对：①范围越界（第 N 节 ≤ 目标最大编号节）；②带关键词说明的指针
     （「第 a–b 节：kw1 + kw2」）按 + 、／ 拆词，须命中引用范围节标题的并集。
+    §N 形态（仓内活跃写法）纳入越界层。目标节图基于掩码文本——围栏内伪标题
+    投毒可抬高节图骗过越界、或覆盖真节题制造误报（2026-10-10 二轮审查实测）。
     无编号节的文档、无反引号路径的口语化指针不在核对范围（宁漏勿误）。
     """
     for i, line in visible_lines(md_path.read_text(encoding="utf-8")):
+        for m in SEC_PTR_SHA_PATTERN.finditer(line):
+            ref, start, end = m.group(1), int(m.group(2)), m.group(3)
+            target, _basis = resolve_ref(md_path, ref)
+            if target is None:
+                continue
+            secs = _numbered_h2s(mask_fenced(target.read_text(encoding="utf-8")))
+            if not secs:
+                continue
+            end_n = int(end) if end else start
+            if start > max(secs) or end_n > max(secs):
+                errors.append(f"{md_path.relative_to(REPO)}:{i}: 节号指针越界 `{ref}` §{start}"
+                              + (f"–{end_n}" if end else "") + f"——目标实际节号 1–{max(secs)}")
         for m in SEC_PTR_PATTERN.finditer(line):
             ref, start, end, kw = m.group(1), int(m.group(2)), m.group(3), m.group(4)
             target, _basis = resolve_ref(md_path, ref)
             if target is None:
                 continue  # 路径不存在由红线 5 报，这里不重复
-            secs = _numbered_h2s(target.read_text(encoding="utf-8"))
+            secs = _numbered_h2s(mask_fenced(target.read_text(encoding="utf-8")))
             if not secs:
                 continue  # 目标无编号节（清单型文档），无从核对
             where = f"{md_path.relative_to(REPO)}:{i}"
@@ -303,7 +327,8 @@ def check_section_pointers(md_path, errors):
                 continue
             if kw:
                 titles = " ".join(secs.get(n, "") for n in range(start, end_n + 1))
-                miss = [w for w in re.split(r"\s*[+＋、／/]\s*", kw) if len(w) >= 2 and w not in titles]
+                miss = [w for w in (k.strip() for k in re.split(r"\s*[+＋、／/]\s*", kw))
+                        if len(w) >= 2 and w not in titles]
                 if miss:
                     errors.append(f"{where}: 节号指针与目标节题不符 `{ref}` {scope}"
                                   f"——关键词 {'、'.join(miss)} 不在节题「{titles.strip()}」中")
@@ -313,7 +338,7 @@ def check_versions(errors, versions):
     """红线 7：SKILL.md frontmatter version ↔ package.json 三处同步。
 
     versions 为 (skill 目录名, frontmatter version 或 None)，由 main 循环
-    解析 frontmatter 时顺时收集，避免二次解析。
+    解析 frontmatter 时顺带收集，避免二次解析。
 
     三处同步含 CHANGELOG 定版小节存在性（RELEASING §2 声称"由本规则机械强制"，
     2026-10-10 对抗审查发现实现只比 SKILL↔package.json——补齐使名实相符）；
@@ -335,9 +360,13 @@ def check_versions(errors, versions):
     changelog = REPO / "CHANGELOG.md"
     if not changelog.exists():
         errors.append("CHANGELOG.md: 缺失——版本一致性校验无法执行")
-    elif not re.search(rf"^## \[{re.escape(pkg_version)}\]", changelog.read_text(encoding="utf-8"), re.M):
-        errors.append(f"CHANGELOG.md: 缺 [{pkg_version}] 定版小节"
-                      "（发版时三处同步：全部 SKILL.md / package.json / CHANGELOG）")
+    else:
+        # 掩码 + 节界锚定：围栏内的伪节头不算数、[0.9.0]-rc1 前缀不顶替定版节
+        #（2026-10-10 二轮对抗审查实测构造）
+        body = mask_fenced(changelog.read_text(encoding="utf-8"))
+        if not re.search(rf"^## \[{re.escape(pkg_version)}\](?:[ \t]|$)", body, re.M):
+            errors.append(f"CHANGELOG.md: 缺 [{pkg_version}] 定版小节"
+                          "（发版时三处同步：全部 SKILL.md / package.json / CHANGELOG）")
 
 
 def check_tracked_files(errors):

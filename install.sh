@@ -134,8 +134,17 @@ deny_selfdestruct() {
 TARGET_ABS="$(cd "$TARGET" 2>/dev/null && pwd -P || true)"
 guard_target "${TARGET_ABS:-$TARGET}" || deny_selfdestruct
 mkdir -p "$TARGET"
-TARGET_ABS="$(cd "$TARGET" && pwd -P)"
-guard_target "$TARGET_ABS" || { rmdir "$TARGET" 2>/dev/null || true; deny_selfdestruct; }
+TARGET_ABS="$(cd "$TARGET" && pwd -P)" || { echo "❌ 无法访问目标目录：$TARGET" >&2; exit 1; }
+guard_target "$TARGET_ABS" || {
+  # 只删空目录（rmdir 非空即失败），沿拼写路径向上清理本守卫刚创建的层级，
+  # 删到非空 / 出源树 / 到根即停——多级新建路径同样零残留
+  d="$TARGET"
+  while [ -n "$d" ] && [ "$d" != "/" ] && [ "$d" != "." ] && [ "$d" != "$SRC_ROOT" ]; do
+    rmdir "$d" 2>/dev/null || break
+    d="$(dirname -- "$d")"
+  done
+  deny_selfdestruct
+}
 METHOD="拷贝"; $LINK && METHOD="软链"
 echo "安装目标：${TARGET}（方式：${METHOD}）"
 echo ""

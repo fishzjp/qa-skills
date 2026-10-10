@@ -324,6 +324,14 @@ class FrontmatterYamlGateTests(unittest.TestCase):
         desc = validate_skills._fm_scalar("description: 'Review others'' work'", "description")
         self.assertEqual(desc, "Review others' work")
 
+    def test_literal_block_scalar_keeps_newlines(self):
+        """`|` 字面块保留换行（`>` 折叠块空格连接）——混用空格折叠会让多行 `|`
+        值恒与 YAML 解析值不一致（2026-10-10 二轮审查误拒原形）。"""
+        desc = validate_skills._fm_scalar("description: |\n  第一行的描述文字\n  第二行的描述文字", "description")
+        self.assertEqual(desc, "第一行的描述文字\n第二行的描述文字")
+        desc = validate_skills._fm_scalar("description: >\n  第一行的描述文字\n  第二行的描述文字", "description")
+        self.assertEqual(desc, "第一行的描述文字 第二行的描述文字")
+
 
 class ValidateSkillsRefResolutionTests(unittest.TestCase):
     """validate_skills 的引用解析基准（消费方 SKILL.md 目录约定）。"""
@@ -422,6 +430,21 @@ class WhenNotToUseBodyTests(unittest.TestCase):
     def test_populated_body_passes(self):
         self.assertEqual(self._check("\n- 写用例 → test-case-writing\n"), [])
 
+    def test_comment_only_body_flagged(self):
+        """纯 HTML 注释段体渲染为空——剥注释后判空（2026-10-10 二轮审查绕过形态）。"""
+        errors = []
+        text = ("---\nname: alpha\n---\n\n# t\n\n## When NOT to Use\n\n"
+                "<!-- 交给 bug-analysis -->\n\n## 其他\n")
+        validate_skills.check_when_not_to_use(text, "alpha", errors)
+        self.assertTrue(any("段内容为空" in e for e in errors), errors)
+
+    def test_heading_only_inside_fence_not_counted(self):
+        """真实段删除、标题仅存于围栏示例内——掩码后不算数（2026-10-10 二轮审查骗绿原形）。"""
+        errors = []
+        text = ("---\nname: alpha\n---\n\n```md\n## When NOT to Use\n- 示例\n```\n\n正文\n")
+        validate_skills.check_when_not_to_use(text, "alpha", errors)
+        self.assertTrue(any("缺 '## When NOT to Use'" in e for e in errors), errors)
+
 
 class SectionPointerTests(unittest.TestCase):
     """节号指针核对：引用检查只查路径存在性，不查"§N 指向的是不是声称的内容"——
@@ -473,6 +496,31 @@ class SectionPointerTests(unittest.TestCase):
             "# 无编号节\n\n## When NOT to Use\n\n内容\n", encoding="utf-8")
         self.assertEqual(self._pointers("见 `../core/plain.md` 第 3 节"), [])
 
+    def test_sha_pointer_out_of_range_flagged(self):
+        """§N 形态（仓内活跃写法）纳入越界层——2026-10-10 二轮审查：本批手工修的
+        triage §6→§7 正是 § 形态，此前完全逃逸。"""
+        errors = self._pointers("见 `../core/triage.md`（§2–9）")
+        self.assertTrue(any("节号指针越界" in e for e in errors), errors)
+
+    def test_sha_pointer_in_range_passes(self):
+        self.assertEqual(self._pointers("边界见 `../core/triage.md` §3"), [])
+
+    def test_fenced_fake_heading_cannot_inflate_sections(self):
+        """围栏投毒抬节图：目标文件围栏内放 `## 99. 泳道模板` + 指针第 99 节——
+        节图基于掩码文本，围栏内伪标题不算（2026-10-10 二轮审查实测骗绿原形）。"""
+        (validate_skills.SKILLS_ROOT / "core" / "triage.md").write_text(
+            "# t\n\n## 1. A\n\n```md\n## 99. 泳道模板\n```\n", encoding="utf-8")
+        errors = self._pointers("见 `../core/triage.md` 第 99 节：泳道模板")
+        self.assertTrue(any("节号指针越界" in e for e in errors), errors)
+
+    def test_fenced_fake_heading_cannot_shadow_real_titles(self):
+        """围栏投毒反向覆盖：伪标题出现在真标题之后覆盖节图 → 正确指针被误报。
+        节图掩码后该误报源消失。"""
+        (validate_skills.SKILLS_ROOT / "core" / "triage.md").write_text(
+            "# t\n\n## 2. 判定树\n\n## 3. 四分类证据表\n\n```md\n## 2. 伪标题甲\n```\n",
+            encoding="utf-8")
+        self.assertEqual(self._pointers("见 `../core/triage.md`（第 2–3 节：判定树 + 证据表）"), [])
+
 
 class VersionGateChangelogTests(unittest.TestCase):
     """版本三处同步含 CHANGELOG 定版小节存在性（RELEASING 声称"机械强制"，
@@ -504,6 +552,12 @@ class VersionGateChangelogTests(unittest.TestCase):
     def test_present_changelog_section_passes(self):
         errors = self._check("0.9.0", "# 更新日志\n\n## [0.9.0] - 2026-09-20\n\n- 条目\n")
         self.assertEqual([e for e in errors if "CHANGELOG" in e], [])
+
+    def test_fenced_fake_section_header_not_counted(self):
+        """真定版节改名 + 围栏内伪节头顶替——掩码 + 节界锚定后必须红
+       （2026-10-10 二轮审查实测骗绿原形）；rc 前缀不顶替定版节。"""
+        errors = self._check("0.9.0", "# 更新日志\n\n## [0.9.0]-rc1\n\n```md\n## [0.9.0] - 2026-09-20\n```\n")
+        self.assertTrue(any("缺 [0.9.0] 定版小节" in e for e in errors), errors)
 
     def test_missing_package_json_fails_loud(self):
         errors = self._check(None, "# 更新日志\n")
@@ -539,6 +593,26 @@ class MdLinkSuffixCoverageTests(unittest.TestCase):
 
     def test_existing_non_md_asset_passes(self):
         self.assertEqual(self._check("![架构](references/arch.png)", ["references/arch.png"]), [])
+
+    def test_same_skill_asset_via_link_not_cross_flagged(self):
+        """symlink 环境回归钉子（2026-10-10 修复）：macOS tempdir（/var→/private/var）
+        下 references/ 内同 skill 资产的 md 链接不得因 resolve 口径分裂误报跨 skill 引用。"""
+        self.assertEqual(self._check("![架构](references/arch.png)", ["references/arch.png"]), [])
+        # 反引号引用形态同样不得误报
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            (td / "skills" / "alpha" / "references").mkdir(parents=True)
+            (td / "skills" / "alpha" / "references" / "r.md").write_text("# r\n", encoding="utf-8")
+            sk = td / "skills" / "alpha" / "SKILL.md"
+            sk.write_text("---\nname: alpha\n---\n\n见 `references/r.md`\n", encoding="utf-8")
+            old = (validate_skills.SKILLS_ROOT, validate_skills.REPO)
+            validate_skills.SKILLS_ROOT, validate_skills.REPO = td / "skills", td
+            try:
+                errors = []
+                validate_skills.check_references(sk, errors)
+                self.assertEqual(errors, [])
+            finally:
+                validate_skills.SKILLS_ROOT, validate_skills.REPO = old
 
 
 if __name__ == "__main__":
