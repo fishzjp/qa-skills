@@ -222,12 +222,13 @@ class FieldRuleTests(unittest.TestCase):
         rc, out = self._one(ftype="defect", title="券叠加为负", evidence='"bug条目.md#TC-1"')
         self.assertEqual(rc, 0, out)
 
-    def test_related_dangling_fails_and_valid_passes(self):
+    def test_related_dangling_fails_after_init(self):
         with tempfile.TemporaryDirectory() as td:
             other = entry(ftype="env", title="2026-09-05 nightly 环境变量缺失")
             files = {TYPE2FILE["env"]: other,
                      TYPE2FILE["flaky"]: entry(related="[nightly 环境变量缺失]")}
             rc, out = run(["--init", str(make_qa(td, files))])
+            self.assertEqual(rc, 0, out)  # 骨架已存在时 --init 只补 INDEX、跳过既有文件
             rc, out = run([str(Path(td) / ".qa")])
             self.assertEqual(rc, 1)
             self.assertIn("related 指向不存在", out)

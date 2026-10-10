@@ -117,15 +117,25 @@ else
   fi
 fi
 
-mkdir -p "$TARGET"
 # 防自毁：目标等于或位于本仓库 skills/ 源目录内时拒绝（src==dst 会先删源文件，随后复制失败）。
-# pwd -P 解析物理路径：--target 若是链进仓库的 symlink，逻辑路径守卫会被绕过（2026-09-07 审查修复）
+# pwd -P 解析物理路径：--target 若是链进仓库的 symlink，逻辑路径守卫会被绕过（2026-09-07 审查修复）。
+# 守卫先于 mkdir（2026-10-10 审查修复：原顺序会在拒绝前先在源树内留下空目录）——目标尚不存在时
+# 先按字符串前缀判定，mkdir 后再物理复核（覆盖 symlink 父目录的窄窗），复核拒绝时清掉刚建的空目录。
+guard_target() {
+  case "$1" in
+    "$SRC_ROOT"|"$SRC_ROOT"/*) return 1 ;;
+  esac
+  return 0
+}
+deny_selfdestruct() {
+  echo "❌ 拒绝安装：目标目录位于本仓库的 skills/ 源目录内，会破坏源文件。请换一个安装目标。" >&2
+  exit 1
+}
+TARGET_ABS="$(cd "$TARGET" 2>/dev/null && pwd -P || true)"
+guard_target "${TARGET_ABS:-$TARGET}" || deny_selfdestruct
+mkdir -p "$TARGET"
 TARGET_ABS="$(cd "$TARGET" && pwd -P)"
-case "$TARGET_ABS" in
-  "$SRC_ROOT"|"$SRC_ROOT"/*)
-    echo "❌ 拒绝安装：目标目录位于本仓库的 skills/ 源目录内，会破坏源文件。请换一个安装目标。" >&2
-    exit 1 ;;
-esac
+guard_target "$TARGET_ABS" || { rmdir "$TARGET" 2>/dev/null || true; deny_selfdestruct; }
 METHOD="拷贝"; $LINK && METHOD="软链"
 echo "安装目标：${TARGET}（方式：${METHOD}）"
 echo ""
@@ -150,6 +160,8 @@ for d in "${SKILL_DIRS[@]}"; do
     ln -s "$src" "$dst"
   else
     cp -R "$src" "$dst"
+    # 从本地工作副本安装时 cp -R 会带入运行缓存（npm 面已用 files 否定模式排除，这里对齐）——不装进宿主
+    find "$dst" -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true
   fi
 done
 

@@ -15,6 +15,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "scripts"))
 
+import _gate_common    # noqa: E402
 import validate_repo  # noqa: E402
 
 
@@ -72,21 +73,24 @@ class LocalTargetExtractionTests(unittest.TestCase):
 
 
 class RootMdLinkCheckTests(unittest.TestCase):
-    """根目录 md 链接检查的存在性判定（含目录目标——README 链接 ./examples/ 这类）。"""
+    """md 链接检查的存在性判定（含目录目标——README 链接 ./examples/ 这类；
+    基准 = 文件所在目录，覆盖 .github/、examples/ 等非根目录 md）。"""
 
-    def _check(self, md_text, layout):
+    def _check(self, md_text, layout, md_rel="README.md"):
         with tempfile.TemporaryDirectory() as td:
             td = Path(td)
-            (td / "README.md").write_text(md_text, encoding="utf-8")
+            p = td / md_rel
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(md_text, encoding="utf-8")
             for rel, content in layout.items():
-                p = td / rel
+                q = td / rel
                 if rel.endswith("/"):
-                    p.mkdir(parents=True, exist_ok=True)
+                    q.mkdir(parents=True, exist_ok=True)
                 else:
-                    p.parent.mkdir(parents=True, exist_ok=True)
-                    p.write_text(content, encoding="utf-8")
+                    q.parent.mkdir(parents=True, exist_ok=True)
+                    q.write_text(content, encoding="utf-8")
             errors = []
-            validate_repo.check_md_links(td, errors)
+            validate_repo.check_md_links(td, [md_rel], errors)
             return errors
 
     def test_missing_target_flagged(self):
@@ -98,6 +102,109 @@ class RootMdLinkCheckTests(unittest.TestCase):
         errors = self._check("[x](./a.md) [d](./examples/)",
                              {"a.md": "hi", "examples/": ""})
         self.assertEqual(errors, [])
+
+    def test_non_root_md_resolves_relative_to_own_dir(self):
+        """非根目录 md（.github/ 模板形态）的相对链接按文件所在目录判定——
+        2026-10-10 扩面审查抓到的真问题形态：.github/PULL_REQUEST_TEMPLATE.md
+        写 ./CONTRIBUTING.md 解析到 .github/CONTRIBUTING.md 断链。"""
+        errors = self._check("[见](./CONTRIBUTING.md)", {},
+                             md_rel=".github/PULL_REQUEST_TEMPLATE.md")
+        self.assertEqual(len(errors), 1)
+        self.assertIn(".github/PULL_REQUEST_TEMPLATE.md", errors[0])
+        errors = self._check("[见](../CONTRIBUTING.md)", {"CONTRIBUTING.md": "x"},
+                             md_rel=".github/PULL_REQUEST_TEMPLATE.md")
+        self.assertEqual(errors, [])
+
+
+class FenceErrorTests(unittest.TestCase):
+    """未闭合围栏自检：mask_fenced / visible_lines 对未闭合围栏是"其后全部按代码块
+    掩掉"的保守行为——引用检查静默跳过该区间（fail-silent）。此门把未闭合本身
+    变成独立错误（2026-10-10 对抗审查实测构造：一个未闭合围栏废掉单文件引用门）。"""
+
+    def test_unclosed_fence_reported_with_line(self):
+        fe = _gate_common.fence_error("正文\n```python\n[x](./fenced.md)\n再一段")
+        self.assertEqual(fe, (2, "```"))
+
+    def test_closed_fence_passes(self):
+        self.assertIsNone(_gate_common.fence_error("```python\ncode\n```\n正文"))
+
+    def test_mismatched_fence_marker_reported(self):
+        # ``` 开、~~~ 闭不匹配——同样视为未闭合
+        fe = _gate_common.fence_error("~~~\ncode\n```\n正文")
+        self.assertIsNotNone(fe)
+
+
+class BilingualPairTests(unittest.TestCase):
+    """落地页静态双语对门：zh-only/en-only 计数相等 + 序列相邻交替。
+    此前成对性只活在发版提交信息里（缺一半照绿，2026-10-10 对抗审查实测构造）。"""
+
+    def _check(self, html):
+        with tempfile.TemporaryDirectory() as td:
+            (Path(td) / "index.html").write_text(html, encoding="utf-8")
+            errors = []
+            validate_repo.check_bilingual_pairs(Path(td), errors)
+            return errors
+
+    def test_paired_sequence_passes(self):
+        errors = self._check(
+            '<span class="zh-only">中文</span><span class="en-only">EN</span>'
+            '<p class="zh-only">中文2</p><p class="en-only">EN2</p>')
+        self.assertEqual(errors, [])
+
+    def test_missing_half_flagged(self):
+        errors = self._check(
+            '<span class="zh-only">中文</span><span class="en-only">EN</span>'
+            '<span class="zh-only">孤儿中文</span>')
+        self.assertTrue(any("静态双语对不完整" in e for e in errors), errors)
+
+    def test_consecutive_same_kind_flagged(self):
+        errors = self._check(
+            '<span class="zh-only">中文</span><span class="zh-only">又一个中文</span>'
+            '<span class="en-only">EN</span><span class="en-only">EN2</span>')
+        self.assertTrue(any("相邻性破坏" in e for e in errors), errors)
+
+    def test_no_pairs_at_all_flagged(self):
+        errors = self._check('<div class="hero">无双语标记的单语页</div>')
+        self.assertTrue(any("未检出" in e for e in errors), errors)
+
+    def test_ambiguous_both_classes_flagged(self):
+        errors = self._check('<span class="zh-only en-only">自相矛盾</span>')
+        self.assertTrue(any("同时挂" in e for e in errors), errors)
+
+    def test_css_and_script_not_counted(self):
+        # CSS 选择器与 JS 字符串里的类名不是元素——不得计入序列（零对会误报"未检出"）
+        errors = self._check(
+            '<style>html.lang-en .zh-only{display:none}</style>'
+            '<script>var t="zh-only";</script>'
+            '<span class="zh-only">中文</span><span class="en-only">EN</span>')
+        self.assertEqual(errors, [])
+
+
+class JsonldVersionTests(unittest.TestCase):
+    """JSON-LD softwareVersion 与 package.json 一致（GEO 层版本事实曾停更两个版本，
+    从 RELEASING 人工检查单机制化为常驻门）。"""
+
+    def _check(self, html_version, pkg_version="1.2.3"):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            html = ('{"@type":"SoftwareApplication"' +
+                    (f',"softwareVersion":"{html_version}"' if html_version else "") + '}')
+            (td / "index.html").write_text(html, encoding="utf-8")
+            (td / "package.json").write_text(f'{{"version": "{pkg_version}"}}', encoding="utf-8")
+            errors = []
+            validate_repo.check_jsonld_version(td, errors)
+            return errors
+
+    def test_mismatch_flagged(self):
+        errors = self._check("0.8.0", pkg_version="0.9.0")
+        self.assertTrue(any("softwareVersion" in e for e in errors), errors)
+
+    def test_match_passes(self):
+        self.assertEqual(self._check("0.9.0", pkg_version="0.9.0"), [])
+
+    def test_missing_field_flagged(self):
+        errors = self._check(None)
+        self.assertTrue(any("缺 JSON-LD softwareVersion" in e for e in errors), errors)
 
 
 class HtmlAssetCheckTests(unittest.TestCase):

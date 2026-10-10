@@ -42,6 +42,27 @@ def mask_fenced(text):
     return "\n".join(out)
 
 
+def fence_error(text):
+    """未闭合 fenced code block 的 (开栏行号, 标记) 或 None。
+
+    mask_fenced / visible_lines 对未闭合围栏的行为是"其后全部行按代码块掩掉"——
+    单看掩码是保守方向，但引用检查会静默跳过该区间（fail-silent：一个手滑的
+    未闭合围栏可废掉单文件整个引用门，2026-10-10 对抗审查实测构造确认）。
+    调用方应先过本检查，把未闭合本身变成独立错误，而不是让后续内容静默逃检。
+    """
+    in_fence, open_line = None, None
+    for i, line in enumerate(text.split("\n"), 1):
+        m = _FENCE_OPEN.match(line)
+        if in_fence is None:
+            if m:
+                in_fence, open_line = m.group(1), i
+        elif m and m.group(1) == in_fence:
+            in_fence = None
+    if in_fence is not None:
+        return open_line, in_fence
+    return None
+
+
 def visible_lines(text):
     """[(行号, 行)]——跳过 fenced code block 内的行（行号保持原文位置）。"""
     out, in_fence = [], None

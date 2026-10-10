@@ -40,16 +40,22 @@ except ImportError:
     yaml = None
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _gate_common import extract_local_refs, find_git, visible_lines  # noqa: E402
+from _gate_common import extract_local_refs, fence_error, find_git, visible_lines  # noqa: E402
 
 REPO = Path(__file__).resolve().parents[1]
 SKILLS_ROOT = REPO / "skills"   # 产品本体（12 个 skill + core/ 共享库）统一在此
 MAX_LINES = 500
 MAX_DESC_CHARS = 300
-REF_PATTERN = re.compile(r"`((?:\.\./|references/|templates/|core/)[\w./-]+\.(?:md|json|py|ya?ml))`")
+REF_PATTERN = re.compile(r"`((?:\.\./|references/|templates/|core/|scripts/)[\w./-]+\.(?:md|json|py|ya?ml))`")
 CORE_BARE_PATTERN = re.compile(r"`((?:\.\./)?(?:[\w-]+/)*[\w-]+\.(?:md|py))`")
 FRONTMATTER = re.compile(r"\A---\n(.*?)\n---\n", re.S)
-MD_EXTS = (".md", ".json", ".py", ".yml", ".yaml")
+# 「`references/x.md`（第 2–3 节：判定树 + 证据表）」形态的节号指针：目标反引号引用 +
+# 同行紧邻的第 N 节（含可选区间与可选关键词说明）。用于节号指针核对（check_section_pointers）。
+SEC_PTR_PATTERN = re.compile(
+    r"`((?:\.\./|references/|templates/|core/|scripts/)[\w./-]+\.(?:md|py|ya?ml))`"
+    r"[^`\n]{0,80}?第\s*(\d+)\s*(?:[–—-]\s*(\d+)\s*)?节"
+    r"(?:\s*[：:]\s*([^）\n]{1,80}))?"
+)
 
 # 红线 10 白名单：白名单制而非黑名单关键词——临时文件命名不可枚举，
 # 且 test-case-writing、report-template 等合法文件名含 test/report 字样会被关键词误杀。
@@ -85,6 +91,13 @@ def check_frontmatter(text, dirname, errors):
         errors.append(f"{dirname}/SKILL.md: 缺少 frontmatter（--- name/description ---）")
         return None
     fm = m.group(1)
+    # 重复键检测：手写行解析取首个匹配、标准 YAML 解析 last-wins——同名键并存时
+    # 校验口径与宿主解析结果分裂（2026-10-10 对抗审查：name 双写逃检）
+    fm_keys = re.findall(r"^([A-Za-z][\w-]*):", fm, re.M)
+    dupes = sorted({k for k in fm_keys if fm_keys.count(k) > 1})
+    if dupes:
+        errors.append(f"{dirname}/SKILL.md: frontmatter 存在重复键 {dupes}——"
+                      "手写解析取首个、标准 YAML last-wins，宿主侧解析结果与校验口径分裂")
     name = re.search(r"^name:\s*(.+)$", fm, re.M)
     desc = _fm_scalar(fm, "description")
     # YAML 合法性门：手写行解析（上方 _fm_scalar）与标准解析器口径可能分裂——
@@ -195,7 +208,9 @@ def check_target(md_path, ref, errors, line_no=None):
         return
     if target.is_relative_to(root / "core"):
         return  # core 共享层：其 SKILL.md 仅为安装依赖单元，不算跨引用
-    src_owner = owning_skill_dir(md_path)
+    # 两侧统一 resolve 后比较：macOS tempdir（/var → /private/var）这类 symlink 环境
+    # 下，未 resolve 的 md_path 与已 resolve 的 target 会把同 skill 误判成跨引用
+    src_owner = owning_skill_dir(md_path.resolve())
     tgt_owner = owning_skill_dir(target)
     if tgt_owner is not None and tgt_owner != src_owner:
         bad = f"{where}: 跨 skill 引用 `{ref}`（属于 {tgt_owner.name}/）——被多 skill 消费的内容应下沉 core/"
@@ -222,14 +237,13 @@ def check_references(md_path, errors):
 
 def check_md_links(md_path, errors):
     """markdown 链接（行内 + 引用式定义）/ html img 目标的本地存在性（外链、锚点、
-    含占位符的模板串跳过），报错带行号。
+    含占位符的模板串跳过；不限后缀——.png/.sh/.html 等资产链接断链同样红，
+    2026-10-10 对抗审查：此前只查 md/py/yaml/json 后缀，其余后缀断链照绿）。
 
     目标存在时同样过红线 6 归属判定——防止用链接形态绕过反引号形态的跨 skill 检查。
     """
     rel = md_path.relative_to(REPO)
     for line_no, raw, path in extract_local_refs(md_path.read_text(encoding="utf-8")):
-        if not path.lower().endswith(MD_EXTS):
-            continue
         if any(ch in path for ch in "{}<>:*|"):
             continue  # 模板占位符 / 通配描述不在校验范围
         if not (md_path.parent / path).exists():
@@ -238,15 +252,76 @@ def check_md_links(md_path, errors):
             check_target(md_path, path, errors, line_no)
 
 
+def check_when_not_to_use(text, dirname, errors):
+    """红线 3：When NOT to Use——锚定真实二级标题形态，防 code fence 示例或正文顺带
+    提及骗过朴素子串闸；且段体非空（空标题段 = 反触发边界退化归零，
+    2026-10-10 对抗审查：此前只查标题存在不查内容）。
+    """
+    m = re.search(r"^## +When NOT to Use\s*$", text, re.M)
+    if not m:
+        errors.append(f"{dirname}/SKILL.md: 缺 '## When NOT to Use' 二级标题段（须指明交给哪个 skill）")
+        return
+    tail = text[m.end():]
+    nxt = re.search(r"^## ", tail, re.M)
+    body = tail[:nxt.start()] if nxt else tail
+    if not body.strip():
+        errors.append(f"{dirname}/SKILL.md: 'When NOT to Use' 段内容为空（须指明交给哪个 skill）")
+
+
+def _numbered_h2s(text):
+    """二级标题的编号映射 {节号: 标题文本}——`## 2. 判定树` / `## 2 判定树` 形态。"""
+    secs = {}
+    for m in re.finditer(r"^##\s+(\d+)[.、]?\s*(.+)$", text, re.M):
+        secs[int(m.group(1))] = m.group(2).strip()
+    return secs
+
+
+def check_section_pointers(md_path, errors):
+    """节号指针核对：「`references/x.md`（第 2–3 节：判定树 + 证据表）」形态与目标
+    文件实际节序比对——引用检查此前只查路径存在性，不查"§N 指向的是不是声称的内容"，
+    属结构绿、语义漂（2026-10-10 对抗审查：flaky-playbook 判定树+证据表实际在 §2–3
+    而 SKILL.md 写 1–2；triage 三层分工 §7 写成 §6）。
+
+    两层核对：①范围越界（第 N 节 ≤ 目标最大编号节）；②带关键词说明的指针
+    （「第 a–b 节：kw1 + kw2」）按 + 、／ 拆词，须命中引用范围节标题的并集。
+    无编号节的文档、无反引号路径的口语化指针不在核对范围（宁漏勿误）。
+    """
+    for i, line in visible_lines(md_path.read_text(encoding="utf-8")):
+        for m in SEC_PTR_PATTERN.finditer(line):
+            ref, start, end, kw = m.group(1), int(m.group(2)), m.group(3), m.group(4)
+            target, _basis = resolve_ref(md_path, ref)
+            if target is None:
+                continue  # 路径不存在由红线 5 报，这里不重复
+            secs = _numbered_h2s(target.read_text(encoding="utf-8"))
+            if not secs:
+                continue  # 目标无编号节（清单型文档），无从核对
+            where = f"{md_path.relative_to(REPO)}:{i}"
+            end_n = int(end) if end else start
+            scope = f"第 {start}" + (f"–{end_n}" if end else "") + " 节"
+            if start < 1 or end_n > max(secs):
+                errors.append(f"{where}: 节号指针越界 `{ref}` {scope}——目标实际节号 1–{max(secs)}")
+                continue
+            if kw:
+                titles = " ".join(secs.get(n, "") for n in range(start, end_n + 1))
+                miss = [w for w in re.split(r"\s*[+＋、／/]\s*", kw) if len(w) >= 2 and w not in titles]
+                if miss:
+                    errors.append(f"{where}: 节号指针与目标节题不符 `{ref}` {scope}"
+                                  f"——关键词 {'、'.join(miss)} 不在节题「{titles.strip()}」中")
+
+
 def check_versions(errors, versions):
     """红线 7：SKILL.md frontmatter version ↔ package.json 三处同步。
 
     versions 为 (skill 目录名, frontmatter version 或 None)，由 main 循环
-    解析 frontmatter 时顺带收集，避免二次解析。
+    解析 frontmatter 时顺时收集，避免二次解析。
+
+    三处同步含 CHANGELOG 定版小节存在性（RELEASING §2 声称"由本规则机械强制"，
+    2026-10-10 对抗审查发现实现只比 SKILL↔package.json——补齐使名实相符）；
+    package.json / CHANGELOG 缺失 = 门没法跑 = FAIL 而非跳过（fail-loud 口径）。
     """
     pkg = REPO / "package.json"
     if not pkg.exists():
-        print("(i) 未检出 package.json——跳过版本一致性校验")
+        errors.append("package.json: 缺失——版本一致性校验无法执行（跟踪面应有文件缺失，先查 git status）")
         return
     try:
         pkg_version = json.loads(pkg.read_text(encoding="utf-8"))["version"]
@@ -257,6 +332,12 @@ def check_versions(errors, versions):
         if v != pkg_version:
             errors.append(f"{name}/SKILL.md: frontmatter version '{v}' 与 package.json '{pkg_version}' 不一致"
                           "（发版时三处同步：全部 SKILL.md / package.json / CHANGELOG）")
+    changelog = REPO / "CHANGELOG.md"
+    if not changelog.exists():
+        errors.append("CHANGELOG.md: 缺失——版本一致性校验无法执行")
+    elif not re.search(rf"^## \[{re.escape(pkg_version)}\]", changelog.read_text(encoding="utf-8"), re.M):
+        errors.append(f"CHANGELOG.md: 缺 [{pkg_version}] 定版小节"
+                      "（发版时三处同步：全部 SKILL.md / package.json / CHANGELOG）")
 
 
 def check_tracked_files(errors):
@@ -319,19 +400,31 @@ def main():
         n = len(text.splitlines())
         if n > MAX_LINES:
             errors.append(f"{d.name}/SKILL.md: {n} 行超过 {MAX_LINES} 行红线（方法细节下沉 references/ 或 core/）")
-        # 红线 3：When NOT to Use——锚定真实二级标题形态，
-        # 防 code fence 示例或正文顺带提及骗过朴素子串闸
-        if not re.search(r"^## +When NOT to Use\s*$", text, re.M):
-            errors.append(f"{d.name}/SKILL.md: 缺 '## When NOT to Use' 二级标题段（须指明交给哪个 skill）")
+        # 红线 3：When NOT to Use（标题存在 + 段体非空）
+        check_when_not_to_use(text, d.name, errors)
+
+    # 围栏闭合自检：未闭合围栏会让其后内容对引用检查静默不可见——先显式报出，
+    # 不让掩码的保守行为吞掉区间内的坏引用（fail-loud，2026-10-10 审查加固）
+    all_mds = sorted(SKILLS_ROOT.rglob("*.md"))
+    n_fence = 0
+    for md in all_mds:
+        fe = fence_error(md.read_text(encoding="utf-8"))
+        if fe:
+            errors.append(f"{md.relative_to(REPO)}:{fe[0]}: 未闭合的 fenced code block（{fe[1]}）"
+                          "——其后内容对引用检查静默不可见，先修围栏")
+            n_fence += 1
 
     # 红线 5/6：skills/ 下全部 .md 的引用检查（SKILL.md、references/、templates/、core/ 一次遍历）
-    all_mds = sorted(SKILLS_ROOT.rglob("*.md"))
     for md in all_mds:
         check_references(md, errors)
 
-    # 红线 5c：全库 markdown 链接存在性 + 归属判定
+    # 红线 5c：全库 markdown 链接存在性（不限后缀）+ 归属判定
     for md in all_mds:
         check_md_links(md, errors)
+
+    # 节号指针核对（结构绿、语义漂防线）：在引用存在性之后跑——路径存在才谈节号对不对
+    for md in all_mds:
+        check_section_pointers(md, errors)
 
     # 红线 7：版本一致性
     check_versions(errors, versions)

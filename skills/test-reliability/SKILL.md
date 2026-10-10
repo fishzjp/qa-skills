@@ -12,7 +12,7 @@ description: "Govern flaky tests and suite reliability: rerun-pass verdicts, roo
 
 - **输入**：失败/翻灯历史（CI 运行记录、重跑日志、triage 分流表 D 类条目）、套件清单与运行统计；项目存在 `.qa/` 时先读其 flaky-tests 主题（经 `qa-memory` 沉淀的历史判定）
 - **输出（落盘）**：《可靠性报告_{套件}_{日期}.md》——逐条 flaky 清单（判定 × 根因分类 × 处置 × 状态，缺一字段即报告不合规）+ 套件健康度机读摘要（字段规范见 `references/flaky-playbook.md` 第 5 节，挂靠 `../core/report-template.md` 机读段）；沉淀判定结论（哪些发现值得写入 `.qa/`，交 `qa-memory` 工作流执行）
-- **边界（三层分工，同源 `../core/triage.md` 第 6 节）**：执行中单条失败的即时定性（first-run-flaky 规则、等待策略）→ 各执行 skill 工程约定；一批失败的首轮分类与路由 → `../core/triage.md`；已确认 Bug 的根因/影响/修复建议 → `bug-analysis`；**本 skill 管"套件与门禁"层**——单条定性做完之后的跨轮追踪、根因分类、隔离策略、重试语义与健康度
+- **边界（三层分工，同源 `../core/triage.md` 第 7 节）**：执行中单条失败的即时定性（first-run-flaky 规则、等待策略）→ 各执行 skill 工程约定；一批失败的首轮分类与路由 → `../core/triage.md`；已确认 Bug 的根因/影响/修复建议 → `bug-analysis`；**本 skill 管"套件与门禁"层**——单条定性做完之后的跨轮追踪、根因分类、隔离策略、重试语义与健康度
 
 ## When to Use
 
@@ -41,7 +41,7 @@ description: "Govern flaky tests and suite reliability: rerun-pass verdicts, roo
 ## 工作流一：flaky 判定与根因四分类
 
 1. **判定（先于一切归因）**：一条用例首次失败、原样重跑通过 → 判 first-run-flaky，**不算稳定通过**——重跑只用于定性，不得成为常态化通过手段（同源：playwright-conventions §11、`../core/triage.md` D 类，规则一致）。证据不足时显式标"未知"，不许硬编结论。
-2. **复跑矩阵（根因归因的证据面）**：对已定性 flaky 的用例按矩阵取证——原样重跑 / 隔离重跑（单跑该条）/ 干净环境重跑（新容器/新目录）/ 带序重跑（按序执行邻居）。矩阵结果 → 根因四分类的判定树**此时加载 `references/flaky-playbook.md`**（第 1–2 节：判定树 + 证据表）。
+2. **复跑矩阵（根因归因的证据面）**：对已定性 flaky 的用例按矩阵取证——原样重跑 / 隔离重跑（单跑该条）/ 干净环境重跑（新容器/新目录）/ 带序重跑（按序执行邻居）。矩阵结果 → 根因四分类的判定树**此时加载 `references/flaky-playbook.md`**（第 2–3 节：判定树 + 证据表）。
 3. **根因四分类**（类名 × 典型证据 × 修复模式见 playbook 第 3 节）：
    - **S1 时序与等待不足**：异步未等、轮询窗口、动画/懒加载——隔离重跑仍间歇失败
    - **S2 共享状态与测试间依赖**：数据残留、执行顺序敏感、全局单例污染——隔离重跑稳定、带序重跑失败

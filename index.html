@@ -3387,7 +3387,11 @@
     btn.addEventListener('click', function () {
       var target = document.documentElement.classList.contains('lang-en') ? 'zh' : 'en';
       try { localStorage.setItem('qa-lang', target); } catch (e) {}
-      location.replace(location.pathname + (target === 'en' ? '?lang=en' : '') + location.hash);
+      // 只增删 lang 参数，其余 query（utm 等）原样保留
+      var params = new URLSearchParams(location.search);
+      if (target === 'en') params.set('lang', 'en'); else params.delete('lang');
+      var qs = params.toString();
+      location.replace(location.pathname + (qs ? '?' + qs : '') + location.hash);
     });
   }
 

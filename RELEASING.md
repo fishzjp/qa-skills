@@ -83,11 +83,11 @@ git diff --stat                                                  # 复验：每�
 | 触发条件 | 必做同步 |
 |----------|----------|
 | 定版触及 `index.html`（或每版例行） | `index.html` JSON-LD `softwareVersion` 随版本号同步（0.9.0 审查发现该字段曾停更两个版本——GEO 层的机器可读事实不得陈旧） |
-| 新增 / 下线 skill 单元 | 安装器清单自动派生自 `skills/*/SKILL.md`（install.sh / uninstall.sh 无需改清单）；package.json description 中的 skill 计数与枚举；双语 README 结构树计数与行列排布；`tests/install_smoke.sh` 的单元数下限与 bug_report.yml 问题区域下拉（如适用）；`index.html` ticker 枚举与 featureList 能力项 |
+| 新增 / 下线 skill 单元 | 安装器清单自动派生自 `skills/*/SKILL.md`（install.sh / uninstall.sh 无需改清单）；package.json description 中的 skill 计数与枚举；双语 README 结构树计数与行列排布；`tests/install_smoke.sh` 的单元数下限与 bug_report.yml 问题区域下拉（如适用）；`index.html` ticker 枚举与 featureList 能力项；`.dsh/plugins/qa-skills.js` 文件头注释的技能计数（随 npm 包分发的事实陈述——0.9.0 审查发现停在"11 个"未随 12 更新） |
 | 新增 / 下线 core 共享文档 | 双语 README 结构树 core 行的文档枚举；涉及指纹文件的更名需同改 `install.sh`/`uninstall.sh` 的 `owns_unit` 判据 |
 | core 文档在触发措辞上影响其他 skill | 相互指向的 description / When NOT to Use 同步修订 |
 
-（dsh 插件侧无需任何随动：`.dsh/plugins/qa-skills.js` 以 `readdirSync` 动态枚举 skills 目录。）
+（dsh 插件**运行时**无需任何随动：`.dsh/plugins/qa-skills.js` 以 `readdirSync` 动态枚举 skills 目录；文件头注释计数属上表同步项。）
 
 ### §3 测试关
 

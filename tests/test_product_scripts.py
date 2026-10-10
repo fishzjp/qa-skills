@@ -381,5 +381,165 @@ class ValidateSkillsRefResolutionTests(unittest.TestCase):
         self.assertTrue(any("跨 skill 引用" in e for e in errors))
 
 
+class FrontmatterDuplicateKeyTests(unittest.TestCase):
+    """frontmatter 重复键：手写行解析取首个、标准 YAML last-wins——同名键并存时
+    校验口径与宿主解析结果分裂（2026-10-10 对抗审查：name 双写逃检）。"""
+
+    def setUp(self):
+        self.errors = []
+
+    def _check(self, fm_body):
+        return validate_skills.check_frontmatter(f"---\n{fm_body}\n---\n正文", "alpha", self.errors)
+
+    def test_duplicate_name_key_flagged(self):
+        self._check("name: alpha\nname: evil-twin\nversion: 0.9.0\n"
+                    'description: "足够长的描述文字在这里凑够二十个字符以上"')
+        self.assertTrue(any("重复键" in e and "name" in e for e in self.errors), self.errors)
+
+    def test_unique_keys_pass(self):
+        self._check("name: alpha\nversion: 0.9.0\n"
+                    'description: "足够长的描述文字在这里凑够二十个字符以上"')
+        self.assertFalse(any("重复键" in e for e in self.errors), self.errors)
+
+
+class WhenNotToUseBodyTests(unittest.TestCase):
+    """When NOT to Use 段体非空：空标题段 = 反触发边界退化归零（此前只查标题存在）。"""
+
+    def _check(self, body_after_heading):
+        text = f"---\nname: alpha\n---\n\n# t\n\n## When NOT to Use\n{body_after_heading}\n## 其他\n\n正文"
+        errors = []
+        validate_skills.check_when_not_to_use(text, "alpha", errors)
+        return errors
+
+    def test_empty_body_flagged(self):
+        self.assertTrue(self._check("\n\n## 其他"), )  # 标题后直接下一节
+
+    def test_missing_heading_flagged(self):
+        errors = []
+        validate_skills.check_when_not_to_use("---\nname: alpha\n---\n正文无该节", "alpha", errors)
+        self.assertTrue(any("缺 '## When NOT to Use'" in e for e in errors))
+
+    def test_populated_body_passes(self):
+        self.assertEqual(self._check("\n- 写用例 → test-case-writing\n"), [])
+
+
+class SectionPointerTests(unittest.TestCase):
+    """节号指针核对：引用检查只查路径存在性，不查"§N 指向的是不是声称的内容"——
+    结构绿、语义漂（2026-10-10 审查实证：flaky-playbook 判定树+证据表实际在 §2–3
+    而 SKILL.md 写「第 1–2 节：判定树 + 证据表」）。"""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        td = Path(self._tmp.name)
+        (td / "skills" / "alpha" / "references").mkdir(parents=True)
+        (td / "skills" / "core").mkdir(parents=True)
+        (td / "skills" / "alpha" / "SKILL.md").write_text("---\nname: alpha\n---\n", encoding="utf-8")
+        (td / "skills" / "core" / "triage.md").write_text(
+            "# triage\n\n## 1. 复跑矩阵\n\n内容\n\n## 2. 判定树\n\n内容\n\n## 3. 四分类证据表\n\n内容\n",
+            encoding="utf-8")
+        self._old = (validate_skills.SKILLS_ROOT, validate_skills.REPO)
+        validate_skills.SKILLS_ROOT = td / "skills"
+        validate_skills.REPO = td
+
+    def tearDown(self):
+        validate_skills.SKILLS_ROOT, validate_skills.REPO = self._old
+        self._tmp.cleanup()
+
+    def _pointers(self, line):
+        sk = validate_skills.SKILLS_ROOT / "alpha" / "SKILL.md"
+        sk.write_text(f"---\nname: alpha\n---\n\n{line}\n", encoding="utf-8")
+        errors = []
+        validate_skills.check_section_pointers(sk, errors)
+        return errors
+
+    def test_on_target_with_keywords_passes(self):
+        """（第 2–3 节：判定树 + 证据表）——关键词都在 §2/§3 节题中 → 零错误。"""
+        self.assertEqual(self._pointers("见 `../core/triage.md`（第 2–3 节：判定树 + 证据表）"), [])
+
+    def test_wrong_range_with_keywords_flagged(self):
+        """P0-1 原形：写 1–2 节但"证据表"只在 §3 → 关键词命中检查必须抓到。"""
+        errors = self._pointers("见 `../core/triage.md`（第 1–2 节：判定树 + 证据表）")
+        self.assertTrue(any("节号指针与目标节题不符" in e and "证据表" in e for e in errors), errors)
+
+    def test_out_of_range_flagged(self):
+        errors = self._pointers("见 `../core/triage.md` 第 9 节")
+        self.assertTrue(any("节号指针越界" in e for e in errors), errors)
+
+    def test_in_range_without_keywords_passes(self):
+        self.assertEqual(self._pointers("见 `../core/triage.md` 第 3 节"), [])
+
+    def test_unnumbered_target_skipped(self):
+        (validate_skills.SKILLS_ROOT / "core" / "plain.md").write_text(
+            "# 无编号节\n\n## When NOT to Use\n\n内容\n", encoding="utf-8")
+        self.assertEqual(self._pointers("见 `../core/plain.md` 第 3 节"), [])
+
+
+class VersionGateChangelogTests(unittest.TestCase):
+    """版本三处同步含 CHANGELOG 定版小节存在性（RELEASING 声称"机械强制"，
+    实现此前只比 SKILL↔package.json——补齐名实相符）；package.json 缺失 fail-loud。"""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self._old = validate_skills.REPO
+        validate_skills.REPO = Path(self._tmp.name)
+
+    def tearDown(self):
+        validate_skills.REPO = self._old
+        self._tmp.cleanup()
+
+    def _check(self, pkg_version, changelog):
+        td = validate_skills.REPO
+        if pkg_version is not None:
+            (td / "package.json").write_text(f'{{"version": "{pkg_version}"}}', encoding="utf-8")
+        if changelog is not None:
+            (td / "CHANGELOG.md").write_text(changelog, encoding="utf-8")
+        errors = []
+        validate_skills.check_versions(errors, [])
+        return errors
+
+    def test_missing_changelog_section_flagged(self):
+        errors = self._check("0.9.0", "# 更新日志\n\n## [0.8.1] - 2026-09-07\n\n- 旧版本\n")
+        self.assertTrue(any("缺 [0.9.0] 定版小节" in e for e in errors), errors)
+
+    def test_present_changelog_section_passes(self):
+        errors = self._check("0.9.0", "# 更新日志\n\n## [0.9.0] - 2026-09-20\n\n- 条目\n")
+        self.assertEqual([e for e in errors if "CHANGELOG" in e], [])
+
+    def test_missing_package_json_fails_loud(self):
+        errors = self._check(None, "# 更新日志\n")
+        self.assertTrue(any("package.json: 缺失" in e for e in errors), errors)
+
+
+class MdLinkSuffixCoverageTests(unittest.TestCase):
+    """md 链接存在性不限后缀：.png/.sh/.html 等资产断链同样红（此前只查
+    md/py/yaml/json 后缀——2026-10-10 对抗审查：不存在的架构图照绿）。"""
+
+    def _check(self, md_text, layout):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            sk = td / "skills" / "alpha" / "SKILL.md"
+            sk.parent.mkdir(parents=True)
+            sk.write_text(f"---\nname: alpha\n---\n\n{md_text}\n", encoding="utf-8")
+            for rel in layout:
+                q = td / "skills" / "alpha" / rel
+                q.parent.mkdir(parents=True, exist_ok=True)
+                q.write_text("", encoding="utf-8")
+            old = (validate_skills.SKILLS_ROOT, validate_skills.REPO)
+            validate_skills.SKILLS_ROOT, validate_skills.REPO = td / "skills", td
+            try:
+                errors = []
+                validate_skills.check_md_links(sk, errors)
+                return errors
+            finally:
+                validate_skills.SKILLS_ROOT, validate_skills.REPO = old
+
+    def test_broken_non_md_asset_flagged(self):
+        errors = self._check("![架构](references/arch.png)", ["references/x.md"])
+        self.assertTrue(any("arch.png" in e and "链接目标不存在" in e for e in errors), errors)
+
+    def test_existing_non_md_asset_passes(self):
+        self.assertEqual(self._check("![架构](references/arch.png)", ["references/arch.png"]), [])
+
+
 if __name__ == "__main__":
     unittest.main()

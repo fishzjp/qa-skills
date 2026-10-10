@@ -26,7 +26,7 @@
 ## 架构红线（改 skill 前必读）
 
 1. **SKILL.md ≤ 500 行**：只装触发边界（L1）与工作流（L2）；方法 / 规则 / Checklist / 模板一律下沉本 skill 的 `references/` 或 `core/`，工作流步骤中显式引用执行（"此步执行 references/xxx.md 全部检查项"），不得降级为可选参考
-2. **每个 skill 必须有 When NOT to Use**，且指明"交给谁"；触发措辞保持现状约定——`qa` 独占"端到端 / 帮我测试"意图词，其余 skill 的 description 均含正向触发词与反触发（"不用于…→ 对应 skill"），新增 / 修改 skill 时对照既有 description 的写法
+2. **每个 skill 必须有 When NOT to Use**，且指明"交给谁"；触发措辞保持现状约定——`qa` 独占"端到端 / 帮我测试"意图词，其余 skill 的 description 均含正向触发词与反触发（"不用于…→ 对应 skill"），新增 / 修改 skill 时对照既有 description 的写法。**例外登记：`bug-analysis` 的 description 保持中文单语是有意决策**——三个双语变体均实测触发路由刃口新增错判（R26，按预注册回滚，见 CHANGELOG 0.9.0 与 X20 观测），勿按双语样本"补齐"
 3. **core/ 是共享依赖单元**：`skills/core/SKILL.md` 仅为安装依赖单元而存在（frontmatter 显式声明"不可独立触发"，不参与任务触发竞争）；其余核心文件为纯共享引用内容，加入新内容需确认至少两个 skill 消费
 4. **skill 自包含，禁止跨 skill 引用**：任何 skill 的文件不得引用兄弟 skill 目录内的文件（含另一 skill 的 SKILL.md / references / scripts）；被多 skill 消费的方法 / 格式 / 规则一律下沉 `core/`（设计方法细则放 `core/methods/`，工具脚本放 `core/scripts/`）
 5. **description ≤ 300 字符**：description 常驻宿主每个会话的上下文，只装正触发话术 + 一句产出 + 反触发指向；机制细节写进 SKILL.md 正文（When to Use 等）
