@@ -1,20 +1,48 @@
 # qa-skills
 
-> QA skills for AI coding agents: 12 skills + a shared knowledge base (`core/`) that make any Agent Skills host — Claude Code, Cursor, Codex, OpenCode and 70+ more — work like a senior software testing engineer. Full lifecycle: requirement analysis with clarification checkpoints, risk-based test strategy with a 10-type decision matrix, executable test cases (markmap for humans + schema.yaml for machines), case review, Playwright/pytest automation, bug analysis down to the failing line, regression scoping, flaky/suite-reliability governance, reporting, plus `qa-memory`, a cross-session project QA knowledge base. Free, MIT, zero runtime, zero telemetry. Measured On/Off gains (pre-registered gates, unfavorable numbers disclosed): case-spec compliance 0.26 → 0.98; planted-bug detection 75%; test-type decision recall 0 → 0.88 on the weakest model (first-round measurement, not yet in the formal gain table); coverage +8.7 to +13.2pp; honest cost: ~3.3x tokens. Primary language is Chinese; the landing page and README are available in English, 11/12 skill descriptions are bilingual, and instruction bodies remain Chinese.
+> A QA engineering skill framework for AI coding agents: 12 testing skills plus the required shared `core/` knowledge base. MIT licensed. Covers requirement clarification, evidence-backed test strategy, executable cases, reviews, Web E2E / API execution, exploration, bug analysis, regression scoping, flaky-test governance and project QA knowledge. Ships instructions and helper scripts; the host provides the model and execution tools.
 
-## Install
+## Install and verify
 
 ```bash
 npx skills add fishzjp/qa-skills --skill '*'
 ```
 
-Verified full install: all 12 skills + `core/` land together; `core/` must always accompany any single-skill install or relative-path references break.
+Requires Node.js / npm for npx. Choose the host and scope in the installer. Always include `core/`; single-skill installation without it breaks relative references. Keep skill directories and core as siblings. Only the repository's install.sh writes qa-skills.VERSION; other methods do not require that marker. After installation, refresh the host's skills or start a new session and check which skill and core files were actually loaded.
+
+## Use
+
+Ask: "Test this requirement: {description + repository or local path}." Supply a regression baseline and, before execution, the test environment and account configuration. Use qa for the full pipeline, or a stage skill for a focused task. Stage outputs are saved to files for resumption. Clarification, execution strategy, bug classification and budget decisions have human checkpoints.
+
+## Skills
+
+- qa: full QA pipeline orchestration and reporting.
+- requirement-analysis: requirement model and clarification.
+- test-strategy: evidence-backed risk map and ten-type test scope.
+- test-case-writing: executable manual cases in markmap and machine-readable Schema.
+- test-case-review: independent coverage and executability review.
+- automated-e2e-testing: Playwright Web automation and execution evidence.
+- api-testing: API test scripts and results; k6 handoff when needed.
+- exploratory-testing: charter-driven exploration with incomplete documentation.
+- bug-analysis: root cause and impact of confirmed bugs.
+- regression-testing: regression scope from code changes.
+- test-reliability: flaky evidence, quarantine / retry policy and suite health.
+- qa-memory: project-local .qa/ knowledge base with validation.
+
+## Language, compatibility and evidence
+
+README and website: Chinese and English. Skill instruction bodies: Chinese. Descriptions: bilingual for 11 of 12 skills; bug-analysis remains Chinese to avoid an observed routing regression. Installation compatibility, correct triggering and output quality are separate checks. Installation records exist for Claude Code, dsh and Codex; gains are not established for every host or model. Playwright, pytest, k6 and the application under test are not bundled.
+
+The README reports historical injected On/Off experiments, not a new evaluation of the current checkout. Its historical table draws on an early 12-task evaluation and later execution-specific checks, including case-spec compliance 0.26 / 0.98 and token cost 1x / 3.3x (without / with skills); separate rounds use different samples. These are not per-install guarantees. Version-specific gain matrices are provided with milestone Releases; individual examples do not establish statistical gains. The harness, task pool and raw data are maintained locally and not distributed.
 
 ## Key links
 
-- [GitHub repository](https://github.com/fishzjp/qa-skills): source, issues, discussions
-- [README（中文，含完整实测数据表）](https://github.com/fishzjp/qa-skills/blob/main/README.md): measured results with per-metric methodology notes
-- [README (English)](https://github.com/fishzjp/qa-skills/blob/main/README.en.md)
-- [Skill On/Off output comparison](https://github.com/fishzjp/qa-skills/tree/main/examples): same PRD, with and without the skills
-- [Releases](https://github.com/fishzjp/qa-skills/releases): milestone releases attach cross-model gain-matrix snapshots
-- [Landing page](https://fishzjp.github.io/qa-skills/): product overview, FAQ, install
+- [README (Chinese)](https://github.com/fishzjp/qa-skills/blob/main/README.md): setup, skill selection, compatibility and historical metrics with limitations.
+- [README (English)](https://github.com/fishzjp/qa-skills/blob/main/README.en.md): equivalent English guide; linked skill bodies remain Chinese.
+- [Output comparisons](https://github.com/fishzjp/qa-skills/tree/main/examples): five real On/Off pairs with selection and interpretation notes.
+- [Shared core index](https://github.com/fishzjp/qa-skills/blob/main/skills/core/SKILL.md): shared standards, methods, templates and helper scripts.
+- [Releases](https://github.com/fishzjp/qa-skills/releases): milestone gain-matrix snapshots.
+- [Changelog](https://github.com/fishzjp/qa-skills/blob/main/CHANGELOG.md): version history and corrections.
+- [Contributing](https://github.com/fishzjp/qa-skills/blob/main/CONTRIBUTING.md): architecture rules and public checks.
+- [GitHub repository](https://github.com/fishzjp/qa-skills): source, issues and discussions.
+- [Website](https://fishzjp.github.io/qa-skills/): product overview and installation.

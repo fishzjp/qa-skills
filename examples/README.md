@@ -1,16 +1,24 @@
 # 示例：同一任务的 Skill On / Off 产出对照
 
 五组真实评测产出的对照——同一任务、同一模型、同一 harness，**唯一差异是是否注入 qa-skills**。
-所有文件均为完整真实产物，未做修饰（选样规则：双臂各取**中位样本**——不挑最好的 On，也不丑化 Off）。
+所有文件保留完整真实产出。第 1 组沿用历史验证轮代表采样；第 2–5 组为双臂 n=3、各取**中位样本**，具体来源见文末溯源表。
 产出基于黄金集的虚构业务域（图券商城 / 在线文档协作等），不含真实系统信息。
 
 > **单任务不构成统计结论。** 全套指标、置信区间与门判定见里程碑版 Release 附带的增益矩阵快照（[Releases](https://github.com/fishzjp/qa-skills/releases)）。逐组判读数字为该次运行的实测，跨 run / 跨模型不可直比。
 
+## 怎么读这些示例
+
+1. 先按下表选择与你的任务接近的一组，对照阅读同一部分的无 / 有 Skill 产物。
+2. 重点检查输入承接、业务边界、断言、数据清理和证据，而不只看篇幅或格式。
+3. 自动化示例是生成工程的 Markdown 产物，不是开箱即用的测试环境；执行前需按文件说明还原工程、安装依赖并配置被测应用与账号。不能把示例中的运行数字当成在你项目上的通过率。
+
+表内数字按**有 Skill / 无 Skill**排列。规格符合度、覆盖率和执行通过率是不同指标；也不要将这里的单任务数字与 README 的跨任务历史汇总直接比较。
+
 ## 五组对照总览
 
-| 组 | 任务（考的 skill） | 有 Skill | 无 Skill | 该组实测（判分覆盖率） |
+| 组 | 任务（考的 skill） | 有 Skill | 无 Skill | 该组历史实测（有 / 无 Skill） |
 |----|------|------|------|------|
-| 1 | 手动用例编写（test-case-writing） | [test-cases_with-skills.md](./test-cases_with-skills.md) | [test-cases_without-skills.md](./test-cases_without-skills.md) | 规格符合度 0.996 vs 0.971，格式采纳是主要差距 |
+| 1 | 手动用例编写（test-case-writing） | [test-cases_with-skills.md](./test-cases_with-skills.md) | [test-cases_without-skills.md](./test-cases_without-skills.md) | 规格符合度 0.996 / 0.971 |
 | 2 | API 测试脚本（api-testing） | [api-coupon_with-skills.md](./api-coupon_with-skills.md) | [api-coupon_without-skills.md](./api-coupon_without-skills.md) | 覆盖 0.94 vs 0.72；**真实执行通过率 0.97 vs 0.51** |
 | 3 | Playwright E2E（automated-e2e-testing） | [e2e-spec_with-skills.md](./e2e-spec_with-skills.md) | [e2e-spec_without-skills.md](./e2e-spec_without-skills.md) | 覆盖 1.00 vs 0.85；执行成功率 0.56 vs 0.39 |
 | 4 | 全流程测试方案（qa 编排） | [qa-pipeline_with-skills.md](./qa-pipeline_with-skills.md) | [qa-pipeline_without-skills.md](./qa-pipeline_without-skills.md) | 覆盖 0.70 vs 0.45 |
@@ -33,18 +41,18 @@
 - 导读四件套齐备：角色表、环境与账号表（未知项写成 `TODO:向谁索取什么`，而不是"待提供"）、术语表、图例
 - 状态流转逐边有用例：TC-02-01～06 把"待发布 → 已发布"的编辑权限、拦截条件、发布后表现拆成可判定的一串用例
 - 异步行为带判定时限：搜索"判失败"可见"到达结束时间后 1 小时内自动变为已结束，超过 1 小时未变判失败"——多久没变算失败是明确的
-- （本示例为 PRD 文档模式，无代码可引故无附录；代码模式产出的附录区结构见 `../skills/core/case-format.md`）
+- 本示例为 PRD 文档模式，无代码可引故无附录；代码模式的附录结构见 [case-format.md](../skills/core/case-format.md)。
 
 ## 2. API 测试脚本（api-testing）
 
-同一份 OpenAPI 文档（优惠券接口），产出可直接运行的 pytest 工程。**这组的最大差距不在覆盖率，在"能不能跑"**：无 Skill 版通过率 0.51，多为环境承接与断言问题；有 Skill 版 0.97。
+同一份 OpenAPI 文档（优惠券接口），产出 pytest 工程代码与配置说明。**这组的最大差距不在覆盖率，在"能不能跑"**：无 Skill 版通过率 0.51，多为环境承接与断言问题；有 Skill 版 0.97。
 
 - **[有 Skill 版](./api-coupon_with-skills.md)**：`common/client.py` 统一封装 + `conftest.py` 环境承接（凭证全部走环境变量）+ 测试文件按"正常创建 / 必填缺失 / 类型错误 / 边界值（name 空白与超长、amount 0 与上限）/ 无效 Token 401"参数化铺开
 - **[无 Skill 版](./api-coupon_without-skills.md)**：有脚本形态，但边界与负向打底不足、鉴权与清理链路不完整
 
 ## 3. Playwright E2E（automated-e2e-testing）
 
-同一份 markmap 用例转 Playwright 工程。注意一个诚实信号：**这组无 Skill 版的判分覆盖率并不低（0.85）——差距在真实执行**（0.39 vs 0.56；另一次执行专项评测中为 0/9 可运行 vs 7/9）。覆盖数字好看、脚本跑不起来，正是 E2E 最常见的坑。
+同一份 markmap 用例转 Playwright 工程。注意一个诚实信号：**这组无 Skill 版的判分覆盖率并不低（0.85）——差距在真实执行**（有 Skill / 无 Skill 为 0.56 / 0.39）。覆盖数字好看、脚本跑不起来，正是 E2E 最常见的坑。
 
 - **[有 Skill 版](./e2e-spec_with-skills.md)**：Page Object 分层 + 每用例自建数据自清理 + 搜索用例额外造"不匹配数据"防断言恒真 + 删除用例做持久化验证
 - **[无 Skill 版](./e2e-spec_without-skills.md)**：结构形似，但等待策略、清理与断言强度的缺口在真实执行中暴露
@@ -75,4 +83,6 @@
 | 4 | qa-doc-collab-pipeline | 本地评测链路 2026-09 轮次 | deepseek-v4-flash，双臂 n=3 | 双臂中位样本 |
 | 5 | exp-docshare-permission | 本地评测链路 2026-09 轮次 | deepseek-v4-flash，双臂 n=3 | 双臂中位样本 |
 
-评测方法学、任务池与原始数据在维护者本地评测链路维护、不随仓库分发；对外数字以 README 实测效果表与 Release 增益矩阵快照为准。
+评测方法学、任务池与原始数据在维护者本地评测链路维护、不随仓库分发；版本级效果以 [Release 增益矩阵快照](https://github.com/fishzjp/qa-skills/releases)为准；[README 实测效果](../README.md#实测效果)保留历史汇总及限制。本文只解释这些示例对应的历史运行。
+
+返回 [项目 README](../README.md) · [English README](../README.en.md)

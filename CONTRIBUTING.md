@@ -20,8 +20,29 @@
 
 ## 开发环境
 
-- Python 3.9+（运行校验脚本与产品脚本单测；`validate_skills.py` 等脚本显式兼容 3.9 的 `relative_to` 写法）
-- 本地校验与 CI 使用同一入口：`python3 scripts/validate_skills.py`（skills 内容红线）+ `python3 scripts/validate_repo.py`（仓库面守门：py 语法 / yml 合法性 / json / 门面文档链接 / 落地页资产）；单测 `python3 -m unittest discover -s tests -p "test_*.py"`；安装器行为冒烟 `bash tests/install_smoke.sh`（eval 评测 harness 与其单测在维护者本地环境，不在公开仓库）
+需要 Python 3.9+、PyYAML、Bash；完整复现 CI 还需要 Node.js 检查 dsh 插件语法。建议在虚拟环境安装依赖：
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install "pyyaml>=6.0"
+```
+
+**公开仓库 / 贡献者自检**（与 CI 对齐）：
+
+```bash
+python3 scripts/validate_skills.py
+python3 scripts/validate_repo.py
+python3 -m unittest discover -s tests -p "test_*.py"
+bash -n install.sh
+bash -n uninstall.sh
+bash tests/install_smoke.sh
+node --check .dsh/plugins/qa-skills.js
+```
+
+两个校验器分别检查 skill 架构与仓库结构 / 语法 / 文档链接 / 落地页一致性；缺 PyYAML 会报错，不会跳过 YAML 门。
+
+**维护者本地合入门**：改 skill 或加 skill 后，除上述检查外，必须运行 `python3 -m pytest tests/ -q`（本地 harness 使用 Python 3.10+，建议 Python 3.12，并需安装 pytest；创建虚拟环境时请选择对应解释器）。本地 `tests/test_harness.py` 只能由 pytest 收集，unittest 不能替代；用例数以实际收集为准。`eval/`、harness 单测与规划文件不随公开仓库分发，外部贡献者无需补齐或运行这部分。
 
 ## 架构红线（改 skill 前必读）
 
@@ -41,11 +62,13 @@
 - [ ] 未引入任何真实环境地址、账号、密钥、内部系统名
 - [ ] `python3 scripts/validate_skills.py` 通过（与 CI 同一校验：frontmatter / description ≤300 字符 / SKILL.md ≤500 行 / When NOT to Use / core 依赖单元声明 / 引用完整含 md 链接与引用式定义 / 无跨 skill 引用 / 版本一致 / JSON 合法 / 无 eval 越界引用 / 跟踪面白名单 / skills 目录形态）
 - [ ] `python3 scripts/validate_repo.py` 通过（仓库面守门：py 语法 / yml 合法性 / json / README 双语等门面文档链接 / 落地页资产引用）
-- [ ] 改动 install.sh / uninstall.sh 的，`bash tests/install_smoke.sh` 通过（copy/link 安装、重装幂等、防误删、卸载干净）
+- [ ] 上方公开自检通过：产品与守门单测、安装器语法与冒烟、插件语法；维护者改 / 加 skill 另跑本地 pytest 门
 - [ ] 改动后的 skill 仍符合 [Agent Skill 规范](https://docs.claude.com/en/docs/claude-code/skills)：每个 skill 有 `SKILL.md`，frontmatter 含 `name` 与 `description`
 - [ ] 改动影响用例产出的，在 PR 中说明预期影响（正式 Benchmark 复验由维护者在本地黄金集执行，判定标准以冻结的 EXPECTED 门为准；外部贡献者无需自行运行）
 - [ ] 客观指标（可执行性 / 编译 / 真实执行 / 植入 Bug 检出）不依赖 LLM judge，回退即拦截；judge 类指标回退需先排除同源宽容偏差（成对评审大量平局是信号）
 - [ ] 代码示例可独立运行，或已用占位符（如 `<你的测试环境地址>`）标注需替换处
+- [ ] 文档改动同步中英文 README 与 `llms.txt` 中受影响的产品事实（安装、skill 清单、语言成熟度、兼容性）；示例数字注明指标、选样与历史轮次，不把安装验证写成效果验证
+- [ ] 文档中的本地链接指向公开跟踪文件；不把维护者本地 `docs/`、`eval/` 当作读者可访问的入口
 
 ## Pull Request 流程
 

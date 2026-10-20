@@ -31,6 +31,8 @@
 
 ### 文档
 
+- **README 与配套文档整理**：中英文按安装 → 装载检查 → 首次任务 → 完整技能表重排，补齐运行工具与语言边界；修正 VERSION 标记归属、`--auto` 与软链升级语义，区分安装兼容与效果验证。历史评测数字保留并注明适用范围，去除预注入必然构成效果上界的推断。examples 修正首组代表采样与其余组中位采样的口径、混合指标表头及跨轮执行数字混用；`llms.txt` 同步。功能建议模板改指共享索引。CONTRIBUTING 区分公开 CI 与维护者 pytest 门、补充本地 Python 版本要求，RELEASING 补齐实际检查与文档同步项、修正合法 tests 跟踪范围与 Pages 触发条件。
+
 - **llms.txt 英文层状态口径更新**："an English layer is on the roadmap" → 落地页与 README 已支持英文、11/12 description 双语、指令正文仍中文（与落地页 FAQ 口径一致）。
 - **CONTRIBUTING 架构红线 2 登记 bug-analysis 单语例外**：三个双语变体均实测触发 R26 刃口新增错判（CHANGELOG 0.9.0），防止未来贡献者按双语样本"补齐"复现路由回退。
 - **RELEASING §2 同步面清单补 `.dsh` 插件注释计数**（"dsh 无需随动"表述修正为"运行时无需随动"）。

@@ -11,7 +11,7 @@
 
 <p align="center"><strong>让 AI 像资深测试工程师一样工作。</strong></p>
 
-<p align="center">知识 × 工具 × 决策 —— 面向 Claude Code 等 Agent 的测试工程 Skill 框架。<br>每一个数字，都来自实测。</p>
+<p align="center">面向 AI 编程 Agent 的测试工程 Skill 框架。<br>从需求澄清、风险决策，到可执行用例、自动化与测试报告。</p>
 
 <p align="center">
   <a href="https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml"><img src="https://github.com/fishzjp/qa-skills/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
@@ -23,180 +23,167 @@
 
 ---
 
+把测试方法、流程与产出标准装进你的 Agent：**12 个测试 skill + 一个共享知识库 `core/`**。可以跑完整流水线，也可以只写用例、审查、测接口或治理 flaky 测试。先看[五组真实产出对照](./examples/)，了解安装前后的区别。
+
+[快速开始](#快速开始) · [选择 skill](#选择-skill) · [工作原理](#工作原理) · [兼容性与边界](#兼容性与边界) · [实测效果](#实测效果) · [文档导航](#文档导航)
+
 ## 快速开始
 
-### 安装
+### 1. 安装全部 skill
 
-**方式一：[skills.sh](https://skills.sh) 跨 Agent 安装**（Claude Code / Cursor / Codex / OpenCode 等 70+ 宿主，一行命令）
+在终端执行（需要 Node.js / npm 提供 `npx`）：
 
 ```bash
 npx skills add fishzjp/qa-skills --skill '*'
 ```
 
-> 无论哪种方式，`core/`（共享知识库，不是可独立触发的 skill）必须一起装——单装任何一个 skill 而不带 core，相对路径引用会断；误装补救 = 补跑一次 `npx skills add fishzjp/qa-skills --skill '*'`（或手动补拷 `core/` 目录）。方式一的 `--skill '*'` 全量安装已实测：12 个 skill + core 全部就位、引用完好。
+按安装器提示选择宿主与安装范围。**保留 `--skill '*'`：`core/` 是必需的共享依赖，不是独立触发的 skill。** 单装某个 skill 而不带 `core/` 会使相对路径引用断开；补救时重新执行上面的全量安装命令。
 
-**方式二：安装脚本**（自动检测宿主 skills 目录）
+<details>
+<summary><strong>其他安装方式、升级与卸载</strong></summary>
+
+**仓库安装脚本**（需要 Git 与 Bash）：
 
 ```bash
 git clone https://github.com/fishzjp/qa-skills.git
 cd qa-skills
-
-./install.sh            # 交互式选择宿主目录（自动检测 ~/.agents/skills 等）
-./install.sh --auto     # 或全自动安装
+./install.sh                 # 交互选择宿主目录
 ```
 
-**方式三：dsh 插件**（npm 包 [`dsh-qa-skills`](https://www.npmjs.com/package/dsh-qa-skills)）
+明确知道目标目录时可指定路径，目录不存在会自动创建：
+
+```bash
+./install.sh --target ~/.agents/skills
+```
+
+请先确认宿主会读取该目录。`./install.sh --auto` 只选择**已有**目录中的首个候选，依次为 `~/.agents/skills`、`~/.claude/skills`、`~/.codex/skills`、`~/.dsh/skills`、本仓库 `.claude/skills`；没有候选时会退出。
+
+| 安装方式 | 升级 | 卸载 |
+|------|------|------|
+| skills.sh | 重跑全量安装命令 | 使用 skills.sh 的移除功能，按其提示选择条目 |
+| `install.sh` 拷贝 | `git pull` 后重跑原安装命令 | `./uninstall.sh --target <原安装目录>` |
+| `install.sh --target <目录> --link` 软链 | `git pull` 即更新内容；保留仓库原路径 | 同上；卸载前保留源仓库 |
+| dsh 插件 | 由 dsh 插件管理器升级 | 由 dsh 插件管理器移除 |
+
+软链安装的 `qa-skills.VERSION` 是安装时快照，`git pull` 不会重写它；要刷新标记可重跑安装脚本。
+
+**dsh 插件**（需先安装 DeepSeek Harness，`web` 为示例 profile）：
 
 ```bash
 dsh plugin --profile web add dsh-qa-skills
 ```
 
-<details>
-<summary><strong>手动安装、升级与卸载</strong></summary>
-
-- 手动安装：`cp -r skills/* <skills 目录>/`——**`core/` 必须一起复制**，各 skill 以相对路径引用它。
-- 验证：`ls <skills 目录>` 应见 12 个 skill 目录 + `core/` + `qa-skills.VERSION`。
-- 升级：`./install.sh --target <目录> --link` 软链安装，`git pull` 后即更新。
-- 卸载：`./uninstall.sh`。
-</details>
-
-<details>
-<summary><strong>宿主兼容性</strong></summary>
-
-Skill 是纯 Markdown（frontmatter + 相对路径引用），不依赖宿主特性：
-
-| 宿主 | 安装目录 | 状态 |
-|------|---------|------|
-| Claude Code | `~/.claude/skills/` 或 `<项目>/.claude/skills/` | ✅ 主要适配对象，评测基于此 |
-| 跨宿主共享目录 | `~/.agents/skills/` | ✅ 多 Agent 共读一份，`install.sh` 默认 |
-| DeepSeek Harness (dsh) | `~/.agents/skills/`、`~/.dsh/skills/` 或 `<项目>/.agents/skills/` | ✅ 端到端实测通过 |
-| Codex CLI | `~/.codex/skills/` | 🔶 未系统评测 |
-| 其他支持 Skills 的 Agent | 各自的 skills 目录 | 🔶 同上 |
-
-`qa` 流水线的每个阶段在独立子会话中运行、互不污染上下文；宿主不支持子代理时自动退化为顺序会话 + 文件衔接，正确性不受影响。
-</details>
-
-<details>
-<summary><strong>项目知识库（<code>.qa/</code>）的宿主装载</strong></summary>
-
-`qa-memory` skill 会在被测项目仓库内维护一个 `.qa/` 知识库（Markdown 条目 + 索引，随项目 git 提交、团队可共享），跨会话沉淀环境怪癖、flaky 判定、缺陷模式等测试知识。读取走双路径——skill 被触发时主动读；装了入口行的宿主每次会话自动可见：
-
-| 宿主 | 装载方式 |
-|------|---------|
-| Cursor / OpenCode / Codex / Gemini CLI / Windsurf / Devin 等 | AGENTS.md 入口行（原生读取，零配置） |
-| Claude Code | CLAUDE.md 加一行 `@.qa/INDEX.md`（或随 `@AGENTS.md` 导入链） |
-| Aider | `.aider.conf.yml` 写 `read: .qa/INDEX.md`，或启动加 `--read` |
-| 其他宿主 | skill 触发时按读取工作流主动加载（兜底路径） |
-
-入口行由 `qa-memory` 的入口自举流程经你确认后写入，也可手动添加。条目写入一律过 `memory_validate.py` 门禁（schema / 预算 / 秘密扫描 / 投毒防线）。
-</details>
-
-### 开始使用
-
-装好后对 Agent 说一句：
-
-> **帮我测试这个需求：{需求描述 + 仓库地址}**
-
-一句话，流水线就从需求理解一路跑到测试报告。只需要其中某一步的产出（写用例 / 审查 / 转自动化 / 回归范围）时，直接说需求就行。
-
-## 能力总览
-
-| 你说 | 框架做 | 产出 |
-|------|--------|------|
-| "帮我测试这个需求" | `qa` 编排 9 阶段流水线，检查点等你裁决 | 全套测试资产 + 测试报告 |
-| "根据这份 PRD 写用例" | 代码优先：索取仓库、读实现、审出潜在 Bug 再写 | 双轨用例：markmap（人）+ schema.yaml（机器） |
-| "这个功能应该怎么测" | Risk Map（每个评级必须给出证据）→ 功能域 + 类型域两域决策（十个测试类型逐一必答） | `测试策略.md`（含 type_scope 与专项移交包） |
-| "审一下这份存量用例" | 独立审查：先立可测点清单作分母，再查覆盖与可执行性 | 直接修订用例文件 + 审查记录 |
-| "把用例转成自动化" | Page Object 规范、监听先于操作、断言三问、基线零通过禁交付、自建数据自清理 | 可运行的 Playwright / pytest / k6 代码 |
-| "这个 Bug 帮我定位一下" | 复现 → 读代码到行 → 影响五面分析 → 回归建议 | Bug 条目（根因 / 证据 / 回归） |
-
-`exploratory-testing`（探索式测试，charter 驱动）、`api-testing`（接口级）、`bug-analysis`、`regression-testing`（diff → 回归范围）各自独立可用。
-
-<details>
-<summary><strong>测试用例脑图怎么渲染</strong></summary>
-
-`测试用例_markmap.md` 是标准 Markdown（markmap 语法）：[VS Code Markmap 扩展](https://marketplace.visualstudio.com/items?itemName=gera2ld.markmap-vscode)、`npx markmap-cli 测试用例_markmap.md` 生成交互式 HTML、或粘贴到 [markmap.js.org/repl](https://markmap.js.org/repl)。
-</details>
-
-<details>
-<summary><strong>范围边界（当前不做）</strong></summary>
-
-本框架聚焦系统级黑盒测试的决策与执行。以下能力显式不做，各有明确理由：
-
-- **单元 / 集成测试**——开发侧职责；测试策略的风险评级与"已覆盖"结论以该层已有保障为假设前提（未验证时在报告中标注）
-- **移动端真机自动化**——兼容性矩阵暂限桌面浏览器，云真机是候选扩容方向
-- **前端组件测试 / 前端性能自动化**——候选扩容方向，决策层验证后立项
-- **渗透测试 / SAST 与依赖扫描**——渗透依赖专业人工与授权环境（右移安全专项）；SAST 是开发侧 CI 工具，只作业务安全轴的信号来源
-- **混沌工程工具链**——故障注入提供设计方法与执行前提约定，专业工具链不随本框架分发
+**手动复制**：把 `skills/` 下全部一级目录复制到宿主 skills 目录，保持各 skill 与 `core/` 同级；已有同名目录时先核对归属，避免覆盖其他内容。手动复制不生成版本标记。
 
 </details>
 
-## 核心设计
+### 2. 检查安装与装载
 
-### 可执行的测试用例
+安装目标应包含下方[技能清单](#选择-skill)中的目录及 `core/`，例如 `qa/SKILL.md` 与 `core/executability.md`。**只有仓库 `install.sh` 会额外写入 `qa-skills.VERSION`**，其他方式不能用该文件判断成功与否。
 
-AI 写出的用例常常看似专业、实则无法执行——判定模糊、占位符、无判定时限、虚构入口。本框架的核心产出标准只有一条：**没读过需求、没人讲解的人，拿着文件能直接开工。** 同一个需求，产出长这样：
+按宿主要求刷新技能或新开会话，试一句“请使用 test-strategy，为这个需求制定测试策略”。从宿主的装载记录确认 `test-strategy/SKILL.md` 及所需 `core/` 文件已读取；没有装载记录时，可要求 Agent 列出实际读取的文件路径。仅目录存在不代表触发已成功。
 
-```markdown
-> 前置:运营账号已登录,进入「营销中台 → 券工场 → 活动列表」
+### 3. 提供输入，开始测试
 
-- **TC-03-05 到达结束时间后优惠券自动变为已结束** [P1]
-  - 操作步骤: 1. 选一张结束时间为 10 分钟后的已发布券「满100减20-测试」 2. 等待到期
-  - 预期结果: 到期后 1 小时内状态自动变为「已结束」,超过 1 小时未变判失败
-```
-
-背后是 `skills/core/executability.md` 的 8 条硬标准；评测中它是一票否决项——不可执行的用例，覆盖再全也计零分。
-
-### 三层架构：指令更少，遵循更强
-
-把方法论、模板、规则全部塞进一个 SKILL.md，Agent 有效遵循的规则反而更少（[Red Hat ACE 实践总结](https://next.redhat.com/2026/07/28/building-skills-for-ai-agents-pitfalls-and-best-practices/)：指令超过 500 行后性能退化）。解法是三层架构：
+在被测项目中对 Agent 说：
 
 ```text
-L1  SKILL.md 头部      触发边界：什么时候用、什么时候不用、交给谁
-L2  SKILL.md 正文      工作流：每次触发都要走的主干（≤500 行红线）
-L3  references/ + core/  方法 / 规则 / 模板：按需加载，工作流步骤里显式引用
+帮我测试这个需求：优惠券到期后自动结束。
+需求：<替换为你的 PRD 路径>
+代码：当前仓库；回归对比基线：main
+先完成需求分析和测试策略，列出需要我确认的问题。
 ```
 
-SKILL.md 只留流程编排，方法细节全部移到下层、用到才加载——Agent 每一步只看当前需要的那部分指令。
+需求可以是文字、PRD、接口文档或已有用例。提供代码可补充实现证据；只有文档时会保留待确认项。进入执行阶段前，还需要可访问的测试环境、测试账号与运行工具：Web E2E 使用 Playwright，API 测试使用 Python / pytest 等，压测按需使用 k6。**安装 skill 不会同时安装这些工具或被测系统。**
 
-### 类型决策矩阵：决定测什么，更决定不测什么
+完整流程会在需求澄清、执行策略、Bug 定性与预算裁决处等待你确认。只需要一步时，直接使用下面对应的请求。
 
-未装 skill 的模型制定测试策略时，跨两个模型段位的 30 次评测采样里，**没有一次给出显式的类型决策**——输出里"提到"了性能与安全，却从不决定哪些纳入、测多深、哪些明确不测。提到不等于决策。
+## 选择 skill
 
-解法是**类型决策矩阵**：性能 / 业务安全 / 可靠 / 并发等十个测试类型**逐一必答**——纳入必须给出信号依据、排除必须留下记录、full 档有预算上限，每条决策落盘为机器可校验的 type_scope。实测：最弱模型类型查全率 0 → **0.88**（详见[实测效果](#实测效果)）。
+| 你的需求 | Skill | 主要产出 |
+|------|------|------|
+| “帮我完整测试这个需求” | [qa](./skills/qa/SKILL.md) | 阶段编排、流水线状态与最终测试报告 |
+| “梳理这份需求，有疑问先问我” | [requirement-analysis](./skills/requirement-analysis/SKILL.md) | 需求模型、范围与澄清记录 |
+| “这个功能应该怎么测，哪些不测” | [test-strategy](./skills/test-strategy/SKILL.md) | 风险图、十类测试决策 `type_scope`、专项移交包 |
+| “根据 PRD / 代码写测试用例” | [test-case-writing](./skills/test-case-writing/SKILL.md) | markmap 用例 + 机器可读 Schema |
+| “审查这份已有用例” | [test-case-review](./skills/test-case-review/SKILL.md) | 覆盖与可执行性审查、修订文件和记录 |
+| “把用例转成 Web 自动化并执行” | [automated-e2e-testing](./skills/automated-e2e-testing/SKILL.md) | Playwright 工程、执行结果与缺陷证据 |
+| “根据 OpenAPI 测这些接口” | [api-testing](./skills/api-testing/SKILL.md) | API 测试脚本、执行结果；按需 k6 移交 |
+| “文档不全，先探索这个系统” | [exploratory-testing](./skills/exploratory-testing/SKILL.md) | charter、探索笔记、风险与测试想法 |
+| “定位这个已确认 Bug 的根因” | [bug-analysis](./skills/bug-analysis/SKILL.md) | 根因、影响、证据与回归建议 |
+| “这次改动应该回归哪些用例” | [regression-testing](./skills/regression-testing/SKILL.md) | diff → 功能 → 用例的分级回归清单 |
+| “用例时好时坏，重跑绿了能信吗” | [test-reliability](./skills/test-reliability/SKILL.md) | flaky 取证、隔离与重试策略、套件健康度 |
+| “沉淀 / 读取这个项目的测试经验” | [qa-memory](./skills/qa-memory/SKILL.md) | 项目 `.qa/` 知识库、索引与校验结果 |
+
+`core/` 是以上 skill 共用的方法、模板与脚本，完整索引见 [core/SKILL.md](./skills/core/SKILL.md)，无需单独调用。
 
 ## 工作原理
 
-**文件即流水线状态**——每个阶段把产出存成文件，下一个阶段只读文件、不依赖会话记忆；流水线再长也不怕超上下文，中断后新会话读文件接着跑：
+**阶段产出保存为文件，后续阶段按文件衔接。** 流水线中断后，在新会话中提供产物目录，让 `qa` 根据阶段完成判据续跑。
 
 ```text
-PRD / 代码
-   │  requirement-analysis
-   ▼
-需求模型.md ·················· ⏸ 澄清检查点
-   │  test-strategy（风险 → 两域决策）
-   ▼
-测试策略.md（Risk Map + 类型域十轴决策 type_scope）· ⏸ 预算裁决
-   │  test-case-writing
-   ▼
-测试用例 markmap（给人）+ schema.yaml（给机器）
-   │  test-case-review
-   ▼
-⏸ 执行策略裁决（手动 / Playwright / API）
-   │  automated-e2e-testing / api-testing
-   ▼
-执行产物 + Bug 证据 → bug-analysis → regression-testing
-   ▼
-回归清单.md → 测试报告.md
+PRD / 代码 ──（文档不足时先探索）
+   ↓ requirement-analysis
+需求模型.md                         ⏸ 澄清
+   ↓ test-strategy
+测试策略.md + type_scope            ⏸ 预算（触及裁决条件时）
+   ↓ test-case-writing → test-case-review
+测试用例_markmap.md + schema.yaml   ⏸ 执行策略
+   ↓ Playwright / API / 手动执行
+执行记录 + 缺陷证据                  ⏸ Bug 定性
+   ↓ bug-analysis / regression-testing（按需）
+Bug 条目 / 回归清单 → 测试报告
 ```
 
-- **证据与风险模型**：每条结论标注证据等级（E0–E4）；风险评级必须给出证据，给不出证据的评级无效——证据 → 风险 → 策略 → 用例，全程可追溯。
-- **类型决策矩阵**：十个测试类型逐一决策，纳入与排除都留痕；能机械扫描的信号由脚本生成预填表，弱模型照着预填表修订、而不是从空白硬编。
-- **关键决策归你拍板**：澄清提问、执行策略、Bug 定性、预算上限，这四类事由你裁决，Agent 只提案、不代答；你裁决落盘后，后续阶段不得推翻。
+- **可执行的用例**：写清前置条件、操作入口、步骤、可判定结果与异步时限。标准见 [executability.md](./skills/core/executability.md)，完整产物见[用例示例](./examples/test-cases_with-skills.md)。
+- **有证据的范围决策**：证据分级 E0–E4；风险评级附依据，十个测试类型逐一决定纳入、深度或排除，记录在可校验的 `type_scope` 中。
+- **按需装载**：SKILL.md 保留触发边界与工作流，方法和模板放在 `core/`、`references/` 中。宿主支持子会话时按阶段隔离上下文；否则用顺序会话与文件衔接，具体遵循效果仍需在该宿主验证。
+- **跨会话知识**：阶段状态留在产物文件中；可复用的项目经验由 `qa-memory` 管理，避免与流水线状态混写。
+
+<details>
+<summary><strong>渲染用例脑图与装载项目知识库</strong></summary>
+
+**脑图**：`测试用例_markmap.md` 可用 [VS Code Markmap 扩展](https://marketplace.visualstudio.com/items?itemName=gera2ld.markmap-vscode) 预览，或运行 `npx markmap-cli 测试用例_markmap.md` 生成 HTML。
+
+**项目知识库**：`qa-memory` 在被测项目维护 `.qa/INDEX.md` 与主题条目，skill 触发时主动读取。要让宿主在后续会话发现索引，可在其项目指令文件加入入口：
+
+| 宿主支持的入口 | 配置 |
+|------|------|
+| `AGENTS.md` | 写明“测试任务开始时先读取 `.qa/INDEX.md`，再按需读取相关条目” |
+| Claude Code 的 `CLAUDE.md` | 加入 `@.qa/INDEX.md`，或经现有 `@AGENTS.md` 导入链装载 |
+| Aider | 在 `.aider.conf.yml` 配置 `read: .qa/INDEX.md`，或启动时加 `--read` |
+| 其他宿主 | 按该宿主的项目指令机制配置，或由 skill 触发时读取 |
+
+这些入口依赖宿主的文件发现与读取行为，不等于自动展开所有 Markdown 链接。入口自举会先展示改动、经你确认再写；知识条目按 [memory_validate.py](./skills/qa-memory/scripts/memory_validate.py) 的校验结果处理。
+
+</details>
+
+## 兼容性与边界
+
+产品以 Markdown 指令、相对路径引用与按需运行的辅助脚本分发。宿主需要支持 skill 发现、文件读取；实际执行还需要终端或浏览器工具。
+
+| 宿主 / 方式 | 目录或载体 | 已有验证的范围 |
+|------|------|------|
+| Claude Code | `~/.claude/skills/` 或项目 `.claude/skills/` | 主要适配对象；安装形态有实测记录 |
+| 共享目录 | `~/.agents/skills/` | 安装脚本优先候选；是否读取由宿主决定 |
+| DeepSeek Harness（dsh） | 插件，或 `~/.agents/skills/`、`~/.dsh/skills/` | 有端到端实测记录 |
+| Codex | skills.sh 安装实测落在 `~/.agents/skills/`；仓库脚本也可指定 `~/.codex/skills/` | 安装与引用路径验证；尚未系统评测产出效果 |
+| 其他支持 Agent Skills 的宿主 | 依其安装规则 | 结构可适配，触发、装载与产出质量需分别验证 |
+
+安装实测的日期与具体命令见 [RELEASING 安装矩阵](./RELEASING.md#安装形态实测矩阵触达安装面引用路径的发版必登记)。**安装成功、触发正确、产出质量是三个不同的验证层次。**
+
+**语言**：README 与官网提供中英文；12 个 skill 中 11 个的 description 为双语，`bug-analysis` 暂保留中文以避免已观测到的路由回退；skill 指令正文仍为中文。
+
+**范围**：聚焦系统级黑盒测试的决策与执行。不提供单元 / 集成测试、移动真机自动化、前端组件测试、专业渗透 / SAST / 依赖扫描或混沌工程工具链；这些领域可作为风险信号或专项移交内容，不能把移交视为已经执行。
 
 ## 实测效果
 
-12 个评测任务：同一模型、同一评测链路，唯一差别是有没有装本框架。数字以异构裁判复评轮为准（裁判模型与被评测的模型不同源），如实披露、包括不利结果。完整方法学与原始数据在本地评测链路维护、不随仓库分发；跨模型增益矩阵快照按里程碑随 Release 附带（[Releases](https://github.com/fishzjp/qa-skills/releases)），Skill On / Off 产出对照见 [examples/](./examples/)：
+以下是**历史实验结果**，并非对当前工作区重新评测，也不代表每个模型、每个宿主都能获得同样提升。数字来自早期 12 任务的注入式 On/Off 对照及后续执行专项复验，具体见逐项口径。同一对照内模型与评测链路相同；裁判类指标采用与生成模型不同源的裁判。各轮样本量与任务范围不同，不能合并计算。
+
+版本对应的证据请看[里程碑 Release 增益矩阵快照](https://github.com/fishzjp/qa-skills/releases)，后续变更与勘误见 [CHANGELOG](./CHANGELOG.md)；[examples/](./examples/) 展示单任务产出。评测 harness、任务池与原始数据在维护者本地维护，不随仓库分发。
+
+<details>
+<summary><strong>展开历史指标、成本与适用边界</strong></summary>
 
 | 指标 | 无 Skill | 有 Skill |
 |------|:---:|:---:|
@@ -216,8 +203,8 @@ PRD / 代码
 - **E2E 真实执行**：真实浏览器里跑被测应用，不经裁判模型；无 skill 一侧包含没写出代码和跑不起来两种情形。
 - **植入 Bug 检出率**：异构裁判口径，同源裁判下为 100%。
 - **产出质量**：异构裁判评分，Δ+6.1pp（95% 置信区间跨零，主轮差异不显著；同源口径下显著）。
-- **API 真实执行通过率 †**：修复评测缺陷后的干净复验（主模型 glm-5.2，n=3）：无/有 skill 100% / 99.2%，差距在噪声范围内、基本持平；弱模型上结论一致（0.30 / 0.67，有 skill 更优）。更早的反向结果经逐条失败归因，定案为评测侧缺陷而非 skill 缺陷，勘误见 [CHANGELOG](./CHANGELOG.md)。
-- **Token 成本**：如实披露——效果更好，但更贵。总 token 消耗比（任务级均值，含 skill 全量注入）：主模型轮 3.3×，弱模型轮最高 9.5×；对照实验显示，只注入核心标准文档时增益不复现——收益来自整套框架，不是某一份文档。
+- **API 真实执行通过率 †**：修复评测缺陷后的干净复验（主模型 glm-5.2，n=3）：无/有 skill 100% / 99.2%，差距在噪声范围内、基本持平；另一轮弱模型结果为无 / 有 skill 0.30 / 0.67，有 skill 更优；两轮应分别解读。更早的反向结果经逐条失败归因，定案为评测侧缺陷而非 skill 缺陷，勘误见 [CHANGELOG](./CHANGELOG.md)。
+- **Token 成本**：指令装载与工作流增加了成本。总 token 消耗比（任务级均值，含 skill 全量注入）：主模型轮 3.3×，弱模型轮最高 9.5×；对照实验显示，只注入核心标准文档时增益不复现——收益来自整套框架，不是某一份文档。
 </details>
 
 <details>
@@ -225,48 +212,46 @@ PRD / 代码
 
 评测前预注册了通过门槛（防事后挑指标）：同源裁判口径通过 4/7，异构裁判口径通过 5/8（两侧门槛清单不同，其中一项在两个口径下方向相反）。覆盖增益（异构裁判）：用例编写 **+8.7pp**（95% CI [0.5, 15.4]）、全任务 **+13.2pp**（95% CI [2.8, 26.3]）、缺陷检出 **+9.7pp**（95% CI [3.3, 16.4]），均显著；同源口径 +3.8pp（裁判宽容偏差已量化并勘误，见 [CHANGELOG](./CHANGELOG.md)）。早期 +29pp 的单采样增益经多样本复验证实为噪声。
 
-**口径边界**：评测时把 skill 全部指令一次性预注入（真实宿主是按需加载），"有 skill" 一侧的数字因此是上界；真实宿主抽查（n=1）未观察到衰减。成对评审（两份产出对比打分）在三种裁判下平局都过多，胜率指标作废（机制问题）。
+**口径边界**：评测时把 skill 全部指令一次性预注入，真实宿主是按需加载，不能直接据此推断所有宿主与模型的增益。真实宿主抽查（n=1）未观察到衰减，样本不足以证明两种装载方式等效。成对评审（两份产出对比打分）在三种裁判下平局都过多，胜率指标作废（机制问题）。
 </details>
 
-## 更多文档
+</details>
 
-- [examples/](./examples/) —— 同一 PRD 的 Skill On / Off 产出对照
-- [CHANGELOG.md](./CHANGELOG.md) —— 版本历史（里程碑版本附增益矩阵快照）
-- [RELEASING.md](./RELEASING.md) —— 发版规则与检查单（四面分发同步 / 版本策略 / 测试门）
-- 设计文档与规划（DESIGN / 决策层设计稿 / v2 规划）—— 维护者本地资料，不随仓库分发
+## 文档导航
+
+| 文档 | 适合何时阅读 |
+|------|------|
+| [examples/](./examples/) | 看五组 On/Off 产物、选样规则与判读说明 |
+| [core/SKILL.md](./skills/core/SKILL.md) | 查共享方法、标准、模板与辅助脚本 |
+| [CHANGELOG.md](./CHANGELOG.md) | 查版本变更、历史评测与勘误 |
+| [Releases](https://github.com/fishzjp/qa-skills/releases) | 查里程碑版本的增益矩阵快照 |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | 贡献内容、理解架构约束、运行公开自检 |
+| [RELEASING.md](./RELEASING.md) | 维护者发版、安装实测与分发同步 |
+| [llms.txt](./llms.txt) | 供 Agent 检索的产品摘要 |
 
 <details>
 <summary><strong>仓库结构</strong></summary>
 
 ```text
-skills/                  产品本体（12 个 skill + core 共享知识库）
-  qa/                    编排入口（薄，无领域知识）
-  core/                  共享知识库（作为依赖随 skill 一并安装，不独立触发）：evidence / risk-model /
-                         executability / testing-principles / report-template / case-format /
-                         coverage / schema-extraction / clarify-pattern / test-type-matrix（类型决策矩阵）/
-                         triage（失败分流）/ pipeline-integration（非交互与 CI 集成）
-                         + methods/（5 篇方法细则）+ scripts/（schema 校验器 + 类型信号扫描器）
-  requirement-analysis/  test-strategy/  test-case-writing/
-  test-case-review/      automated-e2e-testing/  api-testing/
-  exploratory-testing/   bug-analysis/  regression-testing/
-  qa-memory/             test-reliability/（flaky 与套件可靠性治理）
-.dsh/                    dsh 插件三件套（清单见 package.json 的 dsh.bundle）
-assets/                  视觉资产（README 头图 hero、分享图 og.jpg、社交预览图 social-preview）+ 落地页自托管字体 fonts/
-examples/                Skill On / Off 产出对照
-scripts/                 守门脚本（validate_skills.py 架构红线 + validate_repo.py 仓库面守门）
-tests/                   回归测试与安装器冒烟（test_product_scripts / test_memory_validator /
-                         test_repo_gates / install_smoke.sh）
-index.html               官网落地页（GitHub Pages 构建源）
+skills/       产品：各 skill 的 SKILL.md、references/、templates/、scripts/
+  core/       共享知识库，文件索引见 core/SKILL.md
+examples/     真实 On/Off 产出与判读指南
+scripts/      架构与仓库校验器
+tests/        产品脚本、守门脚本回归测试与安装器冒烟
+.dsh/         dsh 插件与配置
+assets/       README / 社交图片与落地页字体
+install.sh    仓库安装器（拷贝或软链）
+uninstall.sh  对应卸载器
+index.html    官网落地页源文件
+llms.txt      机器可读产品摘要
 ```
+
+设计、规划与评测链路（`docs/`、`eval/` 等）由维护者本地维护，不随公开仓库分发。
+
 </details>
 
-## 贡献与社区
+## 贡献与反馈
 
-- **贡献指南与架构红线**：[CONTRIBUTING.md](./CONTRIBUTING.md)；本地自检 `python3 scripts/validate_skills.py` + `python3 scripts/validate_repo.py`（与 CI 同一校验）
-- 🐛 缺陷 / 💡 功能建议：先到 [Discussions](https://github.com/fishzjp/qa-skills/discussions)（问答与经验分享），确认后提 [Issue](https://github.com/fishzjp/qa-skills/issues)
-- 🛡️ 安全漏洞：请勿公开讨论，按[安全策略](./.github/SECURITY.md)私密报告
-- 📜 行为准则：[CODE_OF_CONDUCT.md](./.github/CODE_OF_CONDUCT.md) · 📋 版本历史：[CHANGELOG.md](./CHANGELOG.md)
+欢迎按[贡献指南](./CONTRIBUTING.md)提交改进。使用问题与经验分享到 [Discussions](https://github.com/fishzjp/qa-skills/discussions)，可复现缺陷与具体需求提交 [Issues](https://github.com/fishzjp/qa-skills/issues)。安全漏洞请按[安全策略](./.github/SECURITY.md)私密报告。
 
-## 许可证
-
-[MIT](./LICENSE)
+[行为准则](./.github/CODE_OF_CONDUCT.md) · [MIT 许可证](./LICENSE)
