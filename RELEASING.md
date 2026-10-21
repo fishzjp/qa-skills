@@ -26,6 +26,9 @@ dsh 用户与其他宿主统一从 GitHub 安装：`./install.sh --target ~/.dsh
 | 2 | 共享目录（沙箱实测） | 单装 `--skill qa` | ❌ 不带 core（引用断，设计内）→ README 警示随行 | 同上 |
 | 3 | Claude Code（`~/.claude/skills`，裸 HOME 沙箱） | 整仓 `--skill '*' -g -a claude-code` | ✅ 12 单元全就位、core 文档在位 | 2026-09-07 C0 批（0.8.0） |
 | 4 | Codex 目标（`-a codex`，裸 HOME 沙箱） | 整仓 `--skill '*'` | ✅ 12 单元落位共享目录 `~/.agents/skills`（CLI 对 Codex 的承载形态，未建 `~/.codex/`）、85 处 `../core/` 引用全通、core 完整 | 2026-09-08 C0 收官批 |
+| 5 | Codex 项目目录（临时项目，本地源） | skills CLI 1.7.4 `--skill '*' --agent codex --yes` | ✅ 13 单元、完整文件与 core 引用通过 | 2026-10-21；`scripts/skills_cli_smoke.py` 可复验，不证明 GitHub 网络拉取或真实宿主触发 |
+
+网络集成检查与离线检查分开：`python3 scripts/skills_cli_smoke.py` 需要 Node.js 24 和网络，CI 的 Install integration 可手动运行或按周运行；不会进行全局安装或调用模型。
 
 ## 版本号规则
 
@@ -67,7 +70,7 @@ dsh 用户与其他宿主统一从 GitHub 安装：`./install.sh --target ~/.dsh
 
 ### §2 机械同步 —— 版本号与随动字段
 
-固定项（每版必做，锚定行首防误伤正文提及旧版本的文字）：
+固定项（每版必做；下方为 macOS/BSD sed 示例，Linux 不使用空备份后缀。锚定 frontmatter 行，防误改正文历史版本）：
 
 ```bash
 V_NEW="0.7.0"; V_OLD="0.6.0"   # ← 换成本次目标值
@@ -94,18 +97,13 @@ git diff --stat                                                  # 复验：每�
 ### §3 测试关
 
 ```bash
-python3 scripts/validate_skills.py
-python3 scripts/validate_repo.py
-python3 -m unittest discover -s tests -p "test_*.py"
-node --check .dsh/plugins/qa-skills.js
-bash -n install.sh
-bash -n uninstall.sh
-bash tests/install_smoke.sh
+bash scripts/check.sh
+python3 tests/browser/smoke.py
 ```
 
 维护者改 skill / 加 skill 后还必须运行 `python3 -m pytest tests/ -q`，包含本地 harness 单测；unittest 不能替代该门。详细依赖见 [CONTRIBUTING 开发环境](./CONTRIBUTING.md#开发环境)。
 
-本地全部检查通过后进入 §4；§5 推送后观察 CI「架构红线与语法校验」job 为绿，再继续发布其余分发面。
+本地全部检查通过后进入 §4；通过 PR 合入；观察 CI「架构红线与语法校验」汇总 job 为绿，再继续发布其余分发面。
 
 minor 及以上追加（本地链路）：按分级门跑模型矩阵 + in-situ，结论写入本次 CHANGELOG 条目或 Release notes。
 
@@ -126,8 +124,8 @@ git add -A && git commit -m "<单行概要>"
 # 2) 打标
 git tag v0.7.0                                 # ← 用本次实际版本
 
-# 3) 推送 #1/#2：分支与 tag 精确推送
-git push origin main
+# 3) 功能分支通过 PR 合入 main 后，从已通过 CI 的 commit 发布 tag
+# 禁止直接推送 main；先按 PR 流程合入，再核对 tag 指向
 git push origin v0.7.0                         # 禁止 --tags：会重推全部历史 tag，已被拒项制造噪音报错
 ```
 
@@ -141,6 +139,16 @@ git push origin v0.7.0                         # 禁止 --tags：会重推全部
 - [ ] GitHub Release：`gh release list` 核对最新 tag 在列且为 Latest；逐渠道记录完成凭证（URL / 输出摘要），无需更新时也登记理由
 - [ ] dsh 安装：临时目标目录安装后包含全部 skill 与 core；确认文档引导使用 Git 安装
 - [ ] 官网：需要部署时确认 Pages workflow 成功，双语页面与复制的命令均使用当前安装方式
+
+## 安装失败恢复 / Installation recovery
+
+普通安装失败会回滚已替换的单元和版本标记。多个目录无法整体原子替换，请在安装期间暂停宿主读取。安装和卸载共用目标中的 `.qa-skills.lock`，不会自动抢占旧锁。
+
+Handled failures restore replaced units and the version marker. Multiple directories are not switched atomically as a group; pause host reads while updating. Install/uninstall share `.qa-skills.lock` and never steal it automatically.
+
+断电、SIGKILL 或回滚本身失败时，保留 `.qa-skills.txn.*/old` 和锁。先查看 `.qa-skills.lock/pid`，确认没有活跃进程；PID 可能被重用，需同时核对进程命令。备份目录中的条目是替换前的内容，`new` 是尚未安装的内容。先复制整个目标作备份，再逐项恢复 old 中的原目录及 VERSION；不要直接删除宿主其他 skill。无旧备份的新单元可能已安装，应依据事务 new 的剩余项与旧安装清单确认后处理。恢复完成且版本/引用验证一致后才移除事务目录与锁；无法确认时通过私密或公开的脱敏材料寻求支持。
+
+After power loss, SIGKILL or a rollback error, preserve the transaction and lock. Inspect the recorded pid and command before concluding it is stale. Back up the entire target, restore the original entries and VERSION from `old`, and inspect newly added units against the transaction and previous installation before removing anything. Do not delete unrelated host skills. Remove the transaction and lock only after verifying recovery; ask for help with redacted details if uncertain. These are manual disaster-recovery steps, not a guarantee against uncatchable interruption.
 
 ## 历史经验与渠道变更
 

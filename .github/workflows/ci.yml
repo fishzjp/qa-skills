@@ -2,64 +2,78 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'codex/**']
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
-# 同一 ref 的新推送取消未完成的旧 run（push + PR 双触发时省去重复执行）
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  validate:
-    name: 架构红线与语法校验
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+  checks:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-latest, python: '3.9'}
+          - {os: ubuntu-latest, python: '3.12'}
+          - {os: ubuntu-latest, python: '3.14'}
+          - {os: macos-latest, python: '3.12'}
     steps:
-      - uses: actions/checkout@v7
-
-      - uses: actions/setup-python@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '24'
+      - name: Install check dependencies
+        run: python3 -m pip install -r requirements-dev.txt
+      - name: Public checks (no model evaluation)
+        run: bash scripts/check.sh
 
-      # PyYAML 是 validate_skills frontmatter YAML 门、validate_repo 的 YAML 门与产品单测的
-      # 零用例防骗绿检查的共同依赖（runner 默认不带；两个校验器对缺失依赖均按 FAIL 处理——
-      # 门禁缺依赖 = 门没跑 = 不能绿），因此必须先于第一个校验 step 安装
-      - name: 安装测试依赖
-        run: python3 -m pip install --quiet "pyyaml>=6.0"
+  validate:
+    # Stable branch-protection name: all matrix jobs must succeed.
+    name: 架构红线与语法校验
+    if: always()
+    needs: [checks, browser]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: test "$CHECKS_RESULT" = success && test "$BROWSER_RESULT" = success
+        env:
+          CHECKS_RESULT: ${{ needs.checks.result }}
+          BROWSER_RESULT: ${{ needs.browser.result }}
 
-      - name: Skills 架构红线校验（frontmatter 含 YAML 合法性 / ≤500 行 / When NOT to Use / 引用完整性 / JSON）
-        run: python3 scripts/validate_skills.py
-
-      - name: 仓库面守门（py 语法 / yml 合法性 / json 合法性 / 门面文档链接 / 落地页资产）
-        run: python3 scripts/validate_repo.py
-
-      - name: 产品脚本与守门脚本单测
-        run: python3 -m unittest discover -s tests -p "test_*.py" -v
-
-      - name: 安装器门（语法 + 行为冒烟：copy/link 安装 / 重装幂等 / 防误删 / 卸载干净）
-        run: |
-          bash -n install.sh
-          bash -n uninstall.sh
-          bash tests/install_smoke.sh
-
-      - name: 插件语法门
-        run: node --check .dsh/plugins/qa-skills.js
-
-      # eval 评测 harness 的单测与语法检查随 eval/ 一并留本地（2026-08-22 起公开仓库只含 skills 产品内容）
+  browser:
+    name: Website behavior
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+      - run: python3 -m pip install -r tests/browser/requirements.txt
+      - run: python3 -m playwright install --with-deps chromium
+      - run: python3 tests/browser/smoke.py
 
   label:
     name: PR 自动打标
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/labeler@v5
+      - uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7
         with:
           configuration-path: .github/labeler.yml

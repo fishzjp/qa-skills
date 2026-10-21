@@ -66,7 +66,7 @@ detect_candidates() {
 
 usage() {
   sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'
-  exit 1
+  exit "${1:-1}"
 }
 
 TARGET="" LINK=false MODE="interactive"
@@ -75,7 +75,7 @@ while [ $# -gt 0 ]; do
     --target) TARGET="${2:?--target 需要一个目录参数}"; shift 2 ;;
     --auto) MODE="auto"; shift ;;
     --link) LINK=true; shift ;;
-    -h|--help) usage ;;
+    -h|--help) usage 0 ;;
     *) echo "未知参数: $1" >&2; usage ;;
   esac
 done
@@ -145,44 +145,94 @@ guard_target "$TARGET_ABS" || {
   done
   deny_selfdestruct
 }
-METHOD="拷贝"; $LINK && METHOD="软链"
-echo "安装目标：${TARGET}（方式：${METHOD}）"
-echo ""
-
-for d in "${SKILL_DIRS[@]}"; do
-  src="$SRC_ROOT/$d" dst="$TARGET/$d"
-  [ -d "$src" ] || { echo "❌ 仓库缺少 ${d}（仓库不完整？）" >&2; exit 1; }
-  if [ -e "$dst" ] || [ -L "$dst" ]; then
-    if owns_unit "$d"; then
-      rm -rf "$dst"   # 重装 = 覆盖旧版本（仅覆盖确认属于本框架的目录）
-      echo "  更新 $d"
-    else
-      echo "❌ 目标已存在同名 ${d}/，但不是本框架安装的目录，拒绝覆盖。" >&2
-      echo "   （防误删：共享目录里可能有其他框架或你自己的同名内容）" >&2
-      echo "   确认无用了可手动处理后再装：rm -rf \"$dst\"" >&2
-      exit 1
-    fi
-  else
-    echo "  安装 $d"
+# A directory lock also serializes uninstall.sh. Never steal a stale lock automatically.
+LOCK_DIR="$TARGET/.qa-skills.lock"
+if ! mkdir "$LOCK_DIR" 2>/dev/null; then
+  echo "❌ Another install/uninstall is running, or an interrupted operation needs recovery: $LOCK_DIR" >&2
+  exit 1
+fi
+TXN="" COMMITTED=false
+TOUCHED=()
+cleanup() {
+  local rc=$? d i recovery_failed=false
+  trap - EXIT HUP INT TERM
+  if ! $COMMITTED && [ -n "$TXN" ]; then
+    # Reverse only operations actually started. Existing entries are moved, never deleted first.
+    i=${#TOUCHED[@]}
+    while [ "$i" -gt 0 ]; do
+      i=$((i - 1)); d="${TOUCHED[$i]}"
+      if [ -e "$TXN/old/$d" ] || [ -L "$TXN/old/$d" ]; then
+        rm -rf "$TARGET/$d" && mv "$TXN/old/$d" "$TARGET/$d" || recovery_failed=true
+      elif [ ! -e "$TXN/new/$d" ] && [ ! -L "$TXN/new/$d" ]; then
+        rm -rf "$TARGET/$d" || recovery_failed=true
+      fi
+    done
   fi
+  if $recovery_failed; then
+    echo "❌ Recovery failed. Keep the backup and lock; restore manually: $TXN/old" >&2
+    exit 1
+  fi
+  [ -z "$TXN" ] || rm -rf "$TXN"
+  rm -f "$LOCK_DIR/pid"
+  rmdir "$LOCK_DIR"
+  exit "$rc"
+}
+trap cleanup EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+printf '%s\n' "$$" > "$LOCK_DIR/pid"
+
+# Preflight every unit before changing any installed content.
+for d in "${SKILL_DIRS[@]}"; do
+  [ -d "$SRC_ROOT/$d" ] && [ -f "$SRC_ROOT/$d/SKILL.md" ] || {
+    echo "❌ Incomplete source unit: $d" >&2; exit 1;
+  }
+  if { [ -e "$TARGET/$d" ] || [ -L "$TARGET/$d" ]; } && ! owns_unit "$d"; then
+    echo "❌ 目标已存在同名 ${d}/，但不是本框架安装的目录，拒绝覆盖。" >&2
+    exit 1
+  fi
+done
+if [ -e "$TARGET/qa-skills.VERSION" ] || [ -L "$TARGET/qa-skills.VERSION" ]; then
+  [ -f "$TARGET/qa-skills.VERSION" ] && [ ! -L "$TARGET/qa-skills.VERSION" ] || {
+    echo "❌ Version marker must be a regular file: $TARGET/qa-skills.VERSION" >&2; exit 1;
+  }
+fi
+
+TXN="$(mktemp -d "$TARGET/.qa-skills.txn.XXXXXX")"
+mkdir "$TXN/new" "$TXN/old"
+METHOD="copy"; $LINK && METHOD="link"
+echo "安装目标：${TARGET}（方式：${METHOD}）"
+for d in "${SKILL_DIRS[@]}"; do
   if $LINK; then
-    ln -s "$src" "$dst"
+    ln -s "$SRC_ROOT/$d" "$TXN/new/$d"
   else
-    cp -R "$src" "$dst"
-    # 从本地工作副本安装时 cp -R 会带入运行缓存——不装进宿主
-    find "$dst" -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true
+    cp -R "$SRC_ROOT/$d" "$TXN/new/$d"
+    find "$TXN/new/$d" -type d -name '__pycache__' -prune -exec rm -rf {} +
+    find "$TXN/new/$d" -type f -name '*.pyc' -delete
   fi
 done
 
-# 版本标识：装完能回答"我用的是哪一版"
-VERSION="$(cd "$REPO_ROOT" && git describe --tags --always 2>/dev/null || echo unknown)"
-if $LINK; then
-  echo "$VERSION (repo: $REPO_ROOT)" > "$TARGET/qa-skills.VERSION"
-else
-  echo "$VERSION (installed: $(date +%Y-%m-%d))" > "$TARGET/qa-skills.VERSION"
-fi
+# Include provenance in the same rollback boundary as the content.
+VERSION="$(git -C "$REPO_ROOT" describe --tags --always --dirty 2>/dev/null || echo unknown)"
+COMMIT="$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || echo unknown)"
+{
+  printf '%s (installed: %s)\n' "$VERSION" "$(date +%Y-%m-%d)"
+  printf 'commit: %s\nmethod: %s\nsource: %s\n' "$COMMIT" "$METHOD" "$REPO_ROOT"
+} > "$TXN/new/qa-skills.VERSION"
+
+for d in "${SKILL_DIRS[@]}" qa-skills.VERSION; do
+  TOUCHED+=("$d")
+  if [ -e "$TARGET/$d" ] || [ -L "$TARGET/$d" ]; then
+    mv "$TARGET/$d" "$TXN/old/$d"
+  fi
+  mv "$TXN/new/$d" "$TARGET/$d"
+  echo "  Installed $d"
+done
+COMMITTED=true
 
 echo ""
 echo "✅ 完成。版本：$VERSION"
-echo "   验证：ls $TARGET | head；升级：git pull 后重跑本脚本"
-echo "   下一步：对你的 Agent 说——\"帮我测试这个需求：{需求描述 + 仓库地址}\""
+echo "   Commit: $COMMIT; method: $METHOD"
+echo "   Verify: python3 scripts/verify_install.py \"$TARGET\""
+echo "   已有本框架目录会整体替换；本地自定义请在仓库分支维护。"

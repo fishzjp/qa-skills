@@ -283,6 +283,17 @@ class HtmlAssetCheckTests(unittest.TestCase):
         self.assertEqual(n, 2)
         self.assertEqual(errors, [])
 
+    def test_generated_language_route_requires_builder(self):
+        html = '<a href="en/">English</a>'
+        self.assertEqual(len(self._check(html, {})[1]), 1)
+        self.assertEqual(self._check(html, {"scripts/build_site.py": ""})[1], [])
+
+    def test_builder_does_not_exempt_other_missing_routes_or_assets(self):
+        _, errors = self._check(
+            '<a href="fr/">French</a><img src="assets/missing.png">',
+            {"scripts/build_site.py": ""})
+        self.assertEqual(len(errors), 2)
+
 
 class YamlGateDependencyTests(unittest.TestCase):
     """YAML 门依赖钉子：无 PyYAML 必须 FAIL 而非降级跳过。
