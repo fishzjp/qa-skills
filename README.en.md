@@ -31,7 +31,7 @@ Install testing methods, workflows and output standards into your agent: **12 te
 
 ### 1. Install all skills
 
-Install from GitHub through [skills.sh](https://skills.sh) (requires Node.js for `npx`; no npm login needed):
+Install from GitHub through [skills.sh](https://skills.sh) (requires Node.js compatible with the skills CLI (Node.js 24 is tested) for `npx`; no npm login needed):
 
 ```bash
 npx skills add fishzjp/qa-skills --skill '*'
@@ -78,13 +78,37 @@ To upgrade, run `git pull` and repeat the command. Distribution through the npm 
 
 </details>
 
-### 2. Check installation and loading
+### Pin a version, upgrade or roll back
 
-The destination should contain the directories in the [skill list](#choose-a-skill) plus `core/`, including `qa/SKILL.md` and `core/executability.md`. **Only the repository's `install.sh` writes `qa-skills.VERSION`**; its absence does not mean another installation method failed.
+The default command follows the GitHub source; it does not pin the latest Release. Use a Git tag for repeatable installation (v0.9.0 below is a published historical version and excludes subsequent main-branch fixes):
+
+```bash
+git clone --branch v0.9.0 --depth 1 https://github.com/fishzjp/qa-skills.git qa-skills-stable
+cd qa-skills-stable
+./install.sh --target ~/.agents/skills
+```
+
+In a full clone, run `git fetch --tags`, then `git switch --detach <published-tag-or-full-commit>` and repeat the installer. Rollback uses the same process. Save local changes first and check the selected version's installer and ownership rules; older installers lack the new recovery behavior.
+
+The current installer preflights every unit, stages content and restores the previous payload and marker on handled copy/replacement failures. **Switching multiple directories is not atomic as a group; pause host reads during installation.** Power loss or SIGKILL cannot trigger rollback. If `.qa-skills.lock` or `.qa-skills.txn.*` remains, first check whether its pid is running and preserve the transaction backups: see [recovery instructions](./RELEASING.md#安装失败恢复--installation-recovery). Existing project-owned directories are replaced in full; maintain customizations in a repository branch.
+
+### 2. Check installation and loading
+From a clone, verify the host's actual directory (also works for skills.sh installs):
+
+```bash
+python3 scripts/verify_install.py ~/.agents/skills
+```
+
+Run the verifier from the same tag/commit used for installation. It checks all expected units, helper files and core references; it invokes no model and does not establish host loading or output quality.
+
+
+The destination should contain the directories in the [skill list](#choose-a-skill) plus `core/`, including `qa/SKILL.md` and `core/executability.md`. **Only the repository's `install.sh` writes `qa-skills.VERSION` (version, commit, installation method and source)**; its absence does not mean another installation method failed.
 
 Refresh skills or start a new session as your host requires. Try: “Use test-strategy to plan testing for this requirement.” Check the host's loading trace for `test-strategy/SKILL.md` and the required `core/` files. If no trace is available, ask the agent to list the file paths it actually read. Files on disk alone do not establish that triggering works.
 
 ### 3. Provide input and start testing
+
+Try the [room-booking walkthrough](./examples/first-task/README.en.md) first: no running service is needed, and it includes a brief, stage requests and a review checklist.
 
 In the project under test, tell your agent:
 
@@ -161,7 +185,7 @@ Discovery and reading depend on host behavior; a Markdown link alone does not en
 
 ## Compatibility and scope
 
-The product ships Markdown instructions, relative references and helper scripts run as needed. Hosts must support skill discovery and file reading; execution also needs terminal or browser tools.
+The product ships Markdown instructions, relative references and helper scripts run as needed. The installer supports Bash 3.2+; public scripts support Python 3.9–3.14. The CI matrix covers Linux on 3.9/3.12/3.14 and macOS on 3.12. Native Windows is not covered; use WSL and verify host paths separately. Hosts must support skill discovery and file reading; execution also needs terminal or browser tools.
 
 | Host / method | Directory or package | Existing validation scope |
 |------|------|------|
@@ -222,11 +246,13 @@ Pre-registered gates: 4/7 under the same-family judge, 5/8 under the heterogeneo
 
 | Document | Read it to… |
 |------|------|
+| [First task](./examples/first-task/README.en.md) | Try a brief-to-cases exercise without accounts |
+| [Support](./.github/SUPPORT.md) | Find reporting routes, required context and support limits |
 | [examples/](./examples/) | Compare five On/Off output pairs and understand selection / interpretation (Chinese) |
 | [core/SKILL.md](./skills/core/SKILL.md) | Find shared methods, standards, templates and helpers (Chinese) |
 | [CHANGELOG.md](./CHANGELOG.md) | Check version changes, historical results and corrections (Chinese) |
 | [Releases](https://github.com/fishzjp/qa-skills/releases) | Find milestone gain-matrix snapshots |
-| [CONTRIBUTING.md](./CONTRIBUTING.md) | Contribute, understand constraints and run public checks (Chinese) |
+| [Contributing](./CONTRIBUTING.en.md) | Contribute, understand constraints and run public checks |
 | [RELEASING.md](./RELEASING.md) | Release, validate installations and synchronize distribution (Chinese) |
 | [llms.txt](./llms.txt) | Retrieve a concise product summary for agents |
 
@@ -253,6 +279,6 @@ Design, planning and evaluation resources (`docs/`, `eval/`, etc.) are maintaine
 
 ## Contribute and get help
 
-Use the [contribution guide](./CONTRIBUTING.md) for improvements, [Discussions](https://github.com/fishzjp/qa-skills/discussions) for questions and experience, and [Issues](https://github.com/fishzjp/qa-skills/issues) for reproducible bugs and concrete requests. Report vulnerabilities privately under the [security policy](./.github/SECURITY.md).
+Use the [contribution guide](./CONTRIBUTING.en.md) for improvements, [Discussions](https://github.com/fishzjp/qa-skills/discussions) for questions and experience, and [Issues](https://github.com/fishzjp/qa-skills/issues) for reproducible bugs and concrete requests. Report vulnerabilities privately under the [security policy](./.github/SECURITY.md).
 
 [Code of Conduct](./.github/CODE_OF_CONDUCT.md) · [MIT license](./LICENSE)

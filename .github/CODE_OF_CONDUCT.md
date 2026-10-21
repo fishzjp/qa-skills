@@ -1,41 +1,35 @@
-# 贡献者行为准则
+# 贡献者行为准则 / Code of Conduct
 
-## 我们的承诺
+## 承诺 / Our commitment
 
-为营造开放友善的环境，作为贡献者和维护者，我们承诺：无论年龄、体型、残疾、族裔、性别认同与表达、经验水平、国籍、个人外貌、种族、宗教或性取向，参与本项目的每个人都不受骚扰。
+所有参与者都应获得友善、尊重且无骚扰的参与环境，不因年龄、残疾、族裔、性别认同与表达、经验、国籍、外貌、种族、宗教或性取向受到歧视。
 
-## 我们的准则
+Everyone should be able to participate in a welcoming, respectful and harassment-free environment, regardless of age, disability, ethnicity, gender identity or expression, experience, nationality, appearance, race, religion or sexual orientation.
 
-有助于为本项目创造积极环境的行为包括：
+## 行为 / Expected behavior
 
-- 使用友善包容的语言
-- 尊重不同观点与经验
-- 优雅接受建设性批评
-- 以社区利益为重
-- 对其他成员保持同理心
+尊重不同观点，给出具体且建设性的反馈，讨论行为与技术问题，保护他人隐私。禁止骚扰、威胁、人身攻击、性暗示、不受欢迎的性关注，以及未经许可公开他人私人信息。
 
-不可接受的行为包括：
+Respect different perspectives, give specific and constructive feedback, discuss behavior and technical issues, and protect privacy. Harassment, threats, personal attacks, sexualized language, unwelcome sexual attention and sharing private information without permission are unacceptable.
 
-- 性暗示的语言或意象、不受欢迎的性关注
-- 挑衅、侮辱/贬损性评论、人身或政治攻击
-- 公开或私下的骚扰
-- 未经明确许可发布他人隐私信息（如物理或电子地址）
-- 其余可被合理认定为不专业场合的行为
+## 适用范围 / Scope
 
-## 责任
+适用于本项目的 Issue、PR、Discussion 及代表本项目的公开交流。
 
-项目维护者负责澄清「可接受行为」标准，并对被认为不当、威胁、冒犯或有害的言论与行为采取公正且适当的纠正措施。
+Applies to project issues, pull requests, discussions and public interactions while representing the project.
 
-## 适用范围
+## 联系方式 / Contact
 
-本行为准则适用于所有项目空间与公共场合中代表项目的场合。
+私密联系维护者：[fishzjp@foxmail.com](mailto:fishzjp@foxmail.com)，主题 `[conduct] qa-skills`。说明发生地点、行为和可提供的证据；尽量减少无关个人信息。该渠道用于行为投诉，与软件漏洞报告分开。
 
-## 联系方式
+Contact the maintainer privately at [fishzjp@foxmail.com](mailto:fishzjp@foxmail.com), subject `[conduct] qa-skills`. Describe where the incident occurred, the behavior and available evidence. Minimize unrelated personal information. This channel is separate from software vulnerability reporting.
 
-受到或目睹不当行为，可通过 GitHub 私密渠道报告（见 SECURITY.md 的联系方式）。所有投诉都将被审查与调查，并作出必要且适当的回应。维护者有义务保密举报人身份。
+维护者将保密处理并审查投诉，根据影响采取提醒、删除内容、限制参与或禁止参与等措施。处理对象可通过相同邮箱提出复核。若投诉涉及维护者本人，可使用 [GitHub 举报渠道](https://docs.github.com/en/site-policy/acceptable-use-policies/github-community-guidelines)；该渠道由 GitHub 独立处理，本项目不承诺能看到或控制其结果。
 
-## 来源
+The maintainer will handle reports confidentially and review them. Responses may include a warning, content removal, participation restrictions or a ban, according to impact. Affected participants can request reconsideration through the same email. If the complaint concerns the maintainer, GitHub's [reporting channels](https://docs.github.com/en/site-policy/acceptable-use-policies/github-community-guidelines) are available; GitHub handles those independently, and the project cannot promise access to or control over the outcome.
 
-本准则改编自 [Contributor Covenant][homepage] 2.1 版。
+## 来源 / Attribution
 
-[homepage]: https://www.contributor-covenant.org
+参考 [Contributor Covenant 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/)，按单维护者项目的实际处理方式编写。
+
+Informed by [Contributor Covenant 2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/), adapted to the actual process of an individually maintained project.

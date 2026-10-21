@@ -1,13 +1,12 @@
 # 宣传落地页部署：index.html / assets/og.jpg / llms.txt 变更合入 main 后自动发布到 GitHub Pages
-# 产物打包 index.html + og.jpg + llms.txt（仓库内 og.jpg 归位 assets/，部署时回到站点根路径），不携带仓库其余内容
-# （v2 落地页为单文件无本地图片引用；旧版 13 张 assets/landing/ 配图已随 2026-09-07 死资产清理移除）
+# 同一源生成中文根页、静态 /en/、sitemap、llms 与含许可的字体；不携带私有规划与评测文件
 # llms.txt 随站部署：本产品的检索者与买家大量是 AI agent，站点根提供机器可读摘要（GEO）
 name: pages
 
 on:
   push:
     branches: [main]
-    paths: ['index.html', 'assets/og.jpg', 'assets/fonts/**', 'llms.txt', '.github/workflows/pages.yml']
+    paths: ['index.html', 'assets/og.jpg', 'assets/fonts/**', 'llms.txt', 'requirements-dev.txt', 'scripts/validate_repo.py', 'scripts/build_site.py', '.github/workflows/pages.yml']
   workflow_dispatch:
 
 permissions:
@@ -28,38 +27,31 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      # 部署前守门：index.html 引用的资产与门面文档链接必须真实存在（下方 stage 只做 cp，
-      # 不校验引用完整性，引用了不存在的资源 = 部署成功、线上破图）。
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+
+      # 部署前守门：资源/文档/双语结构校验；静态生成由独立测试覆盖。
       # PyYAML 必装：validate_repo 的 YAML 门对缺失依赖按 FAIL 处理，不降级
       - name: 安装校验依赖
-        run: python3 -m pip install --quiet "pyyaml>=6.0"
+        run: python3 -m pip install -r requirements-dev.txt
 
       - name: 落地页与门面守门（资产引用 / 文档链接 / YAML 合法性）
         run: python3 scripts/validate_repo.py
 
       - name: Configure Pages
-        uses: actions/configure-pages@v6
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
 
-      - name: Stage single page
-        run: |
-          mkdir -p _site
-          cp index.html _site/
-          # og:image 的绝对 URL 指向站点根的 og.jpg（历史已流通，不可变更）；
-          # 仓库内归位 assets/og.jpg，部署时重命名回站点根，分享图 URL 保持不变
-          cp assets/og.jpg _site/og.jpg
-          # AI 系统的机器可读站点摘要（GEO）
-          cp llms.txt _site/llms.txt
-          # 展示字体自托管（Space Grotesk 变量 latin 子集，页面 @font-face 引用）
-          mkdir -p _site/assets
-          cp -R assets/fonts _site/assets/
+      - name: Build static language pages and licensed assets
+        run: python3 scripts/build_site.py
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
           path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5

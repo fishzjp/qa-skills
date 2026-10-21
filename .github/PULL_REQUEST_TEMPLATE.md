@@ -1,24 +1,27 @@
-## 改动类型
+## Change type / 改动类型
 
-<!-- 勾选一项 -->
+- [ ] Skill methodology / skill 方法论（SKILL.md / references / templates）
+- [ ] Shared core / core 共享知识库
+- [ ] Documentation / 文档
+- [ ] Engineering / CI、安装器、校验器或脚本
 
-- [ ] skill 方法论（SKILL.md / references / templates）
-- [ ] core/ 共享知识库
-- [ ] 文档（README / CONTRIBUTING / CHANGELOG / RELEASING）
-- [ ] CI / 工程配置（安装脚本 / 校验器 / workflows / 产品脚本单测）
+## Problem and resulting behavior / 问题与修改后的行为
 
-## 改动说明
+<!-- Explain the concrete trigger, previous behavior and resulting behavior. / 说明具体触发条件、之前与之后的行为。 -->
 
-做了什么、为什么。涉及方法论的，请说明与现有推导链（证据 → 风险 → 策略 → 用例）的关系。
+## Validation / 验证
 
-## 自检清单
+<!-- State what actually ran, its result and remaining limits. Never mark unrun model evaluations as passed. / 写实际执行的检查、结果与限制。 -->
 
-- [ ] 未引入真实环境地址、账号、密钥、内部系统名
-- [ ] `python3 scripts/validate_skills.py` 通过（完整自检枚举见 [CONTRIBUTING 提交前自检](https://github.com/fishzjp/qa-skills/blob/main/CONTRIBUTING.md#提交前自检)：frontmatter / description ≤300 字符 / SKILL.md ≤500 行 / When NOT to Use / core 依赖单元声明 / 引用完整含 md 链接与引用式定义 / 无跨 skill 引用 / 版本一致 / JSON 合法 / 无 eval 越界引用 / 跟踪面白名单 / skills 目录形态）
-- [ ] 新增引用的 references / core 文件存在且相对路径按消费方 SKILL.md 所在目录书写
-- [ ] 改动影响用例产出的，已在评测结果一节说明预期影响（正式 Benchmark 复验由维护者执行）
-- [ ] CHANGELOG.md 已更新（用户可感知的变更）
+- [ ] No credentials, private addresses or business data / 无凭证、私有地址或业务数据
+- [ ] `bash scripts/check.sh` passes / 公开检查通过
+- [ ] Website changes pass `python3 tests/browser/smoke.py` / 网站改动通过实际浏览器检查（如适用）
+- [ ] References resolve relative to the consuming SKILL.md; shared dependencies remain intact / 引用按消费方 SKILL.md 解析且共享依赖完整
+- [ ] User-visible changes are recorded in CHANGELOG / 用户可感知改动已记日志
+- [ ] Affected product facts match across README zh/en, website and llms / 受影响的产品事实已同步
 
-## 评测结果（涉及 skill 方法论、影响用例产出时必填）
+## Skill evaluation / Skill 评测（方法论改动必填）
 
-<!-- 说明预期影响（哪个环节、哪类产出）；指标复验由维护者在本地黄金集执行，结果会回贴在此 PR -->
+<!-- Describe expected impact, affected stage/output and whether maintainer evaluation is pending. Contributors do not need private eval assets. / 说明预期影响、环节与产出；维护者复验是否待办。 -->
+
+[English contribution guide](https://github.com/fishzjp/qa-skills/blob/main/CONTRIBUTING.en.md) · [中文贡献指南](https://github.com/fishzjp/qa-skills/blob/main/CONTRIBUTING.md)

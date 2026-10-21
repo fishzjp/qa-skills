@@ -142,6 +142,9 @@ def check_html_assets(root, errors):
     n = 0
     for line_no, raw, path in extract_local_refs(page.read_text(encoding="utf-8-sig")):
         n += 1
+        # Static language route is generated from index.html by the site builder.
+        if path == "en/" and (root / "scripts/build_site.py").is_file():
+            continue
         if not (root / path.lstrip("/")).exists():
             errors.append(f"index.html:{line_no}: 引用的资源不存在 ({raw})")
     return n

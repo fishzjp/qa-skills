@@ -53,3 +53,7 @@ docs/
 
 # 本地 smoke 测试备份包（不入库）
 .smoke_f*.zip
+
+# Public tutorial outputs and generated website
+.qa-practice/
+_site/

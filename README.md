@@ -31,7 +31,7 @@
 
 ### 1. 安装全部 skill
 
-通过 [skills.sh](https://skills.sh) 从 GitHub 安装（需要 Node.js 提供 `npx`，无需登录 npm）：
+通过 [skills.sh](https://skills.sh) 从 GitHub 安装（需要符合 skills CLI 要求的 Node.js 提供 `npx`，当前实测 Node.js 24，无需登录 npm）：
 
 ```bash
 npx skills add fishzjp/qa-skills --skill '*'
@@ -78,13 +78,37 @@ cd qa-skills
 
 </details>
 
+### 固定版本、升级与回退
+
+默认命令跟随 GitHub 源，不等于锁定最新 Release。需要可重复安装时，使用 Git tag（以下 v0.9.0 是已发布的历史版本，不包含 main 后续修复）：
+
+```bash
+git clone --branch v0.9.0 --depth 1 https://github.com/fishzjp/qa-skills.git qa-skills-stable
+cd qa-skills-stable
+./install.sh --target ~/.agents/skills
+```
+
+切换版本：在完整克隆中 `git fetch --tags`，执行 `git switch --detach <已发布-tag-或完整-commit>`，再重跑安装器；回退同理。先保存本地改动，确认该版本的安装脚本与目标目录归属兼容。旧版没有新安装器的恢复能力。
+
+当前安装器先全量预检、暂存，再替换；可处理的复制/替换失败会恢复原内容和版本标记。**多目录切换不是整组原子操作，安装时请暂停宿主读取**。断电或 SIGKILL 无法触发回滚；出现 `.qa-skills.lock` 或 `.qa-skills.txn.*` 时，先检查其中 pid 是否仍运行，保留事务目录并按 [恢复说明](./RELEASING.md#安装失败恢复--installation-recovery)处理，不要直接删除备份。已有本框架目录会整体替换，本地自定义请在仓库分支维护。
+
 ### 2. 检查安装与装载
 
-安装目标应包含下方[技能清单](#选择-skill)中的目录及 `core/`，例如 `qa/SKILL.md` 与 `core/executability.md`。**只有仓库 `install.sh` 会额外写入 `qa-skills.VERSION`**，其他方式不能用该文件判断成功与否。
+从克隆仓库运行文件级检查（使用宿主的实际目录，skills.sh 安装也适用）：
+
+```bash
+python3 scripts/verify_install.py ~/.agents/skills
+```
+
+请从与安装版本相同的 tag/commit 运行校验器。该检查验证完整单元、辅助文件与 core 引用，不调用模型，也不能证明宿主已装载或输出质量。
+
+安装目标应包含下方[技能清单](#选择-skill)中的目录及 `core/`，例如 `qa/SKILL.md` 与 `core/executability.md`。**只有仓库 `install.sh` 会额外写入 `qa-skills.VERSION`（版本、commit、安装方式与来源）**，其他方式不能用该文件判断成功与否。
 
 按宿主要求刷新技能或新开会话，试一句“请使用 test-strategy，为这个需求制定测试策略”。从宿主的装载记录确认 `test-strategy/SKILL.md` 及所需 `core/` 文件已读取；没有装载记录时，可要求 Agent 列出实际读取的文件路径。仅目录存在不代表触发已成功。
 
 ### 3. 提供输入，开始测试
+
+第一次使用可先走 [会议室预约练习](./examples/first-task/README.md)：无需运行环境，包含完整输入、阶段请求和人工验收清单。
 
 在被测项目中对 Agent 说：
 
@@ -161,7 +185,7 @@ Bug 条目 / 回归清单 → 测试报告
 
 ## 兼容性与边界
 
-产品以 Markdown 指令、相对路径引用与按需运行的辅助脚本分发。宿主需要支持 skill 发现、文件读取；实际执行还需要终端或浏览器工具。
+产品以 Markdown 指令、相对路径引用与按需运行的辅助脚本分发。安装器支持 Bash 3.2+；公开脚本支持 Python 3.9–3.14，CI 抽测 Linux 3.9/3.12/3.14 与 macOS 3.12。原生 Windows 暂未覆盖，建议 WSL；宿主路径仍需单独验证。宿主需要支持 skill 发现、文件读取；实际执行还需要终端或浏览器工具。
 
 | 宿主 / 方式 | 目录或载体 | 已有验证的范围 |
 |------|------|------|
@@ -222,6 +246,8 @@ Bug 条目 / 回归清单 → 测试报告
 
 | 文档 | 适合何时阅读 |
 |------|------|
+| [入门练习](./examples/first-task/README.md) | 无账号完成首次需求到用例设计 |
+| [支持指南](./.github/SUPPORT.md) | 问题分流、反馈材料与维护边界 |
 | [examples/](./examples/) | 看五组 On/Off 产物、选样规则与判读说明 |
 | [core/SKILL.md](./skills/core/SKILL.md) | 查共享方法、标准、模板与辅助脚本 |
 | [CHANGELOG.md](./CHANGELOG.md) | 查版本变更、历史评测与勘误 |
