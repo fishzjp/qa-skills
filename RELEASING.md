@@ -1,19 +1,20 @@
 # 发版规则（RELEASING）
 
 > 适用对象：仓库维护者。日常改动走 [CONTRIBUTING.md](./CONTRIBUTING.md) 的提交前自检；
-> 本文约束"把一批变更收敛成一个对外版本"的完整动作。qa-skills 有四个对外分发面，
-> `git push` 只覆盖其中两个——其余靠本检查单兜住，缺一项就是用户拿不到该拿的东西。
+> 本文约束"把一批变更收敛成一个对外版本"的完整动作。当前分发渠道为 GitHub、skills 市场与官网。
+> 2026-10-21 起停止 npm 插件包分发，发布无需 npm 账号或凭证。
 
-## 分发面全景（发版 = 四面同步，漏一即事故）
+## 分发面全景（发版 = 三面同步）
 
 | # | 分发面 | 载体 | 更新方式 | 是否自动 |
 |---|--------|------|----------|----------|
-| 1 | GitHub 仓 | `main` + tag `vx.y.z` | `git push` | 手动 |
-| 2 | skills 市场（`npx skills add fishzjp/qa-skills`） | GitHub 源，随 tag/release 可见 | 随 #1 自动获得 | ✅ |
-| 3 | **dsh 插件市场**（npm 包 `dsh-qa-skills`） | npmjs.com | `npm publish` | ❌ **必须手动** |
-| 4 | 官网落地页 | GitHub Pages | push 中命中 `pages.yml` 的 paths（页面、分享图、字体、`llms.txt` 或 workflow）时触发 | 条件自动 |
+| 1 | GitHub 仓与 Release | `main` + tag `vx.y.z` + Release 说明 | 精确推送分支 / tag，并创建 Release | 手动 |
+| 2 | skills 市场（`npx skills add fishzjp/qa-skills --skill '*'`） | GitHub 源，随 tag/release 可见 | 随 #1 自动获得 | ✅ |
+| 3 | 官网落地页 | GitHub Pages | push 中命中 `pages.yml` 的 paths（页面、分享图、字体、`llms.txt` 或 workflow）时触发 | 条件自动 |
 
-反面实例：v0.5.1 只完成了 #1，npm 侧停留在 0.5.0（v0.6.0 已于 2026-08-27 补发）。**断档清偿决策（2026-09-07）**：v0.7.0 起的断档不再逐版补发——0.8.0 定版时直接同步 npm（npm 不要求版本连续；补发缺 qa-memory 的旧版反而制造第二次断档），历史欠账在踩坑记录 #9 闭环。
+dsh 用户与其他宿主统一从 GitHub 安装：`./install.sh --target ~/.dsh/skills`；升级为 `git pull` 后重跑同一安装命令。迁移前通过 dsh 插件管理器移除旧插件，避免重复装载。
+
+`package.json` 保留版本校验与历史插件兼容元数据，必须保持 `private: true`，不再作为 npm 发布清单使用。`npx` 仅用于运行第三方 skills.sh 安装器，技能内容来自 GitHub，无需发布本项目的 npm 包。
 
 ## 安装形态实测矩阵（触达安装面/引用路径的发版必登记）
 
@@ -84,7 +85,7 @@ git diff --stat                                                  # 复验：每�
 | 触发条件 | 必做同步 |
 |----------|----------|
 | 定版触及 `index.html`（或每版例行） | `index.html` JSON-LD `softwareVersion` 随版本号同步（0.9.0 审查发现该字段曾停更两个版本——GEO 层的机器可读事实不得陈旧） |
-| 新增 / 下线 skill 单元 | 安装器清单自动派生自 `skills/*/SKILL.md`（install.sh / uninstall.sh 无需改清单）；package.json description 中的 skill 计数与枚举；双语 README 技能表与徽章、`llms.txt` skill 清单与计数；`tests/install_smoke.sh` 的单元数下限与 bug_report.yml 问题区域下拉（如适用）；`index.html` ticker 枚举与 featureList 能力项；`.dsh/plugins/qa-skills.js` 文件头注释的技能计数（随 npm 包分发的事实陈述——0.9.0 审查发现停在"11 个"未随 12 更新） |
+| 新增 / 下线 skill 单元 | 安装器清单自动派生自 `skills/*/SKILL.md`（install.sh / uninstall.sh 无需改清单）；package.json description 中的 skill 计数与枚举；双语 README 技能表与徽章、`llms.txt` skill 清单与计数；`tests/install_smoke.sh` 的单元数下限与 bug_report.yml 问题区域下拉（如适用）；`index.html` ticker 枚举与 featureList 能力项；`.dsh/plugins/qa-skills.js` 文件头注释的技能计数（历史兼容代码中的事实陈述） |
 | 新增 / 下线 core 共享文档 | `skills/core/SKILL.md` 的完整索引与 README 中受影响的说明；涉及指纹文件的更名需同改 `install.sh`/`uninstall.sh` 的 `owns_unit` 判据 |
 | core 文档在触发措辞上影响其他 skill | 相互指向的 description / When NOT to Use 同步修订 |
 
@@ -100,7 +101,6 @@ node --check .dsh/plugins/qa-skills.js
 bash -n install.sh
 bash -n uninstall.sh
 bash tests/install_smoke.sh
-npm pack --dry-run   # 清单不得出现 __pycache__/*.pyc 等运行时产物（踩坑 6）
 ```
 
 维护者改 skill / 加 skill 后还必须运行 `python3 -m pytest tests/ -q`，包含本地 harness 单测；unittest 不能替代该门。详细依赖见 [CONTRIBUTING 开发环境](./CONTRIBUTING.md#开发环境)。
@@ -112,11 +112,12 @@ minor 及以上追加（本地链路）：按分级门跑模型矩阵 + in-situ�
 ### §4 隔离面审查 —— 进公开仓最后一道
 
 - [ ] `git diff --cached --name-only` 暂存清单不含 `eval/`、`tests/test_harness.py`、`.in-situ-lab/`、`docs/` 等本地评测 / 规划产物（`tests/` 下已跟踪的产品回归测试与安装器冒烟允许提交）（.gitignore 已隔离，但要肉眼复核）
-- [ ] `npm pack --dry-run` 清单中的 skills/ 单元集合 == `git ls-files skills/` 的单元集合（install.sh 与 pack 按工作区取文件，未跟踪的 SKILL.md 草稿会静默进安装清单与发包——2026-09-19 审查实证：B1 草稿在 skills/ 窗口期内若发版即随包发布；草稿一律放 eval/plans/ 暂存区，过门合入时再进 skills/）
+- [ ] 工作区 `skills/*/SKILL.md` 的单元集合与 `git ls-files skills/` 中已跟踪的单元集合一致。安装器按工作区取文件，未跟踪草稿也会被安装；草稿放本地暂存区，过门合入时再进 `skills/`
+- [ ] `package.json` 保持 `private: true`；README / 官网 / `llms.txt` 无 npm 插件安装命令、包下载入口或 npm 发布承诺
 - [ ] 无真实环境地址、账号、密钥、内部系统名（CONTRIBUTING 自检第 1 条）
 - [ ] 跟踪面白名单校验通过（validate_skills.py 红线 10 随 §3 测试关自动执行；`git ls-files` 中不得出现临时文件、测试数据、实验·开发报告、开发计划等与 skills 无关内容，白名单维护规则见 CONTRIBUTING 架构红线 8）
 
-### §5 发布动作（四面依次）
+### §5 发布动作（三面依次）
 
 ```bash
 # 1) 提交：中文单行概要体例，覆盖本轮全部实质变更
@@ -128,36 +129,23 @@ git tag v0.7.0                                 # ← 用本次实际版本
 # 3) 推送 #1/#2：分支与 tag 精确推送
 git push origin main
 git push origin v0.7.0                         # 禁止 --tags：会重推全部历史 tag，已被拒项制造噪音报错
-
-# 4) 推送 #3 npm 插件市场（手动强制项！）
-# 前置：本机已装 python3 + PyYAML——prepublishOnly 会在 publish 前强制跑两道校验器，
-# 缺依赖直接卡发版（设计行为，防"绕过门禁发版"；pip install pyyaml 即解）
-NPM_REGISTRY="https://registry.npmjs.org"    # 本机默认源可能是 npmmirror 只读镜像（踩坑 5），一律显式官方源
-npm whoami --registry "$NPM_REGISTRY"        # 未登录先：npm login --registry "$NPM_REGISTRY" --auth-type=web
-npm view dsh-qa-skills version --registry "$NPM_REGISTRY"   # 预检：latest ≠ 本次版本（既防重发、也暴露断档）
-npm pack --dry-run                           # 清单核对：仅 skills 与 .dsh 本体，无 pyc 缓存（踩坑 6）
-npm publish --registry "$NPM_REGISTRY" --otp="<验证器当前6位动态码>"   # 强制 2FA 下必带第二因子（踩坑 7）
-npm view dsh-qa-skills version --registry "$NPM_REGISTRY"   # 复验：latest == 本次版本
 ```
 
-- \#4 GitHub Release 页：贴 CHANGELOG 对应节原文，并附跨模型增益矩阵快照（README 对外承诺：快照按里程碑随 Release 附带；非里程碑小版本无新数据时，贴完整表格并标注"数据沿用 vX.Y.Z"或不贴并在 body 说明）
-- \#5 官网：按 `.github/workflows/pages.yml` 的实际 paths 检查本次变更（含 `llms.txt`、字体与 workflow 本身）；命中时确认 pages workflow 部署成功，未命中且无需更新时登记理由
+- GitHub Release 页：贴 CHANGELOG 对应节原文，并附跨模型增益矩阵快照（README 对外承诺：快照按里程碑随 Release 附带；非里程碑小版本无新数据时，贴完整表格并标注"数据沿用 vX.Y.Z"或不贴并在 body 说明）
+- 官网：按 `.github/workflows/pages.yml` 的实际 paths 检查本次变更（含 `llms.txt`、字体与 workflow 本身）；命中时确认 pages workflow 部署成功，未命中且无需更新时登记理由
 
 ### §6 发布后自证
 
 - [ ] 安装冒烟：`./install.sh --target <临时目录>`，核对输出尾部 `✅ 完成。版本：v0.7.0` 与 `qa-skills.VERSION` 文件内容为新 tag
 - [ ] skills 市场：GitHub Releases 页新 release 可见（npx skills add 按 GitHub 源拉取）
-- [ ] 插件市场：任一新环境 `dsh plugin add dsh-qa-skills` 拉到新版本且注册数量日志正常
-- [ ] npm 断档自查归零：`npm view dsh-qa-skills versions` 中最大值 == git 最新 tag
+- [ ] GitHub Release：`gh release list` 核对最新 tag 在列且为 Latest；逐渠道记录完成凭证（URL / 输出摘要），无需更新时也登记理由
+- [ ] dsh 安装：临时目标目录安装后包含全部 skill 与 core；确认文档引导使用 Git 安装
+- [ ] 官网：需要部署时确认 Pages workflow 成功，双语页面与复制的命令均使用当前安装方式
 
-## 历史踩坑记录（本规则的由来）
+## 历史经验与渠道变更
 
-1. **npm 断档**（2026-08-27 发现）：v0.5.1、v0.6.0 只推了 GitHub，npm latest 停在 0.5.0——插件市场用户长期拿不到增量。§5 第 4 步因此列为强制项。
-2. **`--tags` 重推噪音**：v0.6.0 发布时 `git push origin main --tags` 把 v0.1.0–v0.4.0 一并重推，远端已存在被拒、退出码非 0。改为精确推送单个 tag。
-3. **名实分离**（第五轮审查）：发布文案宣称的修复在实际写盘时静默丢失。由此确立"同文件串行编辑 + 每批写盘即回验"协议，以及 §1 的逐条实体核对。
-4. **sed 误伤正文**：版本替换若不锚定行首（`^version: x\.y\.z$`），会改掉正文中作为历史叙述出现的版本字样。§2 固定命令已内置防御。
-5. **默认源是 npmmirror 只读镜像**（2026-08-27 补发实战）：本机 npm 默认 registry 指向淘宝镜像，镜像不能 publish，首次 `npm login` 会把人带去 `registry.npmmirror.com` 空转。§5 第 4 步所有 npm 命令因此一律显式 `--registry https://registry.npmjs.org`。
-6. **pyc 编译缓存混入发包**（2026-08-27 补发实战；2026-08-28 复发修正）：发包前核对 tarball 清单，发现 `skills/core/scripts/__pycache__/*.pyc` 入包（38 files）。npm 的 `files` 白名单是目录级，兜不住运行时生成的缓存子目录；处理 = 即时删除 + 根级 `.npmignore`（排除 `__pycache__/`、`*.pyc`），并把 `npm pack --dry-run` 固化为 §3 测试关与 §5 第 4 步的固定动作。复核后 37 files 干净入站。**2026-08-28 复发**：根级 `.npmignore` 拦不住 `files` 白名单内路径（pyc 再次入包、40 files）——真正根治 = `package.json` `files` 数组加否定模式（`!skills/**/__pycache__`、`!skills/**/*.pyc`），dry-run 复核 38 files、pyc 计数 0。
-7. **npm 发布认证新政：EOTP/E403 两段墙**（2026-08-27 补发实战）：publish 必须携带第二因子，且策略因账号而异——绑定 TOTP 时报 `EOTP`（等码）；关掉 2FA 或使用未获 bypass 授权的令牌反而报 `E403`（"Two-factor authentication or granular access token with bypass 2fa enabled is required"）。另据官方公告，bypass-2fa 细粒度令牌正被限制直接发布——令牌路线是死路。正解：①账号 Two-Factor Authentication 以 Authenticator App 方式绑定（服务端 `two-factor auth: auth-and-writes` 即就绪）②发版用 `npm publish --otp=<当前6位动态码>`。实测兜底：CLI 的 `--otp` 位也接受恢复码（每条一次性消耗），验证器不在手边时可应急；恢复码已多次暴露的应整体重新生成。
-8. **push tag ≠ GitHub Release 已建**（2026-08-27 补发实战）：v0.6.0 当轮全副精力陷在 npm 认证墙（踩坑 7）里，§5 的 #4 步（Release 页）被执行悬空——tag 推上远端后被心理上当作"已发布完毕"，直到用户质疑才经 `gh release list` 发现 v0.4.0–v0.5.1 三条在列而 v0.6.0 缺席。教训：四个分发面互不等价、彼此独立可见，任一面都不会替另一面兜底；checklist 靠记忆执行必然有洞，且某一面反复排障时会挤占其余面的注意力——恰恰是洞最可能出现的位置。由此固化两条纪律：①§5 逐面执行后各写一行完成凭证（URL / 命令输出摘要），**本面确认无需动作也必须显式写下"不动的理由"**，禁止留白跳过；②§6 自证须包含 `gh release list` 核对最新 tag 在列且为 Latest——这是所有"以为发了实际没发"类断档的统一兜底探针。
-9. **版本断档的清偿方式：跳版直发优于逐版补发**（2026-09-07 定版决策）：v0.7.0 起积压多个未发版内容（qa-memory 合入 + 两轮审查批 + 营销批 + C0 描述双语）时，逐版补发会让 npm 先收到缺 qa-memory 的旧版、再立刻被新版覆盖——两次发布零收益。npm 不要求版本连续，正确清偿 = 最新内容定版一次发布（0.8.0），tag 跳号在 CHANGELOG compare 链里自明。反面约束：跳版只允许向**前**跳（npm latest 必须始终 ≥ git 最新 tag），且 CHANGELOG 定版节须显式登记跳过的版本号与理由。
+- **2026-10-21 渠道裁决**：停止 npm 插件包分发，不再执行 npm 发布、补版或版本同步。历史 CHANGELOG 中的 npm 发布记录仅描述当时状态，不是当前安装指引。
+- **精确推送 tag**：使用单个 tag 的 push，避免 `--tags` 重推全部历史 tag。
+- **声明与文件一致**：CHANGELOG 声称的修复必须在工作区中逐条核验；版本替换锚定 frontmatter 整行，避免修改历史正文。
+- **工作区与发布源一致**：安装器会读取未跟踪的技能草稿，因此发布前要核对工作区与 git 跟踪集合；运行缓存不得进入宿主。
+- **push tag 不等于创建 Release**：GitHub 仓、skills 市场和官网各自验证完成，不能凭一个渠道推断其余渠道已更新。

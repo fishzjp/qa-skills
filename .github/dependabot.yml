@@ -1,6 +1,6 @@
 version: 2
 updates:
-  # npm 插件包（dsh-qa-skills）声明零运行时依赖，无可更新项——不配置 npm 生态
+  # 项目不再发布 npm 包；仅维护 GitHub Actions 依赖
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

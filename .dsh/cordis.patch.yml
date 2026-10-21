@@ -1,8 +1,8 @@
-# qa-skills 的 DeepSeek Harness 插件补丁层。
+# qa-skills 的历史 DeepSeek Harness 插件补丁层（兼容保留）。
 #
-# `dsh plugin --profile <name> add dsh-qa-skills` 会把本包追加进 profile 的
-# dsh.profile.bundles，dsh 启动时将本文件作为一个补丁层并入 cordis 组合，
-# 从而挂载 .dsh/plugins/qa-skills.js（注册 skills/ 下 12 个测试技能 + core）。
+# 项目不再发布 npm 插件包；新安装使用仓库根目录的 install.sh：
+# ./install.sh --target ~/.dsh/skills
+# 本文件仅供已有插件配置兼容，不作为当前安装入口。
 #
 # 临时停用（写进 profile 自己的 cordis.patch.yml）：
 #   - id: dsh-qa-skills

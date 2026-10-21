@@ -51,7 +51,7 @@
   "url": "https://fishzjp.github.io/qa-skills/",
   "sameAs": [
     "https://github.com/fishzjp/qa-skills",
-    "https://www.npmjs.com/package/dsh-qa-skills"
+    "https://skills.sh/fishzjp/qa-skills"
   ],
   "isAccessibleForFree": true,
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
@@ -2240,8 +2240,8 @@
       <a class="btn btn-ghost" href="#what"><span class="zh-only">了解更多</span><span class="en-only">Learn more</span> <span class="arr">→</span></a>
     </div>
     <p class="hero-proof reveal d4 in">
-      <span class="zh-only">实测：用例合格率 <b>26% → 98%</b><span class="sep">·</span>已上架 <b>skills.sh</b> / <b>npm</b><span class="sep">·</span>MIT 开源免费</span>
-      <span class="en-only">Measured: case pass rate <b>26% → 98%</b><span class="sep">·</span>on <b>skills.sh</b> / <b>npm</b><span class="sep">·</span>MIT, free &amp; open source</span>
+      <span class="zh-only">实测：用例合格率 <b>26% → 98%</b><span class="sep">·</span>通过 <b>skills.sh</b> / <b>GitHub</b> 安装<span class="sep">·</span>MIT 开源免费</span>
+      <span class="en-only">Measured: case pass rate <b>26% → 98%</b><span class="sep">·</span>install via <b>skills.sh</b> / <b>GitHub</b><span class="sep">·</span>MIT, free &amp; open source</span>
     </p>
   </div>
 
@@ -2695,15 +2695,15 @@
           <div class="terminal-bar"><i></i><i></i><i></i><button class="copy-btn" type="button"><span class="zh-only">复制</span><span class="en-only">Copy</span></button></div>
           <pre><span class="dollar">$</span> npx skills add fishzjp/qa-skills --skill '*'</pre>
         </div>
-        <p style="margin-top:24px" class="zh-only">不用 npx？克隆仓库跑安装脚本（自动检测宿主目录），也可按 README 手动复制文件：</p>
-        <p style="margin-top:24px" class="en-only">No npx? Clone the repo and run the install script (auto-detects host directories), or copy files manually per the README:</p>
+        <p style="margin-top:24px" class="zh-only">不使用 Node.js？克隆 GitHub 仓库并运行交互安装脚本，或按 README 手动复制文件：</p>
+        <p style="margin-top:24px" class="en-only">No Node.js? Clone the GitHub repository and run the interactive installer, or copy files manually per the README:</p>
         <div class="terminal">
           <div class="terminal-bar"><i></i><i></i><i></i><button class="copy-btn" type="button"><span class="zh-only">复制</span><span class="en-only">Copy</span></button></div>
           <pre><span class="dollar">$</span> git clone https://github.com/fishzjp/qa-skills.git
-<span class="dollar">$</span> cd qa-skills <span>&amp;&amp;</span> ./install.sh --auto</pre>
+<span class="dollar">$</span> cd qa-skills <span>&amp;&amp;</span> ./install.sh</pre>
         </div>
-        <p style="margin-top:24px" class="zh-only">用 <span class="nb">DeepSeek Harness</span>（dsh）？插件已上架 npm，一条命令装好：<code>dsh plugin --profile web add dsh-qa-skills</code></p>
-        <p style="margin-top:24px" class="en-only">On <span class="nb">DeepSeek Harness</span> (dsh)? The plugin is on npm, one command away: <code>dsh plugin --profile web add dsh-qa-skills</code></p>
+        <p style="margin-top:24px" class="zh-only">用 <span class="nb">DeepSeek Harness</span>（dsh）？克隆后执行 <code>./install.sh --target ~/.dsh/skills</code>。升级时 <code>git pull</code> 后重跑同一命令。已有旧插件请先通过 dsh 插件管理器移除，避免重复装载。</p>
+        <p style="margin-top:24px" class="en-only">On <span class="nb">DeepSeek Harness</span> (dsh)? After cloning, run <code>./install.sh --target ~/.dsh/skills</code>. To upgrade, run <code>git pull</code> and repeat the command. Remove any old plugin with the dsh plugin manager first to avoid duplicate loading.</p>
         <p class="install-note zh-only">无论哪种方式，<code>core/</code> 必须一起装（方式一已自带）——单装某个 skill 不带 core，相对引用会断。</p>
         <p class="install-note en-only">Whichever way you install, <code>core/</code> must come along (Option 1 includes it) — a single skill without core breaks the relative references.</p>
       </div>

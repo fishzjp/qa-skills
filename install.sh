@@ -169,7 +169,7 @@ for d in "${SKILL_DIRS[@]}"; do
     ln -s "$src" "$dst"
   else
     cp -R "$src" "$dst"
-    # 从本地工作副本安装时 cp -R 会带入运行缓存（npm 面已用 files 否定模式排除，这里对齐）——不装进宿主
+    # 从本地工作副本安装时 cp -R 会带入运行缓存——不装进宿主
     find "$dst" -type d -name '__pycache__' -exec rm -rf {} + 2>/dev/null || true
   fi
 done

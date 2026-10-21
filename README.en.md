@@ -31,7 +31,7 @@ Install testing methods, workflows and output standards into your agent: **12 te
 
 ### 1. Install all skills
 
-Run in a terminal with Node.js / npm providing `npx`:
+Install from GitHub through [skills.sh](https://skills.sh) (requires Node.js for `npx`; no npm login needed):
 
 ```bash
 npx skills add fishzjp/qa-skills --skill '*'
@@ -63,15 +63,16 @@ Confirm that your host reads this directory. `./install.sh --auto` selects the f
 | skills.sh | Re-run the full installation command | Use skills.sh's removal flow and select the entries |
 | `install.sh` copy | Run `git pull`, then repeat the original install command | `./uninstall.sh --target <original-directory>` |
 | `install.sh --target <dir> --link` symlinks | `git pull` updates the content; keep the repository at its original path | Same as above; keep the source repository until removal |
-| dsh plugin | Use the dsh plugin manager | Use the dsh plugin manager |
 
 For symlink installs, `qa-skills.VERSION` is an installation-time snapshot; `git pull` does not refresh it. Re-run the installer to update the marker.
 
-**dsh plugin** (requires DeepSeek Harness; `web` is an example profile):
+**DeepSeek Harness (dsh)**: clone the repository, then install directly into its skills directory:
 
 ```bash
-dsh plugin --profile web add dsh-qa-skills
+./install.sh --target ~/.dsh/skills
 ```
+
+To upgrade, run `git pull` and repeat the command. Distribution through the npm plugin package has ended. Existing plugin users should remove the old plugin with the dsh plugin manager before installing this way to avoid duplicate loading.
 
 **Manual copy**: copy every top-level directory under `skills/` into the host's skills directory, keeping each skill alongside `core/`. Check ownership before replacing existing directories. Manual copying does not create a version marker.
 
@@ -166,7 +167,7 @@ The product ships Markdown instructions, relative references and helper scripts 
 |------|------|------|
 | Claude Code | `~/.claude/skills/` or project `.claude/skills/` | Primary target; installation records available |
 | Shared directory | `~/.agents/skills/` | First installer candidate; reading depends on the host |
-| DeepSeek Harness (dsh) | Plugin, `~/.agents/skills/` or `~/.dsh/skills/` | End-to-end validation recorded |
+| DeepSeek Harness (dsh) | `~/.agents/skills/` or `~/.dsh/skills/` | End-to-end validation recorded |
 | Codex | skills.sh was verified at `~/.agents/skills/`; the repository installer also accepts `~/.codex/skills/` | Installation and reference paths checked; output gains not systematically evaluated |
 | Other Agent Skills hosts | Follow their installation rules | Structurally adaptable; triggering, loading and quality need separate checks |
 
@@ -238,7 +239,7 @@ skills/       Product: each skill's SKILL.md, references/, templates/, scripts/
 examples/     Real On/Off outputs and interpretation guide
 scripts/      Architecture and repository validators
 tests/        Product / gate regression tests and installer smoke checks
-.dsh/         dsh plugin and configuration
+.dsh/         Legacy dsh plugin compatibility code and configuration
 assets/       README / social images and landing-page fonts
 install.sh    Repository installer (copy or symlink)
 uninstall.sh  Corresponding uninstaller

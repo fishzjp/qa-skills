@@ -4,9 +4,6 @@
   "description": "DeepSeek Harness (dsh) plugin: 12 testing skills (requirement analysis, test strategy, case writing/review, E2E/API automation, exploratory, regression, bug analysis, flaky/suite-reliability governance, pipeline orchestration, project QA memory) + shared core knowledge base — a full QA pipeline as agent skills.",
   "type": "module",
   "main": ".dsh/plugins/qa-skills.js",
-  "scripts": {
-    "prepublishOnly": "python3 scripts/validate_skills.py && python3 scripts/validate_repo.py"
-  },
   "exports": {
     ".": "./.dsh/plugins/qa-skills.js",
     "./.dsh/plugins/qa-skills.js": "./.dsh/plugins/qa-skills.js",
@@ -43,5 +40,6 @@
     "bundle": {
       "patch": "./.dsh/cordis.patch.yml"
     }
-  }
+  },
+  "private": true
 }

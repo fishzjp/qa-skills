@@ -5,6 +5,10 @@
 
 ## [Unreleased]
 
+### 分发调整
+
+- **停止 npm 插件包分发（2026-10-21）**：公开安装入口统一为 skills.sh（从 GitHub 获取技能）与 Git 仓库安装脚本；中英文 README、官网与 `llms.txt` 的 dsh 安装方式改为 `./install.sh --target ~/.dsh/skills`，补充旧插件迁移提示。发版改为 GitHub / skills 市场 / 官网三面同步，不再要求 npm 发布或补版；`package.json` 设为 `private: true` 并移除发布钩子，保留版本校验与历史 dsh 兼容元数据。
+
 ### 新增（补记 0.9.0 tag 后合入）
 
 - **落地页双语切换（ac89a31，tag v0.9.0 之后合入，本条补记）**：导航栏 EN/中文 胶囊按钮，zh-only/en-only 静态成对（**勘误：静态对实测 169 对**，另 3 处 JS 分支文案合计 172——原提交信息"静态成对（172/172）"口径不准）CSS 按 html.lang-en 显隐——无 JS 与爬虫见完整中文页不损 SEO；head 最早脚本渲染前定语言（?lang= → localStorage qa-lang → 默认 zh，同步换 title/meta description）；切换走整页跳转保证动画按新语言重测量。

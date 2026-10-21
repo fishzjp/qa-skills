@@ -8,7 +8,9 @@
 npx skills add fishzjp/qa-skills --skill '*'
 ```
 
-Requires Node.js / npm for npx. Choose the host and scope in the installer. Always include `core/`; single-skill installation without it breaks relative references. Keep skill directories and core as siblings. Only the repository's install.sh writes qa-skills.VERSION; other methods do not require that marker. After installation, refresh the host's skills or start a new session and check which skill and core files were actually loaded.
+Requires Node.js for npx; skills.sh fetches the skills from GitHub and needs no npm login. Choose the host and scope in the installer. Always include `core/`; single-skill installation without it breaks relative references. Keep skill directories and core as siblings. Only the repository's install.sh writes qa-skills.VERSION; other methods do not require that marker. After installation, refresh the host's skills or start a new session and check which skill and core files were actually loaded.
+
+For installation without Node.js, clone https://github.com/fishzjp/qa-skills.git and run ./install.sh. DeepSeek Harness (dsh) users can run ./install.sh --target ~/.dsh/skills from the clone. Upgrade with git pull and repeat the installer command. Distribution through the npm plugin package has ended; existing plugin users should remove the old plugin with the dsh plugin manager before migrating to Git installation to avoid duplicate loading.
 
 ## Use
 

@@ -31,7 +31,7 @@
 
 ### 1. 安装全部 skill
 
-在终端执行（需要 Node.js / npm 提供 `npx`）：
+通过 [skills.sh](https://skills.sh) 从 GitHub 安装（需要 Node.js 提供 `npx`，无需登录 npm）：
 
 ```bash
 npx skills add fishzjp/qa-skills --skill '*'
@@ -63,15 +63,16 @@ cd qa-skills
 | skills.sh | 重跑全量安装命令 | 使用 skills.sh 的移除功能，按其提示选择条目 |
 | `install.sh` 拷贝 | `git pull` 后重跑原安装命令 | `./uninstall.sh --target <原安装目录>` |
 | `install.sh --target <目录> --link` 软链 | `git pull` 即更新内容；保留仓库原路径 | 同上；卸载前保留源仓库 |
-| dsh 插件 | 由 dsh 插件管理器升级 | 由 dsh 插件管理器移除 |
 
 软链安装的 `qa-skills.VERSION` 是安装时快照，`git pull` 不会重写它；要刷新标记可重跑安装脚本。
 
-**dsh 插件**（需先安装 DeepSeek Harness，`web` 为示例 profile）：
+**DeepSeek Harness（dsh）**：克隆仓库后，直接安装到 dsh 的技能目录：
 
 ```bash
-dsh plugin --profile web add dsh-qa-skills
+./install.sh --target ~/.dsh/skills
 ```
+
+升级时 `git pull` 后重跑同一命令。项目已停止通过 npm 插件包分发；已有插件用户请先用 dsh 的插件管理器移除旧插件，再按上述方式安装，避免重复装载。
 
 **手动复制**：把 `skills/` 下全部一级目录复制到宿主 skills 目录，保持各 skill 与 `core/` 同级；已有同名目录时先核对归属，避免覆盖其他内容。手动复制不生成版本标记。
 
@@ -166,7 +167,7 @@ Bug 条目 / 回归清单 → 测试报告
 |------|------|------|
 | Claude Code | `~/.claude/skills/` 或项目 `.claude/skills/` | 主要适配对象；安装形态有实测记录 |
 | 共享目录 | `~/.agents/skills/` | 安装脚本优先候选；是否读取由宿主决定 |
-| DeepSeek Harness（dsh） | 插件，或 `~/.agents/skills/`、`~/.dsh/skills/` | 有端到端实测记录 |
+| DeepSeek Harness（dsh） | `~/.agents/skills/` 或 `~/.dsh/skills/` | 有端到端实测记录 |
 | Codex | skills.sh 安装实测落在 `~/.agents/skills/`；仓库脚本也可指定 `~/.codex/skills/` | 安装与引用路径验证；尚未系统评测产出效果 |
 | 其他支持 Agent Skills 的宿主 | 依其安装规则 | 结构可适配，触发、装载与产出质量需分别验证 |
 
@@ -238,7 +239,7 @@ skills/       产品：各 skill 的 SKILL.md、references/、templates/、scrip
 examples/     真实 On/Off 产出与判读指南
 scripts/      架构与仓库校验器
 tests/        产品脚本、守门脚本回归测试与安装器冒烟
-.dsh/         dsh 插件与配置
+.dsh/         历史 dsh 插件兼容代码与配置
 assets/       README / 社交图片与落地页字体
 install.sh    仓库安装器（拷贝或软链）
 uninstall.sh  对应卸载器
