@@ -22,7 +22,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {os: ubuntu-latest, python: '3.9'}
+          # Python 3.9 binaries are available for 24.04, not ubuntu-latest's 26.04.
+          - {os: ubuntu-24.04, python: '3.9'}
           - {os: ubuntu-latest, python: '3.12'}
           - {os: ubuntu-latest, python: '3.14'}
           - {os: macos-latest, python: '3.12'}
