@@ -14,6 +14,9 @@ engineering:
           - "install.sh"
           - "uninstall.sh"
           - "package.json"
+          - "requirements-dev.txt"
+          - ".editorconfig"
+          - ".gitattributes"
           - ".gitignore"
 
 documentation:

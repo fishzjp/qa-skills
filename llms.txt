@@ -12,9 +12,13 @@ Requires Node.js for npx; skills.sh fetches the skills from GitHub and needs no 
 
 For installation without Node.js, clone https://github.com/fishzjp/qa-skills.git and run ./install.sh. DeepSeek Harness (dsh) users can run ./install.sh --target ~/.dsh/skills from the clone. Upgrade with git pull and repeat the installer command. Distribution through the npm plugin package has ended; existing plugin users should remove the old plugin with the dsh plugin manager before migrating to Git installation to avoid duplicate loading.
 
+For repeatable Git installation, clone a published tag or check out a full commit, then run install.sh. main may contain changes after the latest Release. The current installer stages updates, preflights all units and rolls back handled failures; it records commit/method/dirty provenance. Stop host reads while updating; preserve transaction backups after a hard interruption. From the clone, run `python3 scripts/verify_install.py <actual-host-skills-directory>` to check payload and core references. This is not a host-triggering or model-quality check.
+
 ## Use
 
 Ask: "Test this requirement: {description + repository or local path}." Supply a regression baseline and, before execution, the test environment and account configuration. Use qa for the full pipeline, or a stage skill for a focused task. Stage outputs are saved to files for resumption. Clarification, execution strategy, bug classification and budget decisions have human checkpoints.
+
+Try the account-free fictional room-booking walkthrough at https://github.com/fishzjp/qa-skills/tree/main/examples/first-task for a first document task. It is separate from the private evaluation pool and does not claim executed results.
 
 ## Skills
 
@@ -45,6 +49,9 @@ The README reports historical injected On/Off experiments, not a new evaluation 
 - [Shared core index](https://github.com/fishzjp/qa-skills/blob/main/skills/core/SKILL.md): shared standards, methods, templates and helper scripts.
 - [Releases](https://github.com/fishzjp/qa-skills/releases): milestone gain-matrix snapshots.
 - [Changelog](https://github.com/fishzjp/qa-skills/blob/main/CHANGELOG.md): version history and corrections.
-- [Contributing](https://github.com/fishzjp/qa-skills/blob/main/CONTRIBUTING.md): architecture rules and public checks.
+- [Contributing](https://github.com/fishzjp/qa-skills/blob/main/CONTRIBUTING.en.md): architecture rules and public checks.
 - [GitHub repository](https://github.com/fishzjp/qa-skills): source, issues and discussions.
 - [Website](https://fishzjp.github.io/qa-skills/): product overview and installation.
+
+- [Support](https://github.com/fishzjp/qa-skills/blob/main/.github/SUPPORT.md): help, reporting and response limits.
+- [Security](https://github.com/fishzjp/qa-skills/security/advisories/new): private vulnerability reports; email fishzjp@foxmail.com is also available.

@@ -1,8 +1,20 @@
 version: 2
 updates:
-  # 项目不再发布 npm 包；仅维护 GitHub Actions 依赖
+  # 项目不再发布 npm 包；维护 Actions 与公开检查所需的 Python 依赖
   - package-ecosystem: "github-actions"
     directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    labels:
+      - dependencies
+  - package-ecosystem: "pip"
+    directory: "/tests/browser"
     schedule:
       interval: "monthly"
     labels:

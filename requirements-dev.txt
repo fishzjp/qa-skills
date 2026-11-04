@@ -1,0 +1,2 @@
+# Public checks use unittest. Model-evaluation dependencies remain local.
+PyYAML==6.0.3

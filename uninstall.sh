@@ -20,14 +20,14 @@ done
 }
 SRC_ROOT="$REPO_ROOT/skills"
 
-usage() { sed -n '2,7p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
+usage() { sed -n '2,7p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-1}"; }
 
 TARGET="" AUTO=false
 while [ $# -gt 0 ]; do
   case "$1" in
     --target) TARGET="${2:?--target 需要一个目录参数}"; shift 2 ;;
     --auto) AUTO=true; shift ;;
-    -h|--help) usage ;;
+    -h|--help) usage 0 ;;
     *) echo "未知参数: $1" >&2; usage ;;
   esac
 done
@@ -73,6 +73,19 @@ if [ ! -f "$TARGET/qa-skills.VERSION" ]; then
   read -r -p "继续卸载? [y/N] " ans || ans=""
   case "${ans:-N}" in [yY]) ;; *) echo "已取消。"; exit 0 ;; esac
 fi
+
+# Share the installer's lock so an uninstall cannot race an upgrade.
+LOCK_DIR="$TARGET/.qa-skills.lock"
+mkdir "$LOCK_DIR" 2>/dev/null || {
+  echo "❌ Another install/uninstall is running, or recovery is required: $LOCK_DIR" >&2
+  exit 1
+}
+cleanup_lock() { rm -f "$LOCK_DIR/pid"; rmdir "$LOCK_DIR"; }
+trap cleanup_lock EXIT
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
+printf '%s\n' "$$" > "$LOCK_DIR/pid"
 
 echo "将从 $TARGET 卸载："
 for d in "${SKILL_DIRS[@]}"; do
