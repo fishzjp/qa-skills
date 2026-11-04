@@ -48,7 +48,7 @@ def serve_directory(directory):
 
 def main():
     with server() as base, sync_playwright() as pw:
-        browser = pw.chromium.launch()
+        browser = pw.chromium.launch(channel=os.environ.get('QA_BROWSER_CHANNEL') or None)
         context = browser.new_context(permissions=["clipboard-read", "clipboard-write"],
                                       reduced_motion="reduce", viewport={"width": 1280, "height": 900})
         page = context.new_page()
@@ -72,18 +72,28 @@ def main():
         assert page.locator("html").get_attribute("lang") == "zh-CN"
         assert "utm_source=smoke" in page.url
         # Reduced-motion preference must avoid hiding the page behind reveal animations.
-        for width in (1280, 390):
-            page.set_viewport_size({"width": width, "height": 900})
-            page.goto(base + "/en/", wait_until="networkidle")
-            assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), f"Horizontal overflow at {width}px"
-            page.locator("#install").scroll_into_view_if_needed()
-            assert page.locator(".copy-btn").first.is_visible()
-            page.locator(".copy-btn").first.focus()
-            assert page.evaluate("document.activeElement.classList.contains('copy-btn')")
-            shots = os.environ.get("QA_SITE_SCREENSHOT_DIR")
-            if shots:
-                out = Path(shots); out.mkdir(parents=True, exist_ok=True)
-                page.screenshot(path=str(out / f"website-en-{width}.png"), full_page=True)
+        for language, route in [('zh', '/'), ('en', '/en/')]:
+            for width in (1280, 768, 390, 320):
+                page.set_viewport_size({"width": width, "height": 900})
+                page.goto(base + route, wait_until="networkidle")
+                assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), f"Horizontal overflow: {language} at {width}px"
+                assert page.locator('.nav-lang').is_visible()
+                assert page.locator('.directory-grid a').count() == 12
+                assert page.locator('.hero-shortcuts a').count() == 3
+                assert page.locator('h1').count() == 1
+                page.locator("#install").scroll_into_view_if_needed()
+                assert page.locator(".copy-btn").first.is_visible()
+                page.locator(".copy-btn").first.focus()
+                assert page.evaluate("document.activeElement.classList.contains('copy-btn')")
+                shots = os.environ.get("QA_SITE_SCREENSHOT_DIR")
+                if shots:
+                    out = Path(shots); out.mkdir(parents=True, exist_ok=True)
+                    page.screenshot(path=str(out / f"website-{language}-{width}.png"), full_page=True)
+                    page.evaluate('scrollTo(0, 0)')
+                    page.screenshot(path=str(out / f"hero-{language}-{width}.png"))
+        page.goto(base + '/?lang=en&utm_source=legacy#skills', wait_until='networkidle')
+        assert '/en/?utm_source=legacy#skills' in page.url
+        assert page.locator('html').get_attribute('lang') == 'en'
         assert not errors, errors
         context.close()
         nojs = browser.new_context(java_script_enabled=False, viewport={"width": 1280, "height": 900})

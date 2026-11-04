@@ -12,6 +12,8 @@
 | 2 | skills 市场（`npx skills add fishzjp/qa-skills --skill '*'`） | GitHub 源，随 tag/release 可见 | 随 #1 自动获得 | ✅ |
 | 3 | 官网落地页 | GitHub Pages | push 中命中 `pages.yml` 的 paths（页面、分享图、字体、`llms.txt` 或 workflow）时触发 | 条件自动 |
 
+官网发布后的收录验证与曝光跟踪见 [网站 SEO 维护](.github/website-seo.md)。
+
 dsh 用户与其他宿主统一从 GitHub 安装：`./install.sh --target ~/.dsh/skills`；升级为 `git pull` 后重跑同一安装命令。迁移前通过 dsh 插件管理器移除旧插件，避免重复装载。
 
 `package.json` 保留版本校验与历史插件兼容元数据，必须保持 `private: true`，不再作为 npm 发布清单使用。`npx` 仅用于运行第三方 skills.sh 安装器，技能内容来自 GitHub，无需发布本项目的 npm 包。

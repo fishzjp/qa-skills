@@ -25,7 +25,7 @@
 
 Install testing methods, workflows and output standards into your agent: **12 testing skills + the shared `core/` knowledge base**. Run the full pipeline or use a single stage for cases, reviews, API tests or flaky-test governance. Browse the [five real On/Off comparisons](./examples/) first to see the outputs.
 
-[Quick start](#quick-start) · [Choose a skill](#choose-a-skill) · [How it works](#how-it-works) · [Compatibility and scope](#compatibility-and-scope) · [Measured results](#measured-results) · [Documentation](#documentation)
+[Website & skill directory](https://fishzjp.github.io/qa-skills/en/) · [Quick start](#quick-start) · [Choose a skill](#choose-a-skill) · [How it works](#how-it-works) · [Compatibility and scope](#compatibility-and-scope) · [Measured results](#measured-results) · [Documentation](#documentation)
 
 ## Quick start
 
