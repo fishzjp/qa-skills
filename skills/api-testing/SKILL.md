@@ -57,7 +57,8 @@ class Client:
 
     def get(self, path, **kw):  return self.request("GET", path, **kw)
     def post(self, path, **kw): return self.request("POST", path, **kw)
-    # put / delete / patch 同理扩展
+    def put(self, path, **kw):  return self.request("PUT", path, **kw)
+    def delete(self, path, **kw): return self.request("DELETE", path, **kw)
 
 def login(user: str, password: str) -> str:
     """按项目实际登录接口实现（如 POST /login 换 token）——占位，勿直接照抄"""
@@ -76,7 +77,22 @@ def client():
     base_url = os.environ["API_BASE_URL"]          # 环境与账号不硬编码，走环境变量
     token = login(os.environ["API_USER"], os.environ["API_PASSWORD"])
     return Client(base_url, token)
+
+@pytest.fixture
+def created_resources(client):
+    """用例自建数据的统一清理通道（core/methods/data-factory.md 第 3 节）。
+    创建即登记资源路径，teardown 逐个删除；删除失败只记 warning——既不让清理噪音
+    改变用例结论，也不静默吞掉清理本身的问题。"""
+    paths = []
+    yield paths
+    for path in paths:
+        try:
+            client.delete(path)
+        except Exception as exc:      # 清理失败不阻塞后续用例，但必须留痕
+            print(f"WARN cleanup failed: {path}: {exc}")
 ```
+
+> 每条用例创建数据后 `created_resources.append("/api/v1/coupons/{id}")` 即自动纳入清理；没有这一步的脚本按下方的交付核对第 1 条判不合规。
 
 > 敏感信息（账号/Token/环境地址）一律环境变量注入，不进代码仓库（与 `automated-e2e-testing` 的 constants 约定一致）。
 
@@ -111,6 +127,15 @@ def client():
 - 断言三件套：状态码 + 业务码 + 响应体关键字段（不写"只断言 200"的弱断言）
 - 测试数据自建自清理（setup 创建 / teardown 删除），不依赖执行顺序；数据模板须守字段约束与跨字段业务规则（长度不顶格、组合逐格回检）——规则与两个实测自伤案例的单一源在 `../core/methods/data-factory.md` 第 1 节（此时加载）
 - 依赖前序状态的用例显式在前置里造数，不假设库里有数据（造数模式：`../core/methods/data-factory.md`——makeX 构造器 / 造数通道三选一 / 前缀隔离）
+
+#### 交付前核对（硬约束，与 `test-case-writing` 的维度核对同级）
+
+脚本交出前逐条核对本接口面的四项执行纪律——**不适用的项必须写明理由**（"环境没有多账号"是待办不是理由）；规则写在 §2 的必测点表里会被当成参考，写成交付判据才会被执行：
+
+1. **自清理**：每条用例创建的数据都有对应 teardown（`created_resources` fixture / 批量扫尾），删除失败记 warning 不静默
+2. **鉴权三态**：无 Token / 过期或错误 Token / 他人资源 id 越权，各至少 1 条——直接调接口，不看前端表现
+3. **幂等**：有业务键的写接口至少 1 条重复提交用例（结果不变、不重复创建）
+4. **并发**：有共享可变资源的写接口至少 1 条并发写用例（无互相覆盖、无中间态）
 
 ### 4. 运行与结果
 
