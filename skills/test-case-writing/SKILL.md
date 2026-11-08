@@ -186,7 +186,7 @@ description: "Write manual test cases (markmap) from docs, bugs or code — code
 
 ### 阶段五：定稿 + Schema 抽取
 
-1. **可读性自检**：**执行 `../core/executability.md` 全部检查项**（零上下文新人复述、术语表核对、正文零代码自检、执行性确认、判定时限核查），不是可选参考
+1. **可读性自检**：**执行 `../core/executability.md` 全部检查项**（零上下文新人复述、术语表核对、正文零代码自检、执行性确认、判定时限核查），不是可选参考。随后跑机械闸门 `python3 ../core/scripts/case_lint.py {项目}/测试用例_markmap.md`——**退出码 1 即定稿阻断**：按报错行号修复后重跑；告警逐条人工确认（判断类检查不设机器裁决权，见 `../core/executability.md` 第 6 节）。只有用户明确要求紧凑格式时才加 `--allow-compact`。
 2. **Schema 抽取**：从 markmap 单向抽取 `测试用例.schema.yaml`——字段定义、抽取规则与 YAML 转义纪律统一在 `../core/schema-extraction.md`（此时加载）；抽取后运行 `../core/scripts/validate_schema.py 测试用例_markmap.md 测试用例.schema.yaml --strategy {策略路径}/测试策略.md` 校验（YAML 合法性 + TC 编号一致性 + 占位符检查 + **风险覆盖门禁**：Risk Map 中全部 Critical/High 风险须被 ≥1 条用例的 risk_ref 反向覆盖，零覆盖即门禁失败；上游无策略文件则省略该参数。有代码仓库可叠加 `--repo-root` 抽查 code_refs 指涉真实性）
 3. 文件命名：`{项目名}/测试用例_markmap.md` + `{项目名}/测试用例.schema.yaml`
 

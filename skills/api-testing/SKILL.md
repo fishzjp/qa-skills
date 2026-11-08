@@ -86,6 +86,7 @@ def client():
 
 - 从 OpenAPI 文档提取：接口清单、参数表（必填/类型/范围/默认值）、错误码、鉴权方式
 - 从用例 Schema 过滤：`automation.framework: api` 的用例，以及 `execution_model: dev-collab` 且 framework 非 manual 的用例 → 转换对象（test 名沿用 TC 编号：`test_TC_05_01_写入字段读回一致`；framework: manual 的 dev-collab 用例保持手动协作，不转）
+- 有 markmap 源文件时**先跑红线闸门** `python3 ../core/scripts/case_lint.py {用例markmap}`——错误级命中的用例不转（补齐或列遗留清单），防把占位符/不可判定预期翻成"能跑但没测对"的脚本
 - 环境未知 → 向用户索取（base URL、账号、是否可写生产旁路环境），**不确定就问，不猜接口行为**（提问格式与裁决落盘统一按 `../core/clarify-pattern.md`，场景用「执行确认」）
 
 ### 2. 用例设计（此时加载 `../core/testing-principles.md`，方法细节 `../core/methods/data-driven.md`）

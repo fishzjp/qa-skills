@@ -52,6 +52,8 @@ description: "Review existing test cases (legacy, others', AI) for coverage and 
 
 - 占位符数据（`{xxx}`、"某数据"）、虚构入口、模糊判定（"功能正常"）、异步无时限、断言超强度、前置不可得无 TODO、正文代码内部、缺导读四件套
 
+先跑机械闸门再人工审查：`python3 ../core/scripts/case_lint.py {用例文件}`（错误级红线机器判定并给出行号，告警级供人工确认；退出码 1 必须先修复，否则人工审查建立在不合规底稿上）。
+
 ### 4. 正确性审查（有 PRD/代码时）
 
 - 用例预期结果与 PRD 规则 / 代码实现是否一致（静态裁决：代码为准，见 `../core/evidence.md`）

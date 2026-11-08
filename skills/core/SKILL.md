@@ -29,7 +29,7 @@ description: "qa-skills shared knowledge base — dependency, NOT triggerable: e
 | `pipeline-integration.md` | 流水线集成与非交互运行约定（⏸ 检查点降级、产物落盘、退出码语义、CI 触发分层与失败回流） |
 | `report-template.md` | 测试报告模板 |
 | `methods/*.md` | 设计方法细则（边界 / 数据驱动 / 权限 / 状态机）与执行层造数模式（数据工厂） |
-| `scripts/*.py` | Schema 校验器、类型信号扫描器 |
+| `scripts/*.py` | Schema 校验器、类型信号扫描器、用例红线检查器 |
 
 ## When NOT to Use
 
