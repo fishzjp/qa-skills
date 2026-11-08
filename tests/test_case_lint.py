@@ -106,6 +106,18 @@ class StructuralRuleTests(unittest.TestCase):
         _, findings = run_lint(doc)
         self.assertIn("E0", codes(findings, "error"))
 
+    def test_duplicate_module_number_is_error(self):
+        """导读占用 `## 1.` 后正文模块又从 1 起编号——A/B 实测产出出现过的真实形态。"""
+        doc = make_doc(good_case(), preamble=PREAMBLE + "\n## 1. 导读续\n", module_title="## 1. 优惠券创建")
+        _, findings = run_lint(doc)
+        self.assertIn("E8", codes(findings, "error"))
+
+    def test_contiguous_module_numbers_pass(self):
+        doc = (make_doc(good_case()) +
+               "\n## 2. 第二个模块\n\n" + good_case(tc="TC-02-01"))
+        _, findings = run_lint(doc)
+        self.assertNotIn("E8", codes(findings, "error"))
+
 
 class ExecutabilityRuleTests(unittest.TestCase):
     def test_brace_placeholder_is_error(self):
@@ -164,6 +176,26 @@ class ExecutabilityRuleTests(unittest.TestCase):
         case = "- TC-01-01 券名称为空时提交按钮置灰 [P0]\n"
         _, findings = run_lint(make_doc(case))
         self.assertIn("E7", codes(findings, "error"))
+
+    def test_flat_field_form_is_recognised(self):
+        """字段与用例同缩进（弱模型常见扁平写法）不得误报 E7。"""
+        case = (
+            "- **TC-01-01 创建成功** [P0]\n"
+            "- 操作步骤: 1. 点击\"提交\"\n"
+            "- 预期结果: 列表新增该券\n"
+        )
+        _, findings = run_lint(make_doc(case))
+        self.assertNotIn("E7", codes(findings, "error"))
+
+    def test_bold_field_label_is_recognised(self):
+        """`- **操作步骤**:` 加粗标签与全角冒号不得误报 E7。"""
+        case = (
+            "- **TC-01-01 创建成功** [P0]\n"
+            "  - **操作步骤**：1. 点击\"提交\"\n"
+            "  - **预期结果**：列表新增该券\n"
+        )
+        _, findings = run_lint(make_doc(case))
+        self.assertNotIn("E7", codes(findings, "error"))
 
 
 class WarningTests(unittest.TestCase):

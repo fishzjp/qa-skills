@@ -19,6 +19,7 @@
     E5  正文占位符（{xxx} / <xxx> / 某数据）
     E6  正文出现代码内部（文件:行）
     E7  用例缺 操作步骤 / 预期结果（紧凑格式须显式 --allow-compact）
+    E8  一级模块编号 `## N.` 重复（导读占用模块编号时高发）
     W1  预期结果不可判定（"是否正确处理 / 正常显示 / 视情况"类）
     W2  异步预期缺判定时限（有"自动/异步/生效"而无时间词）
     W3  预期结果非唯一（"或"表述，应拆条）
@@ -148,8 +149,22 @@ def find_placeholders(text):
     return hits
 
 
+def split_field(body):
+    """解析 "- 操作步骤: xxx" / "- **操作步骤**：xxx" / 同缩进扁平写法。
+
+    弱模型产出的字段行形态不统一（加粗标签、全角冒号、与用例同缩进），
+    只认一种写法会把"写了但没识别到"误报成 E7。
+    """
+    s = re.sub(r"^[\s*_]+", "", body.strip())
+    for name in FIELD_NAMES:
+        if s.startswith(name):
+            rest = re.sub(r"^[\s*_]*[：:]?[\s*_]*", "", s[len(name):])
+            return name, rest.strip()
+    return None, None
+
+
 def parse_cases(masked_lines):
-    """解析用例块与模块上下文；返回 (cases, errors_at_parse)。"""
+    """解析用例块与模块上下文；返回 (cases, 首条用例行号)。"""
     cases = []
     current_module = None
     current = None
@@ -184,19 +199,14 @@ def parse_cases(masked_lines):
 
         if current is not None:
             field_m = BULLET_RE.match(line)
-            if field_m and len(field_m.group(1)) > current.indent:
-                body = field_m.group(2).strip()
-                for name in FIELD_NAMES:
-                    if body.startswith(name):
-                        rest = body[len(name):].lstrip("：: ").strip()
-                        current.fields.setdefault(name, rest)
-                        break
-                else:
-                    # 字段的续行
-                    if current.fields:
-                        last = list(current.fields)[-1]
-                        current.fields[last] += " " + body
-            elif field_m and len(field_m.group(1)) <= current.indent:
+            if not field_m:
+                continue
+            name, rest = split_field(field_m.group(2))
+            if name:
+                # 同缩进也接受（扁平写法），缩进更深则为常规写法
+                current.fields.setdefault(name, rest)
+            else:
+                # 既不是字段也不是用例的兄弟项：该用例块结束
                 current = None
 
     return cases, first_case_line
@@ -225,16 +235,41 @@ def lint(text):
             "导读四件套缺失：" + "、".join(missing) + "（core/case-format.md 第 1 节）",
         ))
 
-    # E2/E3/E4 编号
+    # E8 一级模块编号重复（导读若也用 `## N.` 编号，正文模块会重号）
+    module_lines = {}
+    in_appendix = False
+    for idx, line in enumerate(masked, start=1):
+        h = HEADING_RE.match(line)
+        if not h or h.group(1) != "##":
+            continue
+        if is_appendix_heading(h.group(2).strip()):
+            in_appendix = True
+            continue
+        if in_appendix:
+            continue
+        m = MODULE_HEADING_RE.match(line)
+        if not m:
+            continue
+        n = int(m.group(1))
+        module_lines.setdefault(n, []).append(idx)
+    for n, where in sorted(module_lines.items()):
+        if len(where) > 1:
+            findings.append(Finding(
+                "E8", "error", where[1],
+                "一级模块编号 `## %d.` 重复（首次出现于第 %d 行）——导读不要占用模块编号，"
+                "模块编号从 1 起连续" % (n, where[0]),
+            ))
+
+    # E2/E3/E4 编号（E2/E4 按根因归并：一处编号方案错误会命中整批用例，
+    # 逐条报 26 行只会淹没信息，反而降低可操作性）
     seen = {}
     untagged = 0
+    bad_format = []
+    mismatch = {}
     for case in cases:
         canon = TC_CANON_RE.match(case.tc)
         if not canon:
-            findings.append(Finding(
-                "E2", "error", case.line,
-                "TC 编号 %s 不符合 TC-{模块号}-{序号}（core/case-format.md 第 3 节）" % case.tc,
-            ))
+            bad_format.append((case.line, case.tc))
         if case.tc in seen:
             findings.append(Finding(
                 "E3", "error", case.line,
@@ -243,18 +278,26 @@ def lint(text):
         else:
             seen[case.tc] = case.line
         if canon and case.module is not None and int(canon.group(1)) != case.module:
-            findings.append(Finding(
-                "E4", "error", case.line,
-                "TC 编号 %s 的模块号 %s 与所在模块 `## %d.` 不符" % (
-                    case.tc, canon.group(1), case.module),
-            ))
+            mismatch.setdefault((case.module, int(canon.group(1))), []).append(case.line)
         if not PRIORITY_RE.search(case.text):
             untagged += 1
 
+    if bad_format:
+        samples = "、".join(t for _, t in bad_format[:3])
+        findings.append(Finding(
+            "E2", "error", bad_format[0][0],
+            "%d 条用例的编号不符合 TC-{模块号}-{序号}（如 %s）（core/case-format.md 第 3 节）" % (
+                len(bad_format), samples),
+        ))
+    for (heading_mod, tc_mod), lines in sorted(mismatch.items()):
+        findings.append(Finding(
+            "E4", "error", lines[0],
+            "模块 `## %d.` 下 %d 条用例的编号模块号是 %d，与所在模块不符"
+            "（一级模块从 `## 1.` 起连续编号，导读不占编号）" % (heading_mod, len(lines), tc_mod),
+        ))
+
     # E5/E6/E7 + W1/W2/W3 逐条用例
     for case in cases:
-        body_fields = [case.fields.get(n, "") for n in ("前置条件", "操作步骤", "预期结果", "验证方式")]
-        steps_text = case.fields.get("操作步骤", "")
         expected_text = case.fields.get("预期结果", "")
 
         for field_name in FIELD_NAMES:
@@ -303,19 +346,24 @@ def _excerpt(text, limit=40):
 
 
 def check_required_fields(cases, allow_compact):
-    """E7：缺 操作步骤/预期结果（紧凑格式须显式声明）。"""
+    """E7：缺 操作步骤/预期结果（紧凑格式须显式声明）。按缺项归并，避免整批刷屏。"""
     findings = []
     if allow_compact:
         return findings
+    buckets = {}
     for case in cases:
-        missing = [n for n in ("操作步骤", "预期结果") if not case.fields.get(n)]
+        missing = tuple(n for n in ("操作步骤", "预期结果") if not case.fields.get(n))
         if missing:
-            findings.append(Finding(
-                "E7", "error", case.line,
-                "%s 缺少 %s——紧凑格式须显式 --allow-compact"
-                "（用户明确要求或信息密度优先时，core/case-format.md 第 4 节）" % (
-                    case.tc, "、".join(missing)),
-            ))
+            buckets.setdefault(missing, []).append(case)
+    for missing, group in sorted(buckets.items(), key=lambda kv: -len(kv[1])):
+        lines = "、".join(str(c.line) for c in group[:3])
+        more = "…" if len(group) > 3 else ""
+        findings.append(Finding(
+            "E7", "error", group[0].line,
+            "%d 条用例缺少 %s（行 %s%s）——紧凑格式须显式 --allow-compact"
+            "（用户明确要求或信息密度优先时，core/case-format.md 第 4 节）" % (
+                len(group), "、".join(missing), lines, more),
+        ))
     return findings
 
 
