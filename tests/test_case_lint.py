@@ -274,6 +274,45 @@ class CliContractTests(unittest.TestCase):
             self.assertEqual(payload["findings"][0]["code"], "E2")
 
 
+class BookkeepingTests(unittest.TestCase):
+    """E9：审查记录账目必须与实际一致（模型产出实测 8/8 不符，人写示例精确）。"""
+
+    def _doc(self, record):
+        return make_doc(good_case()) + "\n## 审查记录\n" + record
+
+    def test_matching_counts_pass(self):
+        doc = self._doc("- 审查前：1 条用例，1 个模块\n- 审查后：1 条用例，1 个模块\n")
+        _, findings = run_lint(doc)
+        self.assertNotIn("E9", codes(findings, "error"))
+
+    def test_after_count_mismatch_is_error(self):
+        doc = self._doc("- 审查前：5 条用例，1 个模块\n- 审查后：5 条用例，1 个模块\n")
+        _, findings = run_lint(doc)
+        self.assertIn("E9", codes(findings, "error"))
+
+    def test_module_count_mismatch_is_error(self):
+        doc = self._doc("- 审查后：1 条用例，4 个模块\n")
+        _, findings = run_lint(doc)
+        self.assertIn("E9", codes(findings, "error"))
+
+    def test_arithmetic_mismatch_is_error(self):
+        doc = self._doc("- 审查前：3 条用例，1 个模块\n- 新增：1 条\n- 审查后：1 条用例，1 个模块\n")
+        _, findings = run_lint(doc)
+        self.assertIn("E9", codes(findings, "error"))
+
+    def test_no_review_record_skips_check(self):
+        _, findings = run_lint(make_doc(good_case()))
+        self.assertNotIn("E9", codes(findings, "error"))
+
+    def test_two_records_only_last_is_checked(self):
+        """写时自审 + 独立审查两段共存时，前一段的旧数字不算错。"""
+        doc = (make_doc(good_case())
+               + "\n## 审查记录\n- 审查后：1 条用例，1 个模块\n"
+               + "\n## 审查记录（test-case-review 2026-11-08）\n- 审查后：1 条用例，1 个模块\n")
+        _, findings = run_lint(doc)
+        self.assertNotIn("E9", codes(findings, "error"))
+
+
 class RealCorpusDiscriminationTests(unittest.TestCase):
     """examples/ 是真实评测产出：框架产出应过闸门，无框架产出应被判红。"""
 

@@ -20,6 +20,7 @@
     E6  正文出现代码内部（文件:行）
     E7  用例缺 操作步骤 / 预期结果（紧凑格式须显式 --allow-compact）
     E8  一级模块编号 `## N.` 重复（导读占用模块编号时高发）
+    E9  审查记录自报的用例数 / 模块数与实际不符，或新增数与前后计数算不平
     W1  预期结果不可判定（"是否正确处理 / 正常显示 / 视情况"类）
     W2  异步预期缺判定时限（有"自动/异步/生效"而无时间词）
     W3  预期结果非唯一（"或"表述，应拆条）
@@ -337,12 +338,56 @@ def lint(text):
                         case.tc, _excerpt(expected_text)),
                 ))
 
+    check_bookkeeping(raw_lines, cases, findings)
     return cases, findings, untagged
 
 
 def _excerpt(text, limit=40):
     text = re.sub(r"\s+", " ", text).strip()
     return text if len(text) <= limit else text[: limit - 1] + "…"
+
+
+def check_bookkeeping(raw_lines, cases, findings):
+    """E9：审查记录的自报账目必须与实际一致（模型实测 9/10 产出自报数不符）。
+
+    只认**最后一段**审查记录（文件可同时有写时自审与独立审查两段，前一段的数字
+    按设计就是旧的）；节内到文件末尾，避免正文里的同形句子误伤。纯算术判定。
+    """
+    start = None
+    for i, line in enumerate(raw_lines):
+        h = HEADING_RE.match(line)
+        if h and "审查记录" in h.group(2):
+            start = i
+    if start is None:
+        return
+    section = "\n".join(raw_lines[start:])
+    actual = len(cases)
+    actual_modules = len({c.module for c in cases if c.module is not None})
+
+    claimed_after = [int(x) for x in re.findall(r"审查后[：:]\s*(\d+)\s*条", section)]
+    claimed_before = [int(x) for x in re.findall(r"审查前[：:]\s*(\d+)\s*条", section)]
+    claimed_added = [int(x) for x in re.findall(r"新增[：:]\s*(\d+)\s*条", section)]
+    claimed_modules = [int(x) for x in re.findall(r"(\d+)\s*个模块", section)]
+
+    if claimed_after and claimed_after[0] != actual:
+        findings.append(Finding(
+            "E9", "error", start + 1,
+            "审查记录自报「审查后 %d 条」，实际正文 %d 条——账目须按实际计数填写，不得估写" % (
+                claimed_after[0], actual),
+        ))
+    if claimed_modules and claimed_modules[0] != actual_modules:
+        findings.append(Finding(
+            "E9", "error", start + 1,
+            "审查记录自报「%d 个模块」，实际 %d 个——模块数按 `## N.` 计数" % (
+                claimed_modules[0], actual_modules),
+        ))
+    if claimed_before and claimed_added and claimed_after:
+        if claimed_before[0] + claimed_added[0] != claimed_after[0]:
+            findings.append(Finding(
+                "E9", "error", start + 1,
+                "审查记录算术不平：审查前 %d + 新增 %d ≠ 审查后 %d" % (
+                    claimed_before[0], claimed_added[0], claimed_after[0]),
+            ))
 
 
 def check_required_fields(cases, allow_compact):
@@ -372,7 +417,9 @@ def render(path, cases, findings, untagged):
     warns = [f for f in findings if f.severity == "warn"]
     out = []
     out.append("用例红线检查 — %s" % path)
-    out.append("用例 %d 条 / 错误 %d / 告警 %d" % (len(cases), len(errors), len(warns)))
+    modules = len({c.module for c in cases if c.module is not None})
+    out.append("用例 %d 条 / 模块 %d 个 / 错误 %d / 告警 %d" % (
+        len(cases), modules, len(errors), len(warns)))
     for f in sorted(findings, key=lambda x: (x.severity != "error", x.line, x.code)):
         out.append("%-3s 行 %-4d %s" % (f.code, f.line, f.message))
     if untagged:

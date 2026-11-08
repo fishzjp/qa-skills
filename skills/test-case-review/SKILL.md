@@ -77,6 +77,7 @@ description: "Review existing test cases (legacy, others', AI) for coverage and 
 - 高风险未覆盖：{风险点 + 建议用例，无代码证据则标注}
 - 可执行性修复：{占位符/时限/入口 等 XX 处}
 - 闸门结果：case_lint 错误 {修订前} → {修订后}（最终须为 0）
+- 计数须与正文实算一致：审查前/后条数与模块数由闸门结果填写（E9 会机械核对，估写即报错）
 ```
 
 ### 6. 交付
