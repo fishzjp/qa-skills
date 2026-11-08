@@ -312,7 +312,8 @@ def check_required_fields(cases, allow_compact):
         if missing:
             findings.append(Finding(
                 "E7", "error", case.line,
-                "%s 缺少 %s——紧凑格式须用户明确要求（core/case-format.md 第 4 节）" % (
+                "%s 缺少 %s——紧凑格式须显式 --allow-compact"
+                "（用户明确要求或信息密度优先时，core/case-format.md 第 4 节）" % (
                     case.tc, "、".join(missing)),
             ))
     return findings
