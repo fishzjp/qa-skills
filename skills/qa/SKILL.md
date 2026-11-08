@@ -64,13 +64,13 @@ description: "End-to-end QA entry: \"test this feature fully\" orchestrates requ
 
 - 阶段 1：`需求模型.md` 存在
 - 阶段 2：`测试策略.md` 存在且 `../core/scripts/validate_schema.py` V1–V5 通过（type_scope 含 handoff/blocked 轴或外部执行器时，对应 `专项移交_{轴}_{日期}.yaml` 应已生成）
-- 阶段 3：用例双轨落盘且 `../core/scripts/validate_schema.py {用例文件}`（用例 Schema 单文件校验）通过
-- 阶段 4：用例文件末尾含 **test-case-review 落款**的审查记录节「## 审查记录（test-case-review …）」且 Schema 已重新抽取校验——阶段 3 写时自审的同名「审查记录」节不算数（那是阶段 3 的完成标志，区分两者防续跑时静默跳过独立审查）
+- 阶段 3：用例双轨落盘、`../core/scripts/case_lint.py {用例markmap}` 无错误（退出码 0）且 `../core/scripts/validate_schema.py {用例文件}`（用例 Schema 单文件校验）通过
+- 阶段 4：用例文件末尾含 **test-case-review 落款**的审查记录节「## 审查记录（test-case-review …）」、修订后 `case_lint.py` 仍无错误且 Schema 已重新抽取校验——阶段 3 写时自审的同名「审查记录」节不算数（那是阶段 3 的完成标志，区分两者防续跑时静默跳过独立审查）
 - 阶段 5：`测试报告_{来源}_{日期}.md`（自动路径）或 `手动执行记录_{日期}.md`（手动路径）落盘
 - 阶段 6：`Bug条目_{日期}.md` 中转文件落盘；无 Bug 则在 `{项目}/流水线状态.md` 追加一行「阶段 6：无已确认 Bug，跳过」（跳过/未决等流水线状态统一记此文件——硬规则 3"状态全在文件"的续跑凭据，缺该行视为阶段未到）
 - 阶段 7：`回归清单_{日期}.md` 落盘；无代码变更则在 `{项目}/流水线状态.md` 追加一行「阶段 7：无变更，跳过」
 
-产物缺失/损坏则从该阶段重跑。
+产物缺失/损坏则从该阶段重跑。**存量产物因规则升级不达标**（如新闸门引入前写的用例文件）→ 先按 `test-case-review` 补齐至闸门通过再续跑，不得跳过、也不得把闸门关掉。
 
 ### 3. 按流水线顺序调度阶段 skill
 
