@@ -63,6 +63,7 @@ description: "Review existing test cases (legacy, others', AI) for coverage and 
 
 - **直接在用例文件中修订**：补缺失用例（追加 TC 编号）、删除冗余、改正错误断言、补可执行性要素（导读区/时限/入口路径/具体数据）；新增与改写的用例**同样执行 `../core/case-format.md` 格式硬约束**（四段式/协作五段式、TC 编号、正文零代码内部）
 - 修订后**重新抽取 Schema**（字段与转义规则见 `../core/schema-extraction.md`），并用 `../core/scripts/validate_schema.py` 复验通过后再落盘
+- **修订后重跑红线闸门** `python3 ../core/scripts/case_lint.py {用例文件}`——修订会新增/改写用例，只有第二轮闸门通过才算审查闭环（只跑审查前那一次 = 没验证自己的修订没引入新问题）
 - 文件末尾追加审查记录：
 
 ```markdown
@@ -75,6 +76,7 @@ description: "Review existing test cases (legacy, others', AI) for coverage and 
 - 错误（已改）：TC-xx…（{问题→修正}）
 - 高风险未覆盖：{风险点 + 建议用例，无代码证据则标注}
 - 可执行性修复：{占位符/时限/入口 等 XX 处}
+- 闸门结果：case_lint 错误 {修订前} → {修订后}（最终须为 0）
 ```
 
 ### 6. 交付
