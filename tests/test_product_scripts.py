@@ -739,3 +739,87 @@ class RiskLevelAttributionTests(unittest.TestCase):
             md = self._strategy_with_refs(td, {"reliability": "R1"})
             errors, _ = validate_schema.validate_strategy(md)
             self.assertTrue([e for e in errors if "V4-终态 reliability" in e], errors)
+
+
+class StrategyBlockStyleAxisTests(unittest.TestCase):
+    """V1 接受块式轴书写（2026-11-09）。
+
+    背景：单行 flow 是推荐写法，但块式（`performance:` 换行写 decision/scanned）是 yaml
+    的自然形态，语义完全等价。此前块式 = 轴"视同未决策"，实测 60/86 条 V1 错误属此类。
+    本组用例钉住：块式被接受、语义检查一条不放松、两形态混用不误判。
+    """
+
+    BLOCK_EXCLUDE = "\n".join([
+        "      decision: exclude",
+        '      rationale: "无信号；无代码仓库"',
+        "      scanned:",
+        '        - "需求信号未命中(G)"',
+        '        - "S 级复核(S)"',
+    ])
+
+    FLOW_EXCLUDE = ('{ decision: exclude, rationale: "无信号；无代码仓库", '
+                    'scanned: ["需求信号未命中(G)", "S 级复核(S)"] }')
+
+    AXES = ("performance", "security_business", "reliability", "concurrency",
+            "compatibility", "accessibility", "visual", "i18n", "migration",
+            "contract_integration")
+
+    def _doc(self, td, overrides=None, block_axes=("performance",), extra_flow=""):
+        overrides = overrides or {}
+        parts = ["test_strategy:", "  type_scope:"]
+        for ax in self.AXES:
+            if ax in overrides:
+                parts.append("    %s:" % ax)
+                parts.append(overrides[ax])
+            elif ax in block_axes:
+                parts.append("    %s:" % ax)
+                parts.append(self.BLOCK_EXCLUDE)
+            elif ax == "security_business":
+                parts.append('    security_business: { decision: include, depth: standard, '
+                             'signals: ["多角色"] }')
+            else:
+                parts.append("    %s: %s" % (ax, self.FLOW_EXCLUDE))
+        parts += ["  depth_budget:", "    full_axes: []"]
+        if extra_flow:
+            parts.append(extra_flow)
+        md = td / "测试策略.md"
+        md.write_text("# 测试策略\n\n```yaml\n" + "\n".join(parts) + "\n```\n", encoding="utf-8")
+        return md
+
+    def test_block_style_axis_is_accepted(self):
+        """块式写的轴必须被解析并通过 V1–V5。"""
+        with tempfile.TemporaryDirectory() as td:
+            md = self._doc(Path(td))
+            errors, _ = validate_schema.validate_strategy(md)
+            self.assertEqual(errors, [])
+            self.assertEqual(validate_schema.main([str(md)]), 0)
+
+    def test_block_style_still_enforces_signals(self):
+        """块式 include 但无 signals/risk_refs → 仍报 V2（语义不放松）。"""
+        with tempfile.TemporaryDirectory() as td:
+            md = self._doc(Path(td), overrides={
+                "reliability": "      decision: include\n      depth: standard"})
+            errors, _ = validate_schema.validate_strategy(md)
+            self.assertTrue([e for e in errors if e.startswith("V2 reliability")], errors)
+
+    def test_block_style_still_enforces_exclude_scanned(self):
+        """块式 exclude 无 scanned → 仍报 V3（语义不放松）。"""
+        with tempfile.TemporaryDirectory() as td:
+            md = self._doc(Path(td), overrides={
+                "reliability": '      decision: exclude\n      rationale: "无信号；无代码仓库"'})
+            errors, _ = validate_schema.validate_strategy(md)
+            self.assertTrue([e for e in errors if e.startswith("V3 reliability")], errors)
+
+    def test_duplicate_axis_across_styles_flagged(self):
+        """同一轴同时写 flow 与块式 → 重复轴报错（不得静默取其一）。"""
+        with tempfile.TemporaryDirectory() as td:
+            md = self._doc(Path(td), overrides={"reliability": self.BLOCK_EXCLUDE},
+                           extra_flow='    reliability: { decision: exclude, rationale: "重复；无代码仓库", '
+                                      'scanned: ["需求信号未命中(G)"] }')
+            errors, _ = validate_schema.validate_strategy(md)
+            self.assertTrue([e for e in errors if "出现 2 次" in e], errors)
+
+    def test_block_list_values_parsed(self):
+        """块式 `- item` 列表必须被 list_items 识别。"""
+        self.assertEqual(validate_schema.list_items(["(G)", "(S)"]), ["(G)", "(S)"])
+        self.assertEqual(validate_schema.list_items('["(G)", "(S)"]'), ["(G)", "(S)"])

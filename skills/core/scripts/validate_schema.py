@@ -19,7 +19,8 @@
 
     python3 validate_schema.py 测试策略.md
 
-  V1 全轴必答——十轴齐全且 decision ∈ include/exclude/handoff（每轴单行 flow 风格）；
+  V1 全轴必答——十轴齐全且 decision ∈ include/exclude/handoff（单行 flow 或块式均接受，
+     推荐 flow；同一轴重复声明报错）；
      depth ∈ full/standard/light（"不测"是范围决策不是深度值：功能域 include: false，
      类型域 decision: exclude/handoff）
   V2 include 挂证据——signals 或 risk_refs 非空（无证据纳入 = 过测）
@@ -349,8 +350,6 @@ DEPTHS = {"full", "standard", "light"}
 NON_WEB_API_RE = re.compile(
     r"非\s*[-/·、\s]*[Ww]eb|非\s*[-/·、\s]*API|无\s*[-/·、\s]*[Ww]eb|无\s*[-/·、\s]*API"
     r"|不是\s*[Ww]eb|不是\s*API|命令行|CLI|桌面|离线|纯库|无网络|无界面")
-AXIS_LINE_RE = {axis: re.compile(rf"^[ \t]*{axis}:[ \t]*\{{(.+)\}}[ \t]*$", re.M)
-                for axis in TYPE_AXES}
 FLOW_LINE_RE = re.compile(r"^[ \t]*(\w+):[ \t]*\{(.+)\}[ \t]*$", re.M)
 
 
@@ -363,14 +362,139 @@ def parse_flow_map(inner):
 
 
 def list_items(val):
-    if not val or not val.startswith("["):
+    """列表取值：兼容 flow 的 `[a, b]` 原文与块式解析出的 list 对象。"""
+    if isinstance(val, (list, tuple)):
+        return [str(x).strip().strip("\"'") for x in val if str(x).strip()]
+    if not val or not isinstance(val, str) or not val.startswith("["):
         return []
     return [x.strip().strip("\"'") for x in val[1:-1].split(",") if x.strip()]
 
 
 def scalar(kv, key):
-    """取标量值并剥引号。"""
-    return kv.get(key, "").strip().strip("\"'").strip()
+    """取标量值并剥引号（块式列表值折叠为逗号连接，供包含式判断使用）。"""
+    val = kv.get(key, "")
+    if isinstance(val, (list, tuple)):
+        return ", ".join(str(x) for x in val).strip().strip("\"'").strip()
+    return str(val).strip().strip("\"'").strip()
+
+
+FUNCTIONAL_AXES = ["functional", "boundary", "permission", "state",
+                   "data_consistency", "regression"]
+KNOWN_AXES = set(TYPE_AXES) | set(FUNCTIONAL_AXES)
+CONTAINER_RE = re.compile(r"^([ \t]*)(functional_scope|type_scope):[ \t]*$", re.M)
+
+
+def _parse_block_axes(block):
+    """解析块式（多行）轴条目：functional_scope / type_scope 容器下的直接子键。
+
+    块式是 yaml 的自然写法，语义与单行 flow 完全等价（2026-11-09 起接受）：
+        performance:
+          decision: exclude
+          rationale: "无 SLA"
+          scanned:
+            - "需求信号未命中(G)"
+    返回 [(轴名, kv)]；子键缩进以容器后首个非空行为准，遇同级或更浅缩进即结束。
+    """
+    lines = block.split("\n")
+    out = []
+    i = 0
+    while i < len(lines):
+        m = CONTAINER_RE.match(lines[i])
+        if not m:
+            i += 1
+            continue
+        container_indent = len(m.group(1))
+        i += 1
+        child_indent = None
+        while i < len(lines):
+            line = lines[i]
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                i += 1
+                continue
+            indent = len(line) - len(line.lstrip())
+            if indent <= container_indent:
+                break  # 容器结束
+            if child_indent is None:
+                child_indent = indent
+            if indent != child_indent:
+                i += 1
+                continue
+            cm = re.match(r"^([\w-]+):\s*(.*)$", stripped)
+            if not cm:
+                i += 1
+                continue
+            name, inline = cm.group(1), cm.group(2).strip()
+            if inline.startswith("{"):
+                # 容器内的单行 flow 条目：由 parse_axis_entries 的 flow 分支统一处理，
+                # 这里跳过，否则同一轴会被计两次（flow + block → 误报重复轴）
+                i += 1
+                continue
+            kv = {}
+            if inline:
+                # 紧凑标量形态 `performance: exclude` 是合法写法；但 `performance: 已排除（…）`
+                # 这类散文是决策摘要/说明行，不是轴声明——忽略它，避免把摘要块误判成重复轴
+                # （2026-09-01 minreg 存档里就有一份这样的文档：旧解析看不见摘要行、新解析误报）。
+                if inline.strip().strip("\"'") not in ("include", "exclude", "handoff"):
+                    i += 1
+                    continue
+                kv["decision"] = inline
+                i += 1
+                out.append((name, kv))
+                continue
+            i += 1
+            # 收集本轴的子行（更深缩进）：`key: value`、`key:` + `- item` 列表
+            current_key = None
+            while i < len(lines):
+                s2 = lines[i]
+                st2 = s2.strip()
+                if not st2 or st2.startswith("#"):
+                    i += 1
+                    continue
+                ind2 = len(s2) - len(s2.lstrip())
+                if ind2 <= child_indent:
+                    break
+                if st2.startswith("- ") or st2 == "-":
+                    if current_key:
+                        item = st2[1:].strip().strip("'\"")
+                        prev = kv.get(current_key)
+                        kv[current_key] = (prev if isinstance(prev, list) else []) + [item]
+                    i += 1
+                    continue
+                km = re.match(r"^([\w-]+):\s*(.*)$", st2)
+                if km:
+                    k, v = km.group(1), km.group(2).strip()
+                    if v:
+                        kv[k] = v
+                        current_key = None
+                    else:
+                        kv[k] = []
+                        current_key = k
+                i += 1
+            out.append((name, kv))
+    return out
+
+
+def parse_axis_entries(block):
+    """两域 scope 的轴条目统一视图：flow 与块式都接受，返回 {轴名: {"kv", "styles"}}。
+
+    styles 出现多次 = 同一轴重复决策（V1 报错）；kv 合并两类写法的键值。
+    """
+    entries = {}
+    for m in FLOW_LINE_RE.finditer(block):
+        name = m.group(1)
+        if name not in KNOWN_AXES:
+            continue
+        e = entries.setdefault(name, {"kv": {}, "styles": []})
+        e["kv"].update(parse_flow_map(m.group(2)))
+        e["styles"].append("flow")
+    for name, kv in _parse_block_axes(block):
+        if name not in KNOWN_AXES:
+            continue
+        e = entries.setdefault(name, {"kv": {}, "styles": []})
+        e["kv"].update(kv)
+        e["styles"].append("block")
+    return entries
 
 
 def extract_scope_blocks(text):
@@ -427,17 +551,16 @@ def validate_strategy(path, repo_root=None):
     def has_mark(items, marks):
         return any(mk in s for s in items for mk in marks)
 
+    entries = parse_axis_entries(block)
     for axis in TYPE_AXES:
-        matches = list(AXIS_LINE_RE[axis].finditer(block))
-        if not matches:
-            errors.append(f"V1 轴缺失或非单行 flow 风格: {axis}"
-                          f"（应形如 {axis}: {{ decision: include, depth: standard, signals: [...] }}）")
+        entry = entries.get(axis)
+        if not entry:
+            errors.append(f"V1 轴缺失: {axis}（十轴必答；单行 flow 与块式书写均可，推荐 flow）")
             continue
-        if len(matches) > 1:
-            errors.append(f"V1 {axis}: 出现 {len(matches)} 次——每轴只允许一行决策，重复轴请合并")
-        m = matches[0]
-        kv = parse_flow_map(m.group(1))
-        decision = kv.get("decision", "")
+        if len(entry["styles"]) > 1:
+            errors.append(f"V1 {axis}: 出现 {len(entry['styles'])} 次——每轴只允许一处决策，重复轴请合并")
+        kv = entry["kv"]
+        decision = scalar(kv, "decision")
         if decision not in ("include", "exclude", "handoff"):
             errors.append(f"V1 {axis}: decision='{decision or '(缺)'}' 不在 include/exclude/handoff")
             continue
@@ -488,15 +611,10 @@ def validate_strategy(path, repo_root=None):
     # V4：depth 枚举 + full 档逐行统计（functional_scope + type_scope 两域合并）
     full_axes = []
     critical_low_axes = []  # include 且挂 Critical 风险但 depth<full 的轴名——终态留痕候选
-    seen_names = set()
-    for m in FLOW_LINE_RE.finditer(block):
-        name, inner = m.group(1), m.group(2)
-        if name in seen_names:
-            continue  # 重复轴已由 V1 报错；统计以首处为准
-        seen_names.add(name)
-        kv = parse_flow_map(inner)
+    for name, entry in entries.items():
+        kv = entry["kv"]
         depth = scalar(kv, "depth")
-        decision = kv.get("decision", "")
+        decision = scalar(kv, "decision")
         # depth 缺省警示：类型域 include 轴必须显式声明档位，否则绕过 full_axes/预算审计链；
         # exclude/handoff 轴按 schema 约定本就不写 depth（"不测"是范围决策），不告警防误伤
         if name in TYPE_AXES and not depth and decision not in ("exclude", "handoff"):

@@ -40,7 +40,7 @@ test_strategy:
     state:             { include: true, depth: standard, rationale: "券状态流转多分支" }
     data_consistency:  { include: true, depth: standard, rationale: "库存与订单跨表一致" }
     regression:        { include: true, depth: standard, rationale: "存量功能回归基线" }
-  type_scope:                  # 类型域：十轴全轴必答，每轴单行 flow 风格（校验器按行解析）
+  type_scope:                  # 类型域：十轴全轴必答，每轴一处决策（推荐单行 flow；块式同样可解析）
     performance:        { decision: include, depth: full,     signals: ["PRD-4.2 SLA", "order_service.go:88"], risk_refs: [R3], executor: k6, execution_status: blocked, todo: "向运维索取独立压测环境", handoff_ref: "专项移交_性能_20260901.yaml" }   # 该文件须真实存在（V5 核验）
     security_business:  { decision: include, depth: standard, signals: ["多角色", "内部信号:permission≥standard"] }
     reliability:        { decision: include, depth: standard, signals: ["retry: pay_service.go:41"] }
@@ -61,7 +61,7 @@ test_strategy:
 
 字段口径：`signals` 引用需求章节 / `文件:行` / 矩阵内部信号；`scanned` 为 exclude 的 G+S 双清单（项尾标 (G)/(S)）；`executor` 缺省视为 agent，非 agent（k6 / locust 等）必须带 `handoff_ref`；`execution_status` ∈ ready / blocked / done，exclude 轴省略。深度档位**只取三值**：full（逐格全覆盖）/ standard（主干+重点异常）/ light（抽样+冒烟）——"不测"不是深度而是范围决策：功能域写 `include: false`（挂 rationale），类型域写 `decision: exclude` 或 `handoff`，均须挂理由（校验器会拒绝 depth 里出现其他值）。
 
-> **格式硬约束（防弱模型格式漂移）**：type_scope **每轴必须写成一行** flow 风格，形如 `performance: { decision: include, depth: standard, signals: ["..."] }`——**禁止**把一个轴拆成 decision / depth / signals 多行块式（校验器按行解析，块式 = 校验失败 = 该轴视同未决策）。写之前先照抄上一行的形状。依据：弱模型实测近半数样本出现块式漂移致解析失败，决策内容本身无恙——纯格式损耗。
+> **书写形态（推荐单行 flow）**：type_scope 每轴写成一行 flow 最稳，形如 `performance: { decision: include, depth: standard, signals: ["..."] }`；**块式（`performance:` 换行写 decision / rationale / scanned 列表）同样被校验器接受**，语义等价。两种形态都遵守同一条硬约束：**每轴只允许一处决策**（同一轴写两遍 = V1 重复轴报错；决策摘要里不要再用 `轴名: 散文` 形式重复声明）。依据：块式此前会被判"视同未决策"，实测占全部 V1 报错的约七成而决策内容本身无误——纯格式损耗，已在校验器侧消除。
 
 ## 工作流
 
@@ -114,7 +114,7 @@ test_strategy:
 
 ### 8. 落盘与交付
 
-1. 写 `{项目}/测试策略.md`（Schema 结构 + Risk Map 内嵌；type_scope 每轴单行 flow 风格 + 足够性声明：逐轴档位动作清单与完成状态；开头一段**范围假设声明**：本策略限于系统级黑盒，单元/集成测试为开发侧职责，结论以此为前提）
+1. 写 `{项目}/测试策略.md`（Schema 结构 + Risk Map 内嵌；type_scope 每轴一处决策（推荐单行 flow）+ 足够性声明：逐轴档位动作清单与完成状态；开头一段**范围假设声明**：本策略限于系统级黑盒，单元/集成测试为开发侧职责，结论以此为前提）
 2. handoff 轴 / include+外部执行器 / blocked 轴 → 生成 `{项目}/专项移交_{轴}_{日期}.yaml` 移交包（目标、场景参数、阈值/验收口径）。**文件名中的 {轴} 用以下轴中文短名**（与矩阵轴一一对应；轴 1 全名"性能效率"文件名取"性能"）：性能 / 业务安全 / 可靠性 / 并发一致性 / 兼容性 / 无障碍 / 视觉一致性 / 国际化 / 迁移与升级 / 契约与集成，如 `专项移交_性能_20260901.yaml`——执行侧（api-testing 等）按中文名 glob 消费，用英文轴 id 会断链
 3. **校验后交付**：`python3 ../core/scripts/validate_schema.py {项目}/测试策略.md`（V1–V5；有代码仓库时叠加 `--repo-root {仓库根}` 抽查各轴 signals 指涉真实性），错误清零再交付。**V5 会核验 `handoff_ref` 指向的移交包文件是否真实存在**（按策略文件所在目录解析；模板占位符 `{日期}` 视为未落盘）——先按第 2 条生成移交文件再校验，别只写文件名。注意：include 且挂 Critical 风险的轴若最终维持 full 以下档位，校验器要求该轴名出现在 budget_review 文本中——降档裁量必须留一行依据，不许无声消失
 4. 交付索引给下游（`test-case-writing`）：策略路径 + include 轴清单（用例型轴的 type/标签要求见矩阵第 12 节）+ 优先级映射要求
