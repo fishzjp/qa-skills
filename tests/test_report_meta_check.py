@@ -126,3 +126,30 @@ class ReportMetaCheckTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SourceRunAdhocTests(unittest.TestCase):
+    """source_run 枚举补 adhoc（2026-11-09 全流水线端到端实测暴露）。
+
+    用户即席触发的全量首轮（"帮我把这个功能完整测一遍"）不是 CI 流水线场景，
+    原三值枚举导致被迫错标 nightly-full。补 adhoc 后 Round 33 类场景可如实登记。
+    """
+
+    def test_adhoc_value_accepted(self):
+        errors, _ = self._check(ec="0", oi="0", extra="",
+                                source_run="adhoc")
+        self.assertFalse(any("source_run" in e for e in errors), errors)
+
+    def test_unknown_still_rejected(self):
+        errors, _ = self._check(ec="0", oi="0", extra="",
+                                source_run="manual-trigger")
+        self.assertTrue(any("source_run" in e for e in errors), errors)
+
+    def _check(self, ec, oi, extra, source_run="pr-smoke"):
+        text = GOOD.replace("source_run: pr-smoke", f"source_run: {source_run}") \
+                   .replace("exit_code_hint: 1", f"exit_code_hint: {ec}") \
+                   .replace("open_items: 2", f"open_items: {oi}")
+        if extra:
+            block_end = text.rindex("```")
+            text = text[:block_end] + extra + "\n" + text[block_end:]
+        return rmc.check(text)

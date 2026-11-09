@@ -101,7 +101,7 @@
 meta:
   project: {项目名}
   date: {日期}
-  source_run: {PR-smoke | nightly-full | release-gate}   # 触发分层对照 pipeline-integration 第 1 节
+  source_run: {pr-smoke | nightly-full | release-gate | adhoc}   # 触发分层对照 pipeline-integration 第 1 节；adhoc = 用户即席触发的非流水线场景
 summary:                       # ← §2 执行统计
   total: {总数}
   passed: {通过数}

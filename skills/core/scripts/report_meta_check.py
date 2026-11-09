@@ -31,7 +31,7 @@ from pathlib import Path
 
 FENCE_RE = re.compile(r"```ya?ml\n(.*?)```", re.S)
 META_MARKERS = ("meta:", "summary:", "exit_code_hint")
-SOURCE_RUNS = {"pr-smoke", "nightly-full", "release-gate"}
+SOURCE_RUNS = {"pr-smoke", "nightly-full", "release-gate", "adhoc"}
 EXIT_CODES = {0, 1, 2, 3}
 TRIAGE_KEYS = {"A", "B1", "B2", "C", "D", "U"}
 SEVERITIES = {"S0", "S1", "S2"}
@@ -131,9 +131,10 @@ def check(text):
 
     src = (_scalar(meta, "source_run") or "").strip()
     if src and src not in SOURCE_RUNS:
-        hint = ("——仍是模板占位符，须替换为 pr-smoke / nightly-full / release-gate 之一"
+        hint = ("——仍是模板占位符，须替换为实际触发层级"
                 if "{" in src or "|" in src else
-                "（触发分层口径见 pipeline-integration 第 1 节）")
+                "（合法值：pr-smoke / nightly-full / release-gate / adhoc——"
+                "adhoc = 用户即席触发的非流水线场景，实测 Round 33 全流水线端到端时被迫错标 nightly-full）")
         errors.append(f"E3 meta.source_run='{src}' 不在 {sorted(SOURCE_RUNS)}{hint}")
     ec = _scalar(block, "exit_code_hint")
     if ec is not None and ec != "" and _int(ec) not in EXIT_CODES:
