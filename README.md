@@ -23,7 +23,7 @@
 
 ---
 
-把测试方法、流程与产出标准装进你的 Agent：**12 个测试 skill + 一个共享知识库 `core/`**。可以跑完整流水线，也可以只写用例、审查、测接口或治理 flaky 测试。先看[五组真实产出对照](./examples/)，了解安装前后的区别。
+把测试方法、流程与产出标准装进你的 Agent：**13 个测试 skill + 一个共享知识库 `core/`**。可以跑完整流水线，也可以只写用例、审查、测接口或治理 flaky 测试。先看[五组真实产出对照](./examples/)，了解安装前后的区别。
 
 [官网与能力导航](https://fishzjp.github.io/qa-skills/) · [快速开始](#快速开始) · [选择 skill](#选择-skill) · [工作原理](#工作原理) · [兼容性与边界](#兼容性与边界) · [实测效果](#实测效果) · [文档导航](#文档导航)
 
@@ -139,6 +139,7 @@ python3 scripts/verify_install.py ~/.agents/skills
 | “这次改动应该回归哪些用例” | [regression-testing](./skills/regression-testing/SKILL.md) | diff → 功能 → 用例的分级回归清单 |
 | “用例时好时坏，重跑绿了能信吗” | [test-reliability](./skills/test-reliability/SKILL.md) | flaky 取证、隔离与重试策略、套件健康度 |
 | “沉淀 / 读取这个项目的测试经验” | [qa-memory](./skills/qa-memory/SKILL.md) | 项目 `.qa/` 知识库、索引与校验结果 |
+| “测这个 AI 功能（LLM / prompt / agent / RAG）” | [ai-system-testing](./skills/ai-system-testing/SKILL.md) | 风险建模、评测集与 rubric、容错断言、judge 校准、prompt 回归与注入面移交包 |
 
 `core/` 是以上 skill 共用的方法、模板与脚本，完整索引见 [core/SKILL.md](./skills/core/SKILL.md)，无需单独调用。
 
@@ -197,7 +198,7 @@ Bug 条目 / 回归清单 → 测试报告
 
 安装实测的日期与具体命令见 [RELEASING 安装矩阵](./RELEASING.md#安装形态实测矩阵触达安装面引用路径的发版必登记)。**安装成功、触发正确、产出质量是三个不同的验证层次。**
 
-**语言**：README 与官网提供中英文；12 个 skill 中 11 个的 description 为双语，`bug-analysis` 暂保留中文以避免已观测到的路由回退；skill 指令正文仍为中文。
+**语言**：README 与官网提供中英文；13 个 skill 中 12 个的 description 为双语，`bug-analysis` 暂保留中文以避免已观测到的路由回退；skill 指令正文仍为中文。
 
 **范围**：聚焦系统级黑盒测试的决策与执行。不提供单元 / 集成测试、移动真机自动化、前端组件测试、专业渗透 / SAST / 依赖扫描或混沌工程工具链；这些领域可作为风险信号或专项移交内容，不能把移交视为已经执行。
 

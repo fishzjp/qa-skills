@@ -21,6 +21,7 @@ sys.path.insert(0, str(REPO / "scripts"))
 
 import scan_signals       # noqa: E402
 import validate_schema    # noqa: E402
+import report_meta_check as rmc   # noqa: E402
 import validate_skills    # noqa: E402
 
 GOOD_CASES_YAML = """test_cases:
@@ -617,3 +618,376 @@ class MdLinkSuffixCoverageTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StrategyHandoffRefEntityTests(unittest.TestCase):
+    """V5 断链实体核验（2026-11-09 补）：handoff_ref 必须指向真实存在的移交包。
+
+    修复前形态：`handoff_ref` 只查非空，指向不存在的文件也全绿——"移交包写了名字
+    但没落盘"正是该门要防的失败形态。以下三条锚定：缺失红 / 存在绿 / 占位符红。
+    """
+
+    def _strategy(self, td, handoff_ref):
+        lines = [
+            "test_strategy:",
+            "  type_scope:",
+            f"    performance: {{ decision: handoff, executor: k6, handoff_ref: \"{handoff_ref}\", signals: [\"SLA\"] }}",
+        ]
+        for axis in ("security_business", "reliability", "concurrency", "compatibility",
+                     "accessibility", "visual", "i18n", "migration", "contract_integration"):
+            lines.append(
+                f'    {axis}: {{ decision: exclude, rationale: "无代码仓库，需求信号未命中", '
+                'scanned: ["需求信号(G)"] }')
+        lines += ["  depth_budget:", "    full_axes: []", ""]
+        md = td / "测试策略.md"
+        md.write_text("# 测试策略\n\n```yaml\n" + "\n".join(lines) + "```\n", encoding="utf-8")
+        return md
+
+    def test_missing_handoff_file_fails(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            md = self._strategy(td, "专项移交_性能_20260101.yaml")
+            self.assertEqual(validate_schema.main([str(md)]), 1)
+            errors, _ = validate_schema.validate_strategy(md)
+            self.assertTrue(any("handoff_ref 指向的文件不存在" in e for e in errors), errors)
+
+    def test_existing_handoff_file_passes(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            (td / "专项移交_性能_20260101.yaml").write_text("axis: performance\n", encoding="utf-8")
+            md = self._strategy(td, "专项移交_性能_20260101.yaml")
+            self.assertEqual(validate_schema.main([str(md)]), 0)
+
+    def test_template_placeholder_fails(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            md = self._strategy(td, "专项移交_性能_{日期}.yaml")
+            self.assertEqual(validate_schema.main([str(md)]), 1)
+
+    def test_glob_form_passes_when_file_present(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            (td / "专项移交_性能_20260101.yaml").write_text("axis: performance\n", encoding="utf-8")
+            md = self._strategy(td, "专项移交_性能_*.yaml")
+            self.assertEqual(validate_schema.main([str(md)]), 0)
+
+
+class RiskLevelAttributionTests(unittest.TestCase):
+    """风险等级归属的分组语义（2026-11-09 修）。
+
+    修复前形态：同一行出现多个风险编号时，该行出现的**最高**等级词被套给全部编号——
+    `R1/R2 为 Critical，R3 High` 会把 R3 也判成 Critical，进而让 V4-终态 对引用 R3 的
+    轴误报"Critical 降档未留痕"。实测 27/75 份真实产物命中该写法。
+    """
+
+    def test_grouped_ids_share_preceding_level(self):
+        levels = validate_schema.extract_risk_levels("R1/R2 为 Critical，R3 High 驱动功能域")
+        self.assertEqual(levels, {"R1": "Critical", "R2": "Critical", "R3": "High"})
+
+    def test_per_id_parenthesized_levels(self):
+        levels = validate_schema.extract_risk_levels("R1（Critical 20）> R2（High 16）")
+        self.assertEqual(levels, {"R1": "Critical", "R2": "High"})
+
+    def test_legend_line_without_ids_assigns_nothing(self):
+        self.assertEqual(validate_schema.extract_risk_levels(
+            "评分：Critical 20–25 / High 10–19 / Medium 4–9 / Low 1–3"), {})
+
+    def test_table_row_single_id_still_works(self):
+        self.assertEqual(validate_schema.extract_risk_levels("| R1 用户删除 | Critical | 待验证 |"),
+                         {"R1": "Critical"})
+
+    def _strategy_with_refs(self, td, refs_by_axis):
+        lines = ["test_strategy:", "  type_scope:"]
+        base = {
+            "performance": "exclude",
+        }
+        axes = ["performance", "reliability", "concurrency", "compatibility",
+                "accessibility", "visual", "i18n", "migration", "contract_integration"]
+        for ax in axes:
+            refs = refs_by_axis.get(ax)
+            if refs:
+                lines.append(f'    {ax}: {{ decision: include, depth: standard, '
+                             f'signals: ["x"], risk_refs: [{refs}] }}')
+            else:
+                lines.append(f'    {ax}: {{ decision: exclude, rationale: "无代码仓库，未命中", '
+                             'scanned: ["需求信号(G)"] }')
+        sb = refs_by_axis.get("security_business")
+        if sb:
+            lines.append(f'    security_business: {{ decision: include, depth: standard, '
+                         f'signals: ["越权"], risk_refs: [{sb}] }}')
+        else:
+            lines.append('    security_business: { decision: include, depth: standard, signals: ["越权"] }')
+        lines += ["  depth_budget:", "    full_axes: []", ""]
+        md = td / "测试策略.md"
+        riskmap = ("## Risk Map\n\n```yaml\nrisk:\n  id: R1\n  level: Critical\n```\n\n"
+                   "R1 越权 Critical；R2 为 High；R3 为 High\n\n")
+        md.write_text("# 测试策略\n\n" + riskmap + "```yaml\n" + "\n".join(lines) + "```\n",
+                      encoding="utf-8")
+        return md
+
+    def test_v4_terminal_not_triggered_by_high_ref(self):
+        """轴引用 High 风险（R2）维持 standard 时不得要求 budget_review 留痕。"""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            md = self._strategy_with_refs(td, {"reliability": "R2", "performance": "R3"})
+            errors, _ = validate_schema.validate_strategy(md)
+            self.assertFalse([e for e in errors if "V4-终态" in e], errors)
+
+    def test_v4_terminal_still_triggered_by_critical_ref(self):
+        """轴引用 Critical 风险（R1）维持 standard 时仍须留痕——门不能因修复而失效。"""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            md = self._strategy_with_refs(td, {"reliability": "R1"})
+            errors, _ = validate_schema.validate_strategy(md)
+            self.assertTrue([e for e in errors if "V4-终态 reliability" in e], errors)
+
+
+class StrategyBlockStyleAxisTests(unittest.TestCase):
+    """V1 接受块式轴书写（2026-11-09）。
+
+    背景：单行 flow 是推荐写法，但块式（`performance:` 换行写 decision/scanned）是 yaml
+    的自然形态，语义完全等价。此前块式 = 轴"视同未决策"，实测 60/86 条 V1 错误属此类。
+    本组用例钉住：块式被接受、语义检查一条不放松、两形态混用不误判。
+    """
+
+    BLOCK_EXCLUDE = "\n".join([
+        "      decision: exclude",
+        '      rationale: "无信号；无代码仓库"',
+        "      scanned:",
+        '        - "需求信号未命中(G)"',
+        '        - "S 级复核(S)"',
+    ])
+
+    FLOW_EXCLUDE = ('{ decision: exclude, rationale: "无信号；无代码仓库", '
+                    'scanned: ["需求信号未命中(G)", "S 级复核(S)"] }')
+
+    AXES = ("performance", "security_business", "reliability", "concurrency",
+            "compatibility", "accessibility", "visual", "i18n", "migration",
+            "contract_integration")
+
+    def _doc(self, td, overrides=None, block_axes=("performance",), extra_flow=""):
+        overrides = overrides or {}
+        parts = ["test_strategy:", "  type_scope:"]
+        for ax in self.AXES:
+            if ax in overrides:
+                parts.append("    %s:" % ax)
+                parts.append(overrides[ax])
+            elif ax in block_axes:
+                parts.append("    %s:" % ax)
+                parts.append(self.BLOCK_EXCLUDE)
+            elif ax == "security_business":
+                parts.append('    security_business: { decision: include, depth: standard, '
+                             'signals: ["多角色"] }')
+            else:
+                parts.append("    %s: %s" % (ax, self.FLOW_EXCLUDE))
+        parts += ["  depth_budget:", "    full_axes: []"]
+        if extra_flow:
+            parts.append(extra_flow)
+        md = td / "测试策略.md"
+        md.write_text("# 测试策略\n\n```yaml\n" + "\n".join(parts) + "\n```\n", encoding="utf-8")
+        return md
+
+    def test_block_style_axis_is_accepted(self):
+        """块式写的轴必须被解析并通过 V1–V5。"""
+        with tempfile.TemporaryDirectory() as td:
+            md = self._doc(Path(td))
+            errors, _ = validate_schema.validate_strategy(md)
+            self.assertEqual(errors, [])
+            self.assertEqual(validate_schema.main([str(md)]), 0)
+
+    def test_block_style_still_enforces_signals(self):
+        """块式 include 但无 signals/risk_refs → 仍报 V2（语义不放松）。"""
+        with tempfile.TemporaryDirectory() as td:
+            md = self._doc(Path(td), overrides={
+                "reliability": "      decision: include\n      depth: standard"})
+            errors, _ = validate_schema.validate_strategy(md)
+            self.assertTrue([e for e in errors if e.startswith("V2 reliability")], errors)
+
+    def test_block_style_still_enforces_exclude_scanned(self):
+        """块式 exclude 无 scanned → 仍报 V3（语义不放松）。"""
+        with tempfile.TemporaryDirectory() as td:
+            md = self._doc(Path(td), overrides={
+                "reliability": '      decision: exclude\n      rationale: "无信号；无代码仓库"'})
+            errors, _ = validate_schema.validate_strategy(md)
+            self.assertTrue([e for e in errors if e.startswith("V3 reliability")], errors)
+
+    def test_duplicate_axis_across_styles_flagged(self):
+        """同一轴同时写 flow 与块式 → 重复轴报错（不得静默取其一）。"""
+        with tempfile.TemporaryDirectory() as td:
+            md = self._doc(Path(td), overrides={"reliability": self.BLOCK_EXCLUDE},
+                           extra_flow='    reliability: { decision: exclude, rationale: "重复；无代码仓库", '
+                                      'scanned: ["需求信号未命中(G)"] }')
+            errors, _ = validate_schema.validate_strategy(md)
+            self.assertTrue([e for e in errors if "出现 2 次" in e], errors)
+
+    def test_block_list_values_parsed(self):
+        """块式 `- item` 列表必须被 list_items 识别。"""
+        self.assertEqual(validate_schema.list_items(["(G)", "(S)"]), ["(G)", "(S)"])
+        self.assertEqual(validate_schema.list_items('["(G)", "(S)"]'), ["(G)", "(S)"])
+
+
+class RiskLevelClauseBoundaryTests(unittest.TestCase):
+    """风险等级归属的句末边界（2026-11-09 补，Round 12 in-situ 暴露）。
+
+    失败形态：`… R5 / R6（Medium）。Critical 全落在三轴` —— 句号属于新句子，其 Critical
+    不得并给前文的 R5/R6（否则 Medium 风险被误判 Critical，误触 V4-终态）。
+    表格行以 `|` 分列，不属边界，不能被切断。
+    """
+
+    def test_sentence_end_resets_group(self):
+        self.assertEqual(validate_schema.extract_risk_levels(
+            "R5 / R6（Medium）。Critical 全落在 functional / permission 三轴"), {})
+
+    def test_grouping_across_ranking_sequence_still_works(self):
+        self.assertEqual(validate_schema.extract_risk_levels(
+            "R1 / R2（各 20 = Critical）> R4 / R3（High）> R5 / R6（Medium）。Critical 全落在三轴"),
+            {"R1": "Critical", "R2": "Critical", "R4": "High", "R3": "High"})
+
+    def test_table_row_not_split_by_pipe(self):
+        self.assertEqual(validate_schema.extract_risk_levels("| R1 用户删除 | Critical | 待验证 |"),
+                         {"R1": "Critical"})
+
+    def test_semicolon_resets_group(self):
+        self.assertEqual(validate_schema.extract_risk_levels("R1（Critical 20）；R2 待评估"), {"R1": "Critical"})
+
+
+class StrategyScopeAssumptionTests(unittest.TestCase):
+    """V6（告警级）范围假设声明（2026-11-09）。
+
+    背景：该声明是 SKILL.md 的强制交付项，却只有 39% 的真实产物会写（其余强制项 80–95%）
+    ——典型"有要求、无门、无结构"漏项。修法：schema 加 `scope_assumption` 字段（Agent 照抄），
+    校验器给告警级提醒。因属声明性文字、不影响决策正确性，定告警不阻断（退出码不受影响）。
+    """
+
+    AXES = ("performance", "security_business", "reliability", "concurrency",
+            "compatibility", "accessibility", "visual", "i18n", "migration",
+            "contract_integration")
+
+    def _doc(self, td, scope_line="", prose=""):
+        parts = ["test_strategy:"]
+        if scope_line:
+            parts.append(scope_line)
+        parts.append("  type_scope:")
+        for ax in self.AXES:
+            if ax == "security_business":
+                parts.append('    security_business: { decision: include, depth: standard, '
+                             'signals: ["越权面"] }')
+            else:
+                parts.append(f'    {ax}: {{ decision: exclude, rationale: "无信号；无代码仓库", '
+                             'scanned: ["需求信号未命中(G)", "S 级复核(S)"] }')
+        parts += ["  depth_budget:", "    full_axes: []"]
+        md = td / "测试策略.md"
+        md.write_text("# 测试策略\n\n" + prose + "\n```yaml\n" + "\n".join(parts) + "\n```\n",
+                      encoding="utf-8")
+        return md
+
+    def test_field_present_no_warning(self):
+        with tempfile.TemporaryDirectory() as td:
+            md = self._doc(Path(td), scope_line='  scope_assumption: "本策略限于系统级黑盒；单元/集成属开发侧"')
+            errors, warnings = validate_schema.validate_strategy(md)
+            self.assertEqual(errors, [])
+            self.assertFalse([w for w in warnings if "V6" in w], warnings)
+
+    def test_prose_equivalent_no_warning(self):
+        with tempfile.TemporaryDirectory() as td:
+            md = self._doc(Path(td), prose="> 范围假设：本策略限于系统级黑盒，单元/集成测试为开发侧职责。")
+            errors, warnings = validate_schema.validate_strategy(md)
+            self.assertFalse([w for w in warnings if "V6" in w], warnings)
+
+    def test_missing_warns_but_does_not_block(self):
+        with tempfile.TemporaryDirectory() as td:
+            md = self._doc(Path(td))
+            errors, warnings = validate_schema.validate_strategy(md)
+            self.assertTrue([w for w in warnings if "V6" in w], warnings)
+            self.assertEqual(errors, [])
+            # 告警不阻断：退出码仍为 0
+            self.assertEqual(validate_schema.main([str(md)]), 0)
+
+
+class ValidateSchemaModeHintTests(unittest.TestCase):
+    """单参数误投用例文件时给可执行提示（2026-11-09）。
+
+    触发场景：qa 阶段 3 的完成判据曾写成 `validate_schema.py {用例文件}`（单参数），
+    而校验器按参数个数分发模式——单参数走**测试策略**校验，于是对用例文件报
+    「未找到 type_scope」这种与用例无关的错。实测确认后：判据改为双参数，
+    同时让校验器在单参数喂入用例文件时给出「需要两个参数」的可执行提示。
+    """
+
+    def test_single_arg_on_case_file_hints_two_args(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            md = td / "测试用例_markmap.md"
+            md.write_text("# 用例\n## 1. 模块\n\n- TC-01-01 用例 [P1]\n"
+                          "  - 操作步骤: 1. 打开\n  - 预期结果: 成功\n", encoding="utf-8")
+            errors, _ = validate_schema.validate_strategy(md)
+            self.assertTrue(any("两个参数" in e for e in errors), errors)
+
+    def test_single_arg_on_non_case_file_keeps_original_message(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            md = td / "笔记.md"
+            md.write_text("# 随便一份笔记\n\n没有用例也没有 type_scope\n", encoding="utf-8")
+            errors, _ = validate_schema.validate_strategy(md)
+            self.assertTrue(any("type_scope" in e for e in errors), errors)
+            self.assertFalse(any("两个参数" in e for e in errors), errors)
+
+
+class DevinReviewRegressionTests(unittest.TestCase):
+    """Devin AI 评审在 PR #13 上指出的 5 个真实缺陷（2026-11-09 修复）。
+
+    这些是最终验收阶段由 CI 侧评审发现、并逐条复现确认的问题——
+    记录在此防止回退。
+    """
+
+    # ---- #1 前缀式等级行（`| Critical | R1 |`）必须被归属，否则覆盖门禁 fail-open ----
+    def test_prefix_level_row_is_attributed(self):
+        self.assertEqual(validate_schema.extract_risk_levels("| Critical | R1 |"), {"R1": "Critical"})
+
+    def test_prefix_level_does_not_cross_clause(self):
+        """前缀等级不得跨句污染——Round 13 的句界修复必须同时成立。"""
+        self.assertEqual(validate_schema.extract_risk_levels(
+            "R5 / R6（Medium）。Critical 全落在三轴"), {})
+
+    def test_grouped_and_prefix_forms_coexist(self):
+        self.assertEqual(validate_schema.extract_risk_levels("R1/R2 为 Critical，R3 High"),
+                         {"R1": "Critical", "R2": "Critical", "R3": "High"})
+
+
+class ReportMetaDevinRegressionTests(unittest.TestCase):
+    """report_meta_check 的 3 个漏检（Devin 评审指出）。"""
+
+    BASE = """```yaml
+meta:
+  project: x
+  date: 2026-01-01
+  source_run: pr-smoke
+summary:
+  total: 1
+  passed: 1
+  failed: 0
+  blocked: 0
+exit_code_hint: {ec}
+open_items: {oi}
+{extra}
+```"""
+
+    def _check(self, ec="0", oi="0", extra="bugs:\n  - {id: BUG-1, severity: S1, status: 新建}"):
+        import types
+        return rmc.check(self.BASE.format(ec=ec, oi=oi, extra=extra))[0]
+
+    def test_bug_without_id_rejected(self):
+        errors = self._check(extra="bugs:\n  - {severity: S1, status: 新建}")
+        self.assertTrue(any("缺 id" in e for e in errors), errors)
+
+    def test_unknown_triage_key_rejected(self):
+        errors = self._check(extra="bugs: []\ntriage_distribution:\n  UNKNOWN: 1")
+        self.assertTrue(any("未定义分类" in e for e in errors), errors)
+
+    def test_empty_exit_code_hint_rejected(self):
+        self.assertTrue(any("exit_code_hint" in e for e in self._check(ec="")), )
+
+    def test_placeholder_open_items_rejected(self):
+        self.assertTrue(any("open_items" in e for e in self._check(oi="{条数}")))
+
+    def test_valid_block_still_passes(self):
+        self.assertEqual(self._check(), [])

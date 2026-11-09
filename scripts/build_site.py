@@ -15,7 +15,7 @@ import shutil
 REPO = Path(__file__).resolve().parents[1]
 BASE = "https://fishzjp.github.io/qa-skills/"
 EN_TITLE = "qa-skills — Testing skills for AI coding agents"
-EN_DESCRIPTION = "12 open-source testing skills for Claude Code, Codex and AI agents. Design test cases, review coverage, automate Playwright and API tests. Explore examples and install."
+EN_DESCRIPTION = "13 open-source testing skills for Claude Code, Codex and AI agents. Design test cases, review coverage, automate Playwright and API tests. Explore examples and install."
 
 
 class LocalizedHTML(HTMLParser):

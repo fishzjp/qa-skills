@@ -18,6 +18,11 @@ from build_site import build
 from playwright.sync_api import sync_playwright
 
 REPO = Path(__file__).resolve().parents[2]
+# 站点目录卡的期望数量从安装单元推导，不写死数字：加/删 skill 时这里自动跟随
+# （2026-11-09 教训：硬编码 12 在新增第 13 个 skill 后让浏览器冒烟在 CI 静默变红，
+#  而本地无 Playwright 浏览器，跑不到这条断言）
+SKILL_CARD_COUNT = len([d for d in (REPO / "skills").iterdir()
+                        if d.is_dir() and (d / "SKILL.md").exists() and d.name != "core"])
 
 
 class QuietHandler(SimpleHTTPRequestHandler):
@@ -78,7 +83,7 @@ def main():
                 page.goto(base + route, wait_until="networkidle")
                 assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1"), f"Horizontal overflow: {language} at {width}px"
                 assert page.locator('.nav-lang').is_visible()
-                assert page.locator('.directory-grid a').count() == 12
+                assert page.locator('.directory-grid a').count() == SKILL_CARD_COUNT
                 assert page.locator('.hero-shortcuts a').count() == 3
                 assert page.locator('h1').count() == 1
                 page.locator("#install").scroll_into_view_if_needed()

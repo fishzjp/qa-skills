@@ -41,7 +41,7 @@ description: "Exploratory testing sessions when requirements are vague or docs a
 - 入口与导航路径 / 角色与权限 / 核心流程 / 数据流向 / 状态与流转
 
 ## 风险清单（每条带证据标注，此时加载 `../core/evidence.md`）
-- R?：{风险描述}｜level: {Critical/High/Medium/Low，按 `../core/risk-model.md` 的 Impact × Likelihood 预评}｜evidence: {E0–E4 + 来源}｜confidence: {high/medium/low}｜status: {fact / inference / risk / hypothesis}
+- R?：{风险描述}｜level: {Critical/High/Medium/Low，按 `../core/risk-model.md` 的 Impact × Likelihood 预评}｜evidence: {E0–E4 + 来源}｜verification: {验证强度——已交叉验证（截图+接口/双身份）/ 单次样本 / 未重试 / 未换身份·浏览器核实}｜confidence: {high/medium/low}｜status: {fact / inference / risk / hypothesis}
   （R? 为会话内临时编号；移交 `test-strategy` 时并入其 Risk Map 统一重编为 R1…，探索笔记原文编号不保留）
 
 ## 测试想法（后续转化为正式用例的候选）
@@ -82,6 +82,7 @@ description: "Exploratory testing sessions when requirements are vague or docs a
 | 时间与时钟 | 零点/跨天边界、过期与定时任务触发时机，状态与文案对吗 |
 
 - 每个观察记 evidence 等级（E3 运行证据优先——截图/响应原文）；推测记 Inference/Hypothesis，不伪装成事实
+- **每条观察同时记「验证强度」**（字段 `verification`）：单次样本、未重试、未换身份/浏览器/环境交叉验证的，必须如实写明局限——**不得用确定性口吻描述未充分验证的行为**（"未登录用户可访问"与"未用第二浏览器核实登录态即能打开"是两种不同强度的结论；后者只能作为待验证线索）
 - **发现异常先定性再记录**："这是预期行为还是 Bug？"不确定 → 记入未解之谜问用户，不自判（提问格式与裁决落盘统一按 `../core/clarify-pattern.md`，场景用「Bug 定性」）
 
 ### 4. 收敛与落盘

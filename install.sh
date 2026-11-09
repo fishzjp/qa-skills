@@ -27,8 +27,8 @@ SKILL_DIRS=()
 for d in "$REPO_ROOT"/skills/*/; do
   [ -f "${d}SKILL.md" ] && SKILL_DIRS+=("$(basename "$d")")
 done
-[ "${#SKILL_DIRS[@]}" -ge 13 ] || {
-  echo "❌ skills/ 下仅识别到 ${#SKILL_DIRS[@]} 个安装单元（应 ≥13：12 个 skill + core）——仓库不完整？" >&2
+[ "${#SKILL_DIRS[@]}" -ge 14 ] || {
+  echo "❌ skills/ 下仅识别到 ${#SKILL_DIRS[@]} 个安装单元（应 ≥14：13 个 skill + core）——仓库不完整？" >&2
   exit 1
 }
 SRC_ROOT="$REPO_ROOT/skills"

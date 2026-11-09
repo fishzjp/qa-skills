@@ -57,7 +57,8 @@ class Client:
 
     def get(self, path, **kw):  return self.request("GET", path, **kw)
     def post(self, path, **kw): return self.request("POST", path, **kw)
-    # put / delete / patch 同理扩展
+    def put(self, path, **kw):  return self.request("PUT", path, **kw)
+    def delete(self, path, **kw): return self.request("DELETE", path, **kw)
 
 def login(user: str, password: str) -> str:
     """按项目实际登录接口实现（如 POST /login 换 token）——占位，勿直接照抄"""
@@ -76,7 +77,22 @@ def client():
     base_url = os.environ["API_BASE_URL"]          # 环境与账号不硬编码，走环境变量
     token = login(os.environ["API_USER"], os.environ["API_PASSWORD"])
     return Client(base_url, token)
+
+@pytest.fixture
+def created_resources(client):
+    """用例自建数据的统一清理通道（core/methods/data-factory.md 第 3 节）。
+    创建即登记资源路径，teardown 逐个删除；删除失败只记 warning——既不让清理噪音
+    改变用例结论，也不静默吞掉清理本身的问题。"""
+    paths = []
+    yield paths
+    for path in paths:
+        try:
+            client.delete(path)
+        except Exception as exc:      # 清理失败不阻塞后续用例，但必须留痕
+            print(f"WARN cleanup failed: {path}: {exc}")
 ```
+
+> 每条用例创建数据后 `created_resources.append("/api/v1/coupons/{id}")` 即自动纳入清理；没有这一步的脚本按下方的交付核对第 1 条判不合规。
 
 > 敏感信息（账号/Token/环境地址）一律环境变量注入，不进代码仓库（与 `automated-e2e-testing` 的 constants 约定一致）。
 
@@ -86,6 +102,7 @@ def client():
 
 - 从 OpenAPI 文档提取：接口清单、参数表（必填/类型/范围/默认值）、错误码、鉴权方式
 - 从用例 Schema 过滤：`automation.framework: api` 的用例，以及 `execution_model: dev-collab` 且 framework 非 manual 的用例 → 转换对象（test 名沿用 TC 编号：`test_TC_05_01_写入字段读回一致`；framework: manual 的 dev-collab 用例保持手动协作，不转）
+- 有 markmap 源文件时**先跑红线闸门** `python3 ../core/scripts/case_lint.py {用例markmap}`——错误级命中的用例不转（补齐或列遗留清单），防把占位符/不可判定预期翻成"能跑但没测对"的脚本
 - 环境未知 → 向用户索取（base URL、账号、是否可写生产旁路环境），**不确定就问，不猜接口行为**（提问格式与裁决落盘统一按 `../core/clarify-pattern.md`，场景用「执行确认」）
 
 ### 2. 用例设计（此时加载 `../core/testing-principles.md`，方法细节 `../core/methods/data-driven.md`）
@@ -108,8 +125,19 @@ def client():
 - 一个接口一个 test 文件；一条 test 只测一个点，沿用 TC 编号命名
 - **输出预算纪律（防空截断）**：同类边界/参数校验用 `@pytest.mark.parametrize` 合并为一条参数化测试，禁止逐值展开重复的 test 函数或超长重复断言——单文件超过 ~250 行即应参数化收敛（生成通道有输出上限，超限会截断产生不可编译代码）
 - 断言三件套：状态码 + 业务码 + 响应体关键字段（不写"只断言 200"的弱断言）
-- 测试数据自建自清理（setup 创建 / teardown 删除），不依赖执行顺序；数据模板（唯一名等）先核对材料字段约束（maxLength/枚举/格式），模板总长（前缀+随机段）≤ 约束上限 −2——顶格即数据自建缺陷（实测自伤案例：唯一名模板 22 字符撞契约 maxLength 20；两个实测案例与 test-case-writing §4 各存同源副本，修订须两处同步）；**参数矩阵逐格回检跨字段业务规则**（如"使用门槛不能低于面额"）——违反规则的组合改取合法值或拆为显式负向用例，不做隐式非法组合（实测自伤案例：金额顶格 1000 配低于面额的门槛 → 400 THRESHOLD_INVALID 而用例期望 201）
+- 测试数据自建自清理（setup 创建 / teardown 删除），不依赖执行顺序；数据模板须守字段约束与跨字段业务规则（长度不顶格、组合逐格回检）——规则与两个实测自伤案例的单一源在 `../core/methods/data-factory.md` 第 1 节（此时加载）
 - 依赖前序状态的用例显式在前置里造数，不假设库里有数据（造数模式：`../core/methods/data-factory.md`——makeX 构造器 / 造数通道三选一 / 前缀隔离）
+
+#### 交付前核对（硬约束，与 `test-case-writing` 的维度核对同级）
+
+脚本交出前逐条核对本接口面的四项执行纪律——**不适用的项必须写明理由**（"环境没有多账号"是待办不是理由）；规则写在 §2 的必测点表里会被当成参考，写成交付判据才会被执行：
+
+> **空壳不算实现**：只有 test 名与注释、断言缺失、或写"实际需配合…注入/模拟"就收尾的用例，视为该项未覆盖（与不写等价）。
+
+1. **自清理**：每条用例创建的数据都有对应 teardown（`created_resources` fixture / 批量扫尾），删除失败记 warning 不静默
+2. **鉴权三态**：无 Token / 过期或错误 Token / 他人资源 id 越权，各至少 1 条——直接调接口，不看前端表现
+3. **幂等**：有业务键的写接口至少 1 条重复提交用例（结果不变、不重复创建）
+4. **并发**：有共享可变资源（库存 / 名额 / 余额 / 发放总量）的写接口至少 1 条**真并发**用例（多线程同时请求，断言无超发、无重复、无中间态）——**前提是契约明示了扣减 / 限量语义**（如库存扣减、名额占用、余额冻结）。契约只写了「每人限领 N 次」而**未规定总量在何时扣减**时，"无超发"是**产品语义缺口而非可断言行为**：把它写成硬断言会在契约忠实的实现上必然失败（假失败，开发者会以"需求没写"驳回，白白消耗测试信任）——正确做法是列入**待澄清**（总量是否扣减、超发如何处置），需要时再补一条标注为信息性 / `xfail` 的探针用例并注明依据缺口
 
 ### 4. 运行与结果
 

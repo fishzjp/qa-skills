@@ -19,7 +19,8 @@
 
     python3 validate_schema.py 测试策略.md
 
-  V1 全轴必答——十轴齐全且 decision ∈ include/exclude/handoff（每轴单行 flow 风格）；
+  V1 全轴必答——十轴齐全且 decision ∈ include/exclude/handoff（单行 flow 或块式均接受，
+     推荐 flow；同一轴重复声明报错）；
      depth ∈ full/standard/light（"不测"是范围决策不是深度值：功能域 include: false，
      类型域 decision: exclude/handoff）
   V2 include 挂证据——signals 或 risk_refs 非空（无证据纳入 = 过测）
@@ -32,8 +33,13 @@
   V4-终态留痕——include 且挂 Critical 风险的类型域轴若 depth 未达 full，其轴名必须出现
      在 budget_review 文本中（堵住"先超限触发检查点、再裁剪回 ≤3 后无迹可查"的逃逸窗口：
      维持低档也须留一行依据，不许无声消失）
+  V6（告警级）范围假设声明——test_strategy.scope_assumption 字段或等价散文声明
+     （"本策略限于系统级黑盒 / 单元集成属开发侧"）缺失时告警：该声明决定报告结论的
+     适用边界，实测 On 臂仅 39% 产物带（其余强制项 80–95%），属"有要求无门"的典型漏项；
+     因属声明性文字、不改变决策正确性，定为告警不阻断。
   V5 移交不断链——execution_status=blocked 必带 todo；executor 非空且非 agent 时
-     （含 handoff）必带 handoff_ref
+     （含 handoff）必带 handoff_ref，且该 ref 指向的移交包文件必须真实存在
+     （按测试策略文件所在目录解析，支持 glob；模板占位符视为未落盘）
 
 模式三（可选增强参数，两模式均可叠加）：
 
@@ -183,6 +189,49 @@ def as_list(val):
     return []
 
 
+INLINE_LEVEL_TOKEN_RE = re.compile(r"\bR\d{1,3}\b|\bCritical\b|\bHigh\b", re.I)
+
+
+INLINE_CLAUSE_SEP_RE = re.compile(r"[。；;！？!?]")
+
+
+def _scan_inline_levels(line):
+    """按分组语义把行内风险编号与等级词配对，返回 ([(rid, level)], 未配对编号)。
+
+    - `R1/R2 为 Critical，R3 High` → R1,R2=Critical；R3=High
+    - `R1（Critical 20）> R2（High 16）` → R1=Critical；R2=High
+    - `| R1 | … | Critical |`（表格行）→ R1=Critical
+    等级词先于编号出现（如 `Critical 影响 R1`）时不强行归属，留给下一轮编号匹配。
+
+    句末标点（。；！？ 与半角 ;!?）是分组边界：不得跨句把后文等级并进前文编号组。
+    实测失败形态：`…R5 / R6（Medium）。Critical 全落在 functional / permission …`——
+    句号后的 Critical 被并给 R5/R6，把 Medium 风险误判成 Critical，进而误触 V4-终态。
+    表格行以 `|` 分列，不属边界（否则同一行编号会被切断）。
+    """
+    pairs, pending = [], []
+    prefix_level = None          # 等级词出现在编号之前（如表格 `| Critical | R1 |`）
+    last_end = 0
+    for m in INLINE_LEVEL_TOKEN_RE.finditer(line):
+        if INLINE_CLAUSE_SEP_RE.search(line[last_end:m.start()]):
+            pending = []
+            prefix_level = None   # 句界同时清空前缀等级，防跨句污染
+        last_end = m.end()
+        tok = m.group(0)
+        if tok[0] in "Rr" and tok[1:].isdigit():
+            if prefix_level:      # 前缀等级作用于同句内紧随的编号
+                pairs.append((tok, prefix_level))
+            else:
+                pending.append(tok)
+            continue
+        level = "Critical" if tok.lower() == "critical" else "High"
+        if pending:
+            pairs.extend((rid, level) for rid in pending)
+            pending = []
+        else:
+            prefix_level = level  # 记下，供同句后续编号使用
+    return pairs, pending
+
+
 def extract_risk_levels_detailed(md_text):
     """提取（{风险编号: 等级}, 有等级依据的编号集合），同号取最高级（Critical > High > 其余忽略）。
 
@@ -222,22 +271,26 @@ def extract_risk_levels_detailed(md_text):
         if current and (not stripped or stripped.startswith("```")
                         or stripped.startswith("#")):
             current = None  # 记录边界：空行 / 围栏 / 标题（这些行也不会携带等级词）
+        lv = None
         if CRITICAL_WORD_RE.search(line):
             lv = "Critical"
         elif HIGH_WORD_RE.search(line):
             lv = "High"
-        else:
-            lv = None
         rids = set(RISK_ID_RE.findall(line))
         has_level_field = level_field_re.search(line) is not None
         has_subgate_level = (medium_word_re.search(line) is not None
                              or low_word_re.search(line) is not None)
         if rids:
-            for rid in rids:  # 形态 1：行内同现
-                if lv:
-                    _raise(rid, lv)
-                    leveled.add(rid)
-            if lv is None and (has_subgate_level or has_level_field):
+            # 形态 1：行内同现——按"编号累积到等级词"的分组语义归属
+            # （2026-11-09 修：此前一行内所有编号共用该行出现的最高等级词，
+            #  `R1/R2 为 Critical，R3 High` 会把 R3 也判成 Critical，进而让
+            #  V4-终态 对 R3 的引用轴误报"Critical 降档未留痕"——27/75 份真实
+            #  产物命中该形态）。分组语义同时覆盖 `R1（Critical 20）> R2（High 16）`。
+            line_pairs, _pending = _scan_inline_levels(line)
+            for rid, lvl in line_pairs:
+                _raise(rid, lvl)
+                leveled.add(rid)
+            if not line_pairs and (has_subgate_level or has_level_field):
                 leveled.update(rids)  # 行内有 Medium/Low 词或 level: 字段 → 有依据
         elif current:
             if lv:  # 形态 2：跨行记录内的等级行
@@ -320,8 +373,6 @@ DEPTHS = {"full", "standard", "light"}
 NON_WEB_API_RE = re.compile(
     r"非\s*[-/·、\s]*[Ww]eb|非\s*[-/·、\s]*API|无\s*[-/·、\s]*[Ww]eb|无\s*[-/·、\s]*API"
     r"|不是\s*[Ww]eb|不是\s*API|命令行|CLI|桌面|离线|纯库|无网络|无界面")
-AXIS_LINE_RE = {axis: re.compile(rf"^[ \t]*{axis}:[ \t]*\{{(.+)\}}[ \t]*$", re.M)
-                for axis in TYPE_AXES}
 FLOW_LINE_RE = re.compile(r"^[ \t]*(\w+):[ \t]*\{(.+)\}[ \t]*$", re.M)
 
 
@@ -334,14 +385,139 @@ def parse_flow_map(inner):
 
 
 def list_items(val):
-    if not val or not val.startswith("["):
+    """列表取值：兼容 flow 的 `[a, b]` 原文与块式解析出的 list 对象。"""
+    if isinstance(val, (list, tuple)):
+        return [str(x).strip().strip("\"'") for x in val if str(x).strip()]
+    if not val or not isinstance(val, str) or not val.startswith("["):
         return []
     return [x.strip().strip("\"'") for x in val[1:-1].split(",") if x.strip()]
 
 
 def scalar(kv, key):
-    """取标量值并剥引号。"""
-    return kv.get(key, "").strip().strip("\"'").strip()
+    """取标量值并剥引号（块式列表值折叠为逗号连接，供包含式判断使用）。"""
+    val = kv.get(key, "")
+    if isinstance(val, (list, tuple)):
+        return ", ".join(str(x) for x in val).strip().strip("\"'").strip()
+    return str(val).strip().strip("\"'").strip()
+
+
+FUNCTIONAL_AXES = ["functional", "boundary", "permission", "state",
+                   "data_consistency", "regression"]
+KNOWN_AXES = set(TYPE_AXES) | set(FUNCTIONAL_AXES)
+CONTAINER_RE = re.compile(r"^([ \t]*)(functional_scope|type_scope):[ \t]*$", re.M)
+
+
+def _parse_block_axes(block):
+    """解析块式（多行）轴条目：functional_scope / type_scope 容器下的直接子键。
+
+    块式是 yaml 的自然写法，语义与单行 flow 完全等价（2026-11-09 起接受）：
+        performance:
+          decision: exclude
+          rationale: "无 SLA"
+          scanned:
+            - "需求信号未命中(G)"
+    返回 [(轴名, kv)]；子键缩进以容器后首个非空行为准，遇同级或更浅缩进即结束。
+    """
+    lines = block.split("\n")
+    out = []
+    i = 0
+    while i < len(lines):
+        m = CONTAINER_RE.match(lines[i])
+        if not m:
+            i += 1
+            continue
+        container_indent = len(m.group(1))
+        i += 1
+        child_indent = None
+        while i < len(lines):
+            line = lines[i]
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                i += 1
+                continue
+            indent = len(line) - len(line.lstrip())
+            if indent <= container_indent:
+                break  # 容器结束
+            if child_indent is None:
+                child_indent = indent
+            if indent != child_indent:
+                i += 1
+                continue
+            cm = re.match(r"^([\w-]+):\s*(.*)$", stripped)
+            if not cm:
+                i += 1
+                continue
+            name, inline = cm.group(1), cm.group(2).strip()
+            if inline.startswith("{"):
+                # 容器内的单行 flow 条目：由 parse_axis_entries 的 flow 分支统一处理，
+                # 这里跳过，否则同一轴会被计两次（flow + block → 误报重复轴）
+                i += 1
+                continue
+            kv = {}
+            if inline:
+                # 紧凑标量形态 `performance: exclude` 是合法写法；但 `performance: 已排除（…）`
+                # 这类散文是决策摘要/说明行，不是轴声明——忽略它，避免把摘要块误判成重复轴
+                # （2026-09-01 minreg 存档里就有一份这样的文档：旧解析看不见摘要行、新解析误报）。
+                if inline.strip().strip("\"'") not in ("include", "exclude", "handoff"):
+                    i += 1
+                    continue
+                kv["decision"] = inline
+                i += 1
+                out.append((name, kv))
+                continue
+            i += 1
+            # 收集本轴的子行（更深缩进）：`key: value`、`key:` + `- item` 列表
+            current_key = None
+            while i < len(lines):
+                s2 = lines[i]
+                st2 = s2.strip()
+                if not st2 or st2.startswith("#"):
+                    i += 1
+                    continue
+                ind2 = len(s2) - len(s2.lstrip())
+                if ind2 <= child_indent:
+                    break
+                if st2.startswith("- ") or st2 == "-":
+                    if current_key:
+                        item = st2[1:].strip().strip("'\"")
+                        prev = kv.get(current_key)
+                        kv[current_key] = (prev if isinstance(prev, list) else []) + [item]
+                    i += 1
+                    continue
+                km = re.match(r"^([\w-]+):\s*(.*)$", st2)
+                if km:
+                    k, v = km.group(1), km.group(2).strip()
+                    if v:
+                        kv[k] = v
+                        current_key = None
+                    else:
+                        kv[k] = []
+                        current_key = k
+                i += 1
+            out.append((name, kv))
+    return out
+
+
+def parse_axis_entries(block):
+    """两域 scope 的轴条目统一视图：flow 与块式都接受，返回 {轴名: {"kv", "styles"}}。
+
+    styles 出现多次 = 同一轴重复决策（V1 报错）；kv 合并两类写法的键值。
+    """
+    entries = {}
+    for m in FLOW_LINE_RE.finditer(block):
+        name = m.group(1)
+        if name not in KNOWN_AXES:
+            continue
+        e = entries.setdefault(name, {"kv": {}, "styles": []})
+        e["kv"].update(parse_flow_map(m.group(2)))
+        e["styles"].append("flow")
+    for name, kv in _parse_block_axes(block):
+        if name not in KNOWN_AXES:
+            continue
+        e = entries.setdefault(name, {"kv": {}, "styles": []})
+        e["kv"].update(kv)
+        e["styles"].append("block")
+    return entries
 
 
 def extract_scope_blocks(text):
@@ -355,13 +531,41 @@ def extract_scope_blocks(text):
     return "\n".join(parts) if parts else None
 
 
+def _handoff_ref_exists(ref, base):
+    """handoff_ref 是否指向真实存在的移交包（V5 断链实体核验）。
+
+    解析顺序：绝对路径 → 策略文件同目录 → 当前工作目录；同目录/ cwd 下额外允许
+    glob 形态（如 `专项移交_性能_*.yaml`，多份历史移交包并存时的写法）。
+    模板占位符（含 `{` / `<`）一律视为未落盘。
+    """
+    ref = (ref or "").strip()
+    if not ref or "{" in ref or "<" in ref:
+        return False
+    cands = [Path(ref)] if Path(ref).is_absolute() else [Path(base) / ref, Path.cwd() / ref]
+    for c in cands:
+        if c.exists():
+            return True
+        if any(ch in ref for ch in "*?["):
+            parent = c.parent
+            if parent.is_dir() and any(parent.glob(c.name)):
+                return True
+    return False
+
+
 def validate_strategy(path, repo_root=None):
     errors, warnings = [], []
     # 统一换行（Windows 宿主产物的 CRLF 会让行锚定正则全部失配）
     text = path.read_text(encoding="utf-8").replace("\r\n", "\n")
     block = extract_scope_blocks(text)
     if block is None:
-        errors.append("未找到含 type_scope:/functional_scope: 的 yaml 代码块——测试策略必须包含类型域十轴决策（V1）")
+        # 单参数调用时可能是"误把用例文件当策略文件"——给可执行提示，而不是让人卡在
+        # 「未找到 type_scope」这种与用例无关的错上（qa 阶段 3 判据曾这么写，实测踩到）
+        if re.search(r"^\s*[-*]\s+(?:\*\*)?\s*TC-\d+-\d+", text, re.M):
+            errors.append(
+                "这个文件用的是例（含 TC 编号），而当前是**测试策略**校验模式——"
+                "用例 Schema 校验需要两个参数：validate_schema.py {用例markmap} {测试用例.schema.yaml}")
+        else:
+            errors.append("未找到含 type_scope:/functional_scope: 的 yaml 代码块——测试策略必须包含类型域十轴决策（V1）")
         return errors, warnings
     # Risk Map 等级抽取：供 V4-终态留痕判定哪些轴挂着 Critical 风险；
     # 同时支持 yaml 块 id/level 分行（risk-model.md §4 权威格式）与行内同现（表格/散文）
@@ -377,17 +581,30 @@ def validate_strategy(path, repo_root=None):
     def has_mark(items, marks):
         return any(mk in s for s in items for mk in marks)
 
+    # V6（告警级）：范围假设声明——结构化字段优先，等价散文也算
+    # （scope_assumption 不是十轴之一，故不走 entries；直接在 yaml 块与正文里找）
+    _scope = ""
+    m_scope = re.search(r"(?mi)^[ \t]*scope_assumption[ \t]*:[ \t]*(.+)$", block)
+    if m_scope:
+        _scope = m_scope.group(1).strip().strip("\"'")
+    if not _scope:
+        _scope = " ".join(re.findall(
+            r"[^\n]*(?:范围假设|系统级黑盒|单元/集成[^\n]{0,20}开发侧|黑盒[^\n]{0,8}前提)[^\n]*", text))
+    if not _scope.strip():
+        warnings.append(
+            "V6 缺范围假设声明（scope_assumption）——本策略限于系统级黑盒、单元/集成测试属开发侧职责、"
+            "结论以此为前提；该声明决定报告结论的适用边界，请补一行（结构化字段或等价散文）")
+
+    entries = parse_axis_entries(block)
     for axis in TYPE_AXES:
-        matches = list(AXIS_LINE_RE[axis].finditer(block))
-        if not matches:
-            errors.append(f"V1 轴缺失或非单行 flow 风格: {axis}"
-                          f"（应形如 {axis}: {{ decision: include, depth: standard, signals: [...] }}）")
+        entry = entries.get(axis)
+        if not entry:
+            errors.append(f"V1 轴缺失: {axis}（十轴必答；单行 flow 与块式书写均可，推荐 flow）")
             continue
-        if len(matches) > 1:
-            errors.append(f"V1 {axis}: 出现 {len(matches)} 次——每轴只允许一行决策，重复轴请合并")
-        m = matches[0]
-        kv = parse_flow_map(m.group(1))
-        decision = kv.get("decision", "")
+        if len(entry["styles"]) > 1:
+            errors.append(f"V1 {axis}: 出现 {len(entry['styles'])} 次——每轴只允许一处决策，重复轴请合并")
+        kv = entry["kv"]
+        decision = scalar(kv, "decision")
         if decision not in ("include", "exclude", "handoff"):
             errors.append(f"V1 {axis}: decision='{decision or '(缺)'}' 不在 include/exclude/handoff")
             continue
@@ -426,19 +643,22 @@ def validate_strategy(path, repo_root=None):
         executor = scalar(kv, "executor")
         if decision == "include" and executor and executor != "agent" and not scalar(kv, "handoff_ref"):
             errors.append(f"V5 {axis}: include + 外部执行器({executor}) 缺 handoff_ref")
+        # V5 断链实体核验（2026-11-09 补）：handoff_ref 此前只查"非空"，指向不存在的
+        # 文件也能全绿——移交包"写了名字但没落盘"是本门要防的失败形态本身。
+        # 解析基准：策略文件所在目录（任务产物同目录落盘），其次 cwd（跨目录调用时的宽容路径）。
+        href = scalar(kv, "handoff_ref")
+        if href and not _handoff_ref_exists(href, path.parent):
+            errors.append(
+                f"V5 {axis}: handoff_ref 指向的文件不存在：{href}（按测试策略文件所在目录解析）——"
+                "移交包必须与策略一同落盘；若是模板占位符请替换为实际文件名并生成该文件")
 
     # V4：depth 枚举 + full 档逐行统计（functional_scope + type_scope 两域合并）
     full_axes = []
     critical_low_axes = []  # include 且挂 Critical 风险但 depth<full 的轴名——终态留痕候选
-    seen_names = set()
-    for m in FLOW_LINE_RE.finditer(block):
-        name, inner = m.group(1), m.group(2)
-        if name in seen_names:
-            continue  # 重复轴已由 V1 报错；统计以首处为准
-        seen_names.add(name)
-        kv = parse_flow_map(inner)
+    for name, entry in entries.items():
+        kv = entry["kv"]
         depth = scalar(kv, "depth")
-        decision = kv.get("decision", "")
+        decision = scalar(kv, "decision")
         # depth 缺省警示：类型域 include 轴必须显式声明档位，否则绕过 full_axes/预算审计链；
         # exclude/handoff 轴按 schema 约定本就不写 depth（"不测"是范围决策），不告警防误伤
         if name in TYPE_AXES and not depth and decision not in ("exclude", "handoff"):

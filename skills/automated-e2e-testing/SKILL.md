@@ -88,10 +88,10 @@ description: "Turn manual cases into Playwright E2E automation run in a browser:
 
 ### 步骤
 
-1. **解析测试用例**：从 markmap Markdown 提取场景与预期；test 名沿用用例的 TC 编号（如 `TC-01-03: {用例名称}`），手动用例缺编号时先补编号再转换
+1. **解析测试用例**：从 markmap Markdown 提取场景与预期；test 名沿用用例的 TC 编号（如 `TC-01-03: {用例名称}`），手动用例缺编号时先补编号再转换。**转换前跑红线闸门** `python3 ../core/scripts/case_lint.py {用例文件}`——错误级命中的用例不转（先补齐或列入遗留清单），只转闸门放行的用例
 2. **选择/新建 Page Object**：检查 `tests/pages/` 下是否已有对应 Page Object，优先复用
 3. **编写 spec**：使用 Page Object 封装所有页面交互。每条 test 收笔前过**断言三问**：① 前置里有"不应匹配/应被排除"的数据吗？断言覆盖了"不在"吗？② 被测步骤的触发方式与用例规格一致吗（不得为绕开不稳定换触发路径）？③ 失败时能区分"功能坏了"还是"环境没加载"吗？——判定与反例见工程约定第 15 节
-4. **运行验证**：`npx playwright test tests/{文件名}.spec.ts`；**基线零通过禁交付**——首轮运行 0 条通过即视为流程认知错误（选择器/弹窗结构/等待假设与真实页面不符）：回工作流零针对性重踩核实，修订复跑至 ≥1 条通过后才可进入后续步骤，禁止交付基线零通过的规格
+4. **运行验证**：`npx playwright test tests/{文件名}.spec.ts`；若报 `Executable doesn't exist ...ms-playwright...`（本机没装 Playwright 浏览器），**不要据此判"无法执行"**——按 `references/playwright-conventions.md` 第 11 节的临时 `channel: 'chrome'`/`'msedge'` 降级先跑通（临时配置不入交付物），**基线零通过禁交付**——首轮运行 0 条通过即视为流程认知错误（选择器/弹窗结构/等待假设与真实页面不符）：回工作流零针对性重踩核实，修订复跑至 ≥1 条通过后才可进入后续步骤，禁止交付基线零通过的规格
 
 脚手架、场景代码模板（CRUD / 表单提交 / 状态流转 / 多用户并发）、Page Object 规范与 spec 命名**此时加载 `references/playwright-conventions.md`**（第 1、5–7 节）。
 

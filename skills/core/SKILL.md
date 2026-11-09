@@ -9,8 +9,10 @@ description: "qa-skills shared knowledge base — dependency, NOT triggerable: e
 # qa-skills 共享知识库（core）
 
 本目录是框架的公共层：不定义工作流、不面向用户触发，仅被 `skills/` 下其余
-12 个 skill（qa / requirement-analysis / test-strategy / …）以相对路径
-`../core/<file>` 按需引用。单一维护源，多 skill 复用。
+13 个 skill（qa / requirement-analysis / test-strategy / test-case-writing /
+test-case-review / automated-e2e-testing / api-testing / exploratory-testing /
+bug-analysis / regression-testing / test-reliability / qa-memory / ai-system-testing）
+以相对路径 `../core/<file>` 按需引用。单一维护源，多 skill 复用。
 
 ## 共享文档
 
@@ -29,11 +31,11 @@ description: "qa-skills shared knowledge base — dependency, NOT triggerable: e
 | `pipeline-integration.md` | 流水线集成与非交互运行约定（⏸ 检查点降级、产物落盘、退出码语义、CI 触发分层与失败回流） |
 | `report-template.md` | 测试报告模板 |
 | `methods/*.md` | 设计方法细则（边界 / 数据驱动 / 权限 / 状态机）与执行层造数模式（数据工厂） |
-| `scripts/*.py` | Schema 校验器、类型信号扫描器 |
+| `scripts/*.py` | Schema 校验器、类型信号扫描器、用例红线检查器、报告机读摘要校验器 |
 
 ## When NOT to Use
 
 - 任何具体测试任务（写用例、定策略、查 Bug 等）**都不要触发本 skill**：
-  它不包含工作流，独立使用没有产出。对应任务请用其余 12 个 skill 之一。
+  它不包含工作流，独立使用没有产出。对应任务请用其余 13 个 skill 之一。
 - 本 skill 仅在两种情况下被触及：① 其余 skill 工作流按需引用上述文件；
   ② 安装/校验场景（作为安装依赖单元被安装器识别）。

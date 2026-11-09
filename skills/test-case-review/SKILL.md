@@ -52,15 +52,18 @@ description: "Review existing test cases (legacy, others', AI) for coverage and 
 
 - 占位符数据（`{xxx}`、"某数据"）、虚构入口、模糊判定（"功能正常"）、异步无时限、断言超强度、前置不可得无 TODO、正文代码内部、缺导读四件套
 
+先跑机械闸门再人工审查：`python3 ../core/scripts/case_lint.py {用例文件}`（错误级红线机器判定并给出行号，告警级供人工确认；退出码 1 必须先修复，否则人工审查建立在不合规底稿上）。**宿主不可执行命令时**按 `../core/executability.md` 第 6 节清单人工逐项核对并记录，不得声称已运行闸门。
+
 ### 4. 正确性审查（有 PRD/代码时）
 
 - 用例预期结果与 PRD 规则 / 代码实现是否一致（静态裁决：代码为准，见 `../core/evidence.md`）
-- 优先级标注合理性（P0 逐条过自检：失败则核心不可用？）；风险等级对齐 `../core/risk-model.md`（Critical 必有 P0）
+- 优先级标注合理性（P0 逐条过自检：失败则核心不可用？）；风险等级对齐 `../core/risk-model.md`（Critical 必有 P0）。**机械闸门报 `W5 P0 占比过高` 时必须逐条复核**：冒烟集应只含「失败即核心功能不可用」的用例，实测 P0 合理占比中位约 15%（p95 26%）；把不满足自检的 P0 降为 P1/P2，并在审查记录注明降级依据（闸门是告警级，但忽略它等于把筛选问题留给执行现场）
 
 ### 5. 修订与落盘
 
 - **直接在用例文件中修订**：补缺失用例（追加 TC 编号）、删除冗余、改正错误断言、补可执行性要素（导读区/时限/入口路径/具体数据）；新增与改写的用例**同样执行 `../core/case-format.md` 格式硬约束**（四段式/协作五段式、TC 编号、正文零代码内部）
-- 修订后**重新抽取 Schema**（字段与转义规则见 `../core/schema-extraction.md`），并用 `../core/scripts/validate_schema.py` 复验通过后再落盘
+- 修订后**重新抽取 Schema**（字段与转义规则见 `../core/schema-extraction.md`），并用 `../core/scripts/validate_schema.py {用例markmap} {测试用例.schema.yaml}`（双文件参数）复验通过后再落盘
+- **修订后重跑红线闸门** `python3 ../core/scripts/case_lint.py {用例文件}`——修订会新增/改写用例，只有第二轮闸门通过才算审查闭环（只跑审查前那一次 = 没验证自己的修订没引入新问题）
 - 文件末尾追加审查记录：
 
 ```markdown
@@ -73,6 +76,8 @@ description: "Review existing test cases (legacy, others', AI) for coverage and 
 - 错误（已改）：TC-xx…（{问题→修正}）
 - 高风险未覆盖：{风险点 + 建议用例，无代码证据则标注}
 - 可执行性修复：{占位符/时限/入口 等 XX 处}
+- 闸门结果：case_lint 错误 {修订前} → {修订后}（最终须为 0）
+- 计数须与正文实算一致：审查前/后条数与模块数由闸门结果填写（E9 会机械核对，估写即报错）
 ```
 
 ### 6. 交付
