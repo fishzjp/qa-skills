@@ -5,6 +5,16 @@
 
 ## [Unreleased]
 
+### 新增能力：`ai-system-testing`（AI 系统测试，第 13 个 skill）
+
+- **落地依据（先证据后内容）**：本地预注册门（`eval/EXPECTED.md` B1 段，2026-09-08）判 PASS——三个 AI 任务（`ais-rubric-design` / `ais-prompt-regression` / `ais-injection-toolcall`）的纪律点聚合 On vs Off 差为 **+43pp / +67pp / +40pp**，且存在多个"Off ≤1/3、On 全覆盖"的全防形态点；最弱模型臂（`dfic:deepseek-v4-flash`）按预注册口径为**非劣性门**（On 各指标不劣于 Off）。起草稿自 2026-09-08 起只存于本地评测区，本轮完成产品化落地与全分发面接线。
+- **内容**：六个环节——AI 特性风险建模（非确定性 / 幻觉 / 安全 / 成本与延迟 / 数据回流五面）、评测集与 rubric 设计（判分点可判定性 + 样本覆盖清单）、容错断言阶梯（结构 → 关键字段 → 内容包含 → 阈值 → 多数投票 → 校准过的 judge）、prompt 回归（prompt / 模型 / 温度 / 语料四元组版本锚定 + 方差披露）、judge 选择与校准、注入与越权面移交包。配两个 references（评测设计模式库、judge 校准手册）。
+- **相对起草稿的产品化修正**：版本对齐 0.9.0；产物命名收敛到 `core/report-template` 口径的 `测试报告_AI评测_{日期}.md`（任务指定文件名优先），消除双报告命名体系；补"**被测域**"定位声明（AI 不是第 11 个类型轴，十轴决策照常）；references 补路径口径声明；补 `qa` 编排入口衔接（端到端诉求仍走 `qa`，AI 判分与方差口径由本 skill 提供）。
+- **接线面**：`core/SKILL.md` 与 `core/test-type-matrix.md`（被测域注记 + 13 skill 计数）、`qa`（AI 功能移交行）、中英文 README（技能表 + 语言说明）、官网（计数 / 跑马灯 / 目录卡 / FAQ / meta / JSON-LD）、`llms.txt`、`package.json`、`install.sh` 与安装冒烟阈值（≥14 单元）、`validate_skills.py` 与 dsh 插件注释。
+- **本轮验证（实跑）**：`validate_skills.py` 与 `validate_repo.py` 双绿；`pytest tests/ -q` 256 passed（本地 harness 的技能名单断言同步 +1，避免"加 skill 红灯静默"旧故障复现）；安装到临时目录后 `verify_install.py` PASS（14 单元 + core 引用齐备）；官网构建通过。
+- **触发面验证（in-situ 探针，非 harness 门）**：独立子代理双臂对照（12 skill 目录 vs 13 skill 目录），单模型单样本。原 35 条 routing utterance **判定零变化（35/35）**，即零新增错判；新增 6 条（3 正例 / 1 近邻 / 2 反例）在 after 臂 **6/6 正确**，而在无本 skill 的 before 臂上 R37、R38 **无任何覆盖（答 none）**、R36 被弱匹配到 `regression-testing`（其机制是 code diff → 用例追溯，不覆盖 LLM 行为面）——即"装了才有的能力"而非"多了一个名字"。反例（写 prompt、训练模型）两臂均正确判 `none`，无过度触发。
+- **未闭环（如实登记）**：官方 X26 全量路由屏本轮**未跑**——本地模型园卷未挂载、opencode zen key 过期、dfic/apimodel 通道拒绝请求，全部外部生成通道不可用；上表探针为替代证据，证据力低于 harness 屏幕（单模型、单样本、与维护会话同族，存在自偏好风险）。X20 两周 in-situ 探针同样需要在具备模型通道的环境中补跑。
+
 ### 官网展示与 SEO（2026-11-04）
 
 - **CI 运行环境修复**：Python 3.9 检查固定到 Ubuntu 24.04，避免 `ubuntu-latest` 切换到 26.04 后无法安装该解释器；保留原有版本覆盖与必需汇总门。

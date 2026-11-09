@@ -23,7 +23,7 @@
 
 ---
 
-Install testing methods, workflows and output standards into your agent: **12 testing skills + the shared `core/` knowledge base**. Run the full pipeline or use a single stage for cases, reviews, API tests or flaky-test governance. Browse the [five real On/Off comparisons](./examples/) first to see the outputs.
+Install testing methods, workflows and output standards into your agent: **13 testing skills + the shared `core/` knowledge base**. Run the full pipeline or use a single stage for cases, reviews, API tests or flaky-test governance. Browse the [five real On/Off comparisons](./examples/) first to see the outputs.
 
 [Website & skill directory](https://fishzjp.github.io/qa-skills/en/) · [Quick start](#quick-start) · [Choose a skill](#choose-a-skill) · [How it works](#how-it-works) · [Compatibility and scope](#compatibility-and-scope) · [Measured results](#measured-results) · [Documentation](#documentation)
 
@@ -139,6 +139,7 @@ The full workflow pauses for clarification, execution strategy, bug classificati
 | “Which cases should we rerun after this change?” | [regression-testing](./skills/regression-testing/SKILL.md) | Ranked diff → feature → case regression list |
 | “Tests pass on retry; can we trust them?” | [test-reliability](./skills/test-reliability/SKILL.md) | Flaky evidence, quarantine / retry policy, suite health |
 | “Save / read this project's testing knowledge” | [qa-memory](./skills/qa-memory/SKILL.md) | Project `.qa/` knowledge base, index and validation |
+| “Test this AI feature (LLM / prompt / agent / RAG)” | [ai-system-testing](./skills/ai-system-testing/SKILL.md) | Risk model, eval set and rubric, tolerant assertions, judge calibration, prompt regression, injection handoff |
 
 `core/` provides shared methods, templates and scripts. Its full index is [core/SKILL.md](./skills/core/SKILL.md); do not invoke it as a task skill.
 
@@ -197,7 +198,7 @@ The product ships Markdown instructions, relative references and helper scripts 
 
 See the [RELEASING installation matrix](./RELEASING.md#安装形态实测矩阵触达安装面引用路径的发版必登记) for dates and commands. **Installation, correct triggering and output quality are distinct checks.**
 
-**Language**: the README and website are bilingual. Of the 12 skills, 11 have bilingual descriptions; `bug-analysis` retains its Chinese description to avoid an observed routing regression. Skill instruction bodies remain Chinese.
+**Language**: the README and website are bilingual. Of the 13 skills, 12 have bilingual descriptions; `bug-analysis` retains its Chinese description to avoid an observed routing regression. Skill instruction bodies remain Chinese.
 
 **Scope**: system-level black-box test decisions and execution. Unit / integration tests, real-device mobile automation, frontend component tests, specialist pentesting / SAST / dependency scanners and chaos-engineering toolchains are not provided. They may supply risk signals or receive handoffs; a handoff does not mean a test has been executed.
 

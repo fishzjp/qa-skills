@@ -1,6 +1,6 @@
 # qa-skills
 
-> A QA engineering skill framework for AI coding agents: 12 testing skills plus the required shared `core/` knowledge base. MIT licensed. Covers requirement clarification, evidence-backed test strategy, executable cases, reviews, Web E2E / API execution, exploration, bug analysis, regression scoping, flaky-test governance and project QA knowledge. Ships instructions and helper scripts; the host provides the model and execution tools.
+> A QA engineering skill framework for AI coding agents: 13 testing skills plus the required shared `core/` knowledge base. MIT licensed. Covers requirement clarification, evidence-backed test strategy, executable cases, reviews, Web E2E / API execution, exploration, bug analysis, regression scoping, flaky-test governance, AI feature evaluation and project QA knowledge. Ships instructions and helper scripts; the host provides the model and execution tools.
 
 ## Install and verify
 
@@ -34,10 +34,11 @@ Try the account-free fictional room-booking walkthrough at https://github.com/fi
 - regression-testing: regression scope from code changes.
 - test-reliability: flaky evidence, quarantine / retry policy and suite health.
 - qa-memory: project-local .qa/ knowledge base with validation.
+- ai-system-testing: AI feature testing - nondeterminism risk model, eval sets and rubrics, tolerant assertions, judge calibration, prompt regression and injection / tool-authorization handoffs.
 
 ## Language, compatibility and evidence
 
-README and website: Chinese and English. Skill instruction bodies: Chinese. Descriptions: bilingual for 11 of 12 skills; bug-analysis remains Chinese to avoid an observed routing regression. Installation compatibility, correct triggering and output quality are separate checks. Installation records exist for Claude Code, dsh and Codex; gains are not established for every host or model. Playwright, pytest, k6 and the application under test are not bundled.
+README and website: Chinese and English. Skill instruction bodies: Chinese. Descriptions: bilingual for 12 of 13 skills; bug-analysis remains Chinese to avoid an observed routing regression. Installation compatibility, correct triggering and output quality are separate checks. Installation records exist for Claude Code, dsh and Codex; gains are not established for every host or model. Playwright, pytest, k6 and the application under test are not bundled.
 
 The README reports historical injected On/Off experiments, not a new evaluation of the current checkout. Its historical table draws on an early 12-task evaluation and later execution-specific checks, including case-spec compliance 0.26 / 0.98 and token cost 1x / 3.3x (without / with skills); separate rounds use different samples. These are not per-install guarantees. Version-specific gain matrices are provided with milestone Releases; individual examples do not establish statistical gains. The harness, task pool and raw data are maintained locally and not distributed.
 

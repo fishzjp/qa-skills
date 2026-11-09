@@ -18,6 +18,7 @@ description: "End-to-end QA entry: \"test this feature fully\" orchestrates requ
 ## When NOT to Use
 
 - 只要单阶段产出 → 对应阶段 skill：需求建模 `requirement-analysis`、测试策略 `test-strategy`、写用例 `test-case-writing`、审查已有用例 `test-case-review`、E2E 执行 `automated-e2e-testing`、API 执行 `api-testing`、探索会话 `exploratory-testing`、Bug 根因 `bug-analysis`、回归范围 `regression-testing`
+- 被测对象是 AI 功能（LLM / prompt / agent / RAG）→ `ai-system-testing` 承接 AI 特有风险（不确定性 / 幻觉 / 注入 / 成本），十轴决策照常；需要端到端编排时仍走本 skill，其策略与执行阶段引用该 skill 的判分与方差口径
 - 编写/修改某个阶段 skill 自身的方法论 → 不经过本 skill
 
 ## 编排会话模型（阶段间上下文隔离）
