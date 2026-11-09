@@ -32,6 +32,7 @@ description: "\"How should this be tested?\" Evidence-backed risk map → scope 
 
 ```yaml
 test_strategy:
+  scope_assumption: "本策略限于系统级黑盒（UI/API/手动/专项移交）；单元与集成测试属开发侧职责，本策略的风险评级与"已覆盖"结论以此为前提"   # 必填：决定报告结论的适用边界
   feature:
   functional_scope:            # 功能域：范围+深度+理由（含 state / data_consistency 两轴；rationale 每轴必带，示例仅演示写法）
     functional:        { include: true, depth: full,     rationale: "核心资损路径", risk_refs: [R3] }
@@ -114,7 +115,7 @@ test_strategy:
 
 ### 8. 落盘与交付
 
-1. 写 `{项目}/测试策略.md`（Schema 结构 + Risk Map 内嵌；type_scope 每轴一处决策（推荐单行 flow）+ 足够性声明：逐轴档位动作清单与完成状态；开头一段**范围假设声明**：本策略限于系统级黑盒，单元/集成测试为开发侧职责，结论以此为前提）
+1. 写 `{项目}/测试策略.md`（Schema 结构 + Risk Map 内嵌；type_scope 每轴一处决策（推荐单行 flow）+ 足够性声明：逐轴档位动作清单与完成状态；**范围内假设**写成 `scope_assumption` 字段——本策略限于系统级黑盒，单元/集成测试为开发侧职责，结论以此为前提。实测该声明在无字段时仅 39% 的产物会写，其余强制项 80–95%——所以**结构化成字段、别只靠散文**）
 2. handoff 轴 / include+外部执行器 / blocked 轴 → 生成 `{项目}/专项移交_{轴}_{日期}.yaml` 移交包（目标、场景参数、阈值/验收口径）。**文件名中的 {轴} 用以下轴中文短名**（与矩阵轴一一对应；轴 1 全名"性能效率"文件名取"性能"）：性能 / 业务安全 / 可靠性 / 并发一致性 / 兼容性 / 无障碍 / 视觉一致性 / 国际化 / 迁移与升级 / 契约与集成，如 `专项移交_性能_20260901.yaml`——执行侧（api-testing 等）按中文名 glob 消费，用英文轴 id 会断链
 3. **校验后交付**：`python3 ../core/scripts/validate_schema.py {项目}/测试策略.md`（V1–V5；有代码仓库时叠加 `--repo-root {仓库根}` 抽查各轴 signals 指涉真实性），错误清零再交付。**V5 会核验 `handoff_ref` 指向的移交包文件是否真实存在**（按策略文件所在目录解析；模板占位符 `{日期}` 视为未落盘）——先按第 2 条生成移交文件再校验，别只写文件名。注意：include 且挂 Critical 风险的轴若最终维持 full 以下档位，校验器要求该轴名出现在 budget_review 文本中——降档裁量必须留一行依据，不许无声消失
 4. 交付索引给下游（`test-case-writing`）：策略路径 + include 轴清单（用例型轴的 type/标签要求见矩阵第 12 节）+ 优先级映射要求

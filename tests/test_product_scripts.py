@@ -848,3 +848,56 @@ class RiskLevelClauseBoundaryTests(unittest.TestCase):
 
     def test_semicolon_resets_group(self):
         self.assertEqual(validate_schema.extract_risk_levels("R1（Critical 20）；R2 待评估"), {"R1": "Critical"})
+
+
+class StrategyScopeAssumptionTests(unittest.TestCase):
+    """V6（告警级）范围假设声明（2026-11-09）。
+
+    背景：该声明是 SKILL.md 的强制交付项，却只有 39% 的真实产物会写（其余强制项 80–95%）
+    ——典型"有要求、无门、无结构"漏项。修法：schema 加 `scope_assumption` 字段（Agent 照抄），
+    校验器给告警级提醒。因属声明性文字、不影响决策正确性，定告警不阻断（退出码不受影响）。
+    """
+
+    AXES = ("performance", "security_business", "reliability", "concurrency",
+            "compatibility", "accessibility", "visual", "i18n", "migration",
+            "contract_integration")
+
+    def _doc(self, td, scope_line="", prose=""):
+        parts = ["test_strategy:"]
+        if scope_line:
+            parts.append(scope_line)
+        parts.append("  type_scope:")
+        for ax in self.AXES:
+            if ax == "security_business":
+                parts.append('    security_business: { decision: include, depth: standard, '
+                             'signals: ["越权面"] }')
+            else:
+                parts.append(f'    {ax}: {{ decision: exclude, rationale: "无信号；无代码仓库", '
+                             'scanned: ["需求信号未命中(G)", "S 级复核(S)"] }')
+        parts += ["  depth_budget:", "    full_axes: []"]
+        md = td / "测试策略.md"
+        md.write_text("# 测试策略\n\n" + prose + "\n```yaml\n" + "\n".join(parts) + "\n```\n",
+                      encoding="utf-8")
+        return md
+
+    def test_field_present_no_warning(self):
+        with tempfile.TemporaryDirectory() as td:
+            md = self._doc(Path(td), scope_line='  scope_assumption: "本策略限于系统级黑盒；单元/集成属开发侧"')
+            errors, warnings = validate_schema.validate_strategy(md)
+            self.assertEqual(errors, [])
+            self.assertFalse([w for w in warnings if "V6" in w], warnings)
+
+    def test_prose_equivalent_no_warning(self):
+        with tempfile.TemporaryDirectory() as td:
+            md = self._doc(Path(td), prose="> 范围假设：本策略限于系统级黑盒，单元/集成测试为开发侧职责。")
+            errors, warnings = validate_schema.validate_strategy(md)
+            self.assertFalse([w for w in warnings if "V6" in w], warnings)
+
+    def test_missing_warns_but_does_not_block(self):
+        with tempfile.TemporaryDirectory() as td:
+            md = self._doc(Path(td))
+            errors, warnings = validate_schema.validate_strategy(md)
+            self.assertTrue([w for w in warnings if "V6" in w], warnings)
+            self.assertEqual(errors, [])
+            # 告警不阻断：退出码仍为 0
+            self.assertEqual(validate_schema.main([str(md)]), 0)

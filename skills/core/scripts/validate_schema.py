@@ -33,6 +33,10 @@
   V4-终态留痕——include 且挂 Critical 风险的类型域轴若 depth 未达 full，其轴名必须出现
      在 budget_review 文本中（堵住"先超限触发检查点、再裁剪回 ≤3 后无迹可查"的逃逸窗口：
      维持低档也须留一行依据，不许无声消失）
+  V6（告警级）范围假设声明——test_strategy.scope_assumption 字段或等价散文声明
+     （"本策略限于系统级黑盒 / 单元集成属开发侧"）缺失时告警：该声明决定报告结论的
+     适用边界，实测 On 臂仅 39% 产物带（其余强制项 80–95%），属"有要求无门"的典型漏项；
+     因属声明性文字、不改变决策正确性，定为告警不阻断。
   V5 移交不断链——execution_status=blocked 必带 todo；executor 非空且非 agent 时
      （含 handoff）必带 handoff_ref，且该 ref 指向的移交包文件必须真实存在
      （按测试策略文件所在目录解析，支持 glob；模板占位符视为未落盘）
@@ -562,6 +566,20 @@ def validate_strategy(path, repo_root=None):
 
     def has_mark(items, marks):
         return any(mk in s for s in items for mk in marks)
+
+    # V6（告警级）：范围假设声明——结构化字段优先，等价散文也算
+    # （scope_assumption 不是十轴之一，故不走 entries；直接在 yaml 块与正文里找）
+    _scope = ""
+    m_scope = re.search(r"(?mi)^[ \t]*scope_assumption[ \t]*:[ \t]*(.+)$", block)
+    if m_scope:
+        _scope = m_scope.group(1).strip().strip("\"'")
+    if not _scope:
+        _scope = " ".join(re.findall(
+            r"[^\n]*(?:范围假设|系统级黑盒|单元/集成[^\n]{0,20}开发侧|黑盒[^\n]{0,8}前提)[^\n]*", text))
+    if not _scope.strip():
+        warnings.append(
+            "V6 缺范围假设声明（scope_assumption）——本策略限于系统级黑盒、单元/集成测试属开发侧职责、"
+            "结论以此为前提；该声明决定报告结论的适用边界，请补一行（结构化字段或等价散文）")
 
     entries = parse_axis_entries(block)
     for axis in TYPE_AXES:
