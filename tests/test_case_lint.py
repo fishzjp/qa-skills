@@ -480,3 +480,49 @@ class ReviewAttributionTests(unittest.TestCase):
             "审查记录（自查）"))[1] if f.code == "E9"]
         self.assertTrue(any("test-case-review 落款" in f.message for f in e9),
                         "自查落款不足以标识独立审查")
+
+
+class ProsePlaceholderBoundaryTests(unittest.TestCase):
+    """E5 扫描面边界钉死（Round 39 误报面评估结论，460 份归档产物实测）。
+
+    评估背景：审计登记了"导读散文占位符不扫"盲区（regression_fixtures 负对照）。
+    本轮实测两种扩展方案的误报面后**拒绝 ERROR 级扩展**：
+    - 散文中文花括号命中 20/460 份，逐条核查全部是**技术格式引用**
+      （`oss://…/orders_{日期}.csv` 路径模板、`user:profile:{用户编号}` 缓存键——
+      材料原文即含变量形式，引用不是模板残留）；
+    - 裸 TODO 命中 37/460 份，主体是表头（`替代方案 / TODO`）、交叉引用
+      （`见导读区 TODO`）与自审描述——且带找谁标注的 TODO 是 case-format.md
+      明确要求的行为（"信息未知时不省略——列占位行标注「TODO：向 {谁} 索取」"）。
+    本测试钉住该边界：同一 token 在**用例字段**里是 E5 错误，在**导读散文/技术格式
+    引用**里不是。未来若要扩大扫描面，必须先让本测试有意识地翻红。
+    """
+
+    def test_field_placeholder_still_error(self):
+        """正向对照：字段里的 {日期} 仍是 E5（既有行为不回退）。"""
+        doc = ("# 用例\n## 1. 模块\n\n- TC-01-01 导出文件 [P1]\n"
+               "  - 操作步骤: 1. 触发导出\n"
+               "  - 预期结果: 文件上传至 orders_{日期}.csv\n")
+        e5 = [f for f in case_lint.lint(doc)[1] if f.code == "E5"]
+        self.assertTrue(e5, "字段内花括号占位符必须仍被 E5 拦截")
+
+    def test_preamble_todo_with_owner_not_flagged(self):
+        """导读环境表的带主 TODO 是 case-format 要求的行为，不得报 E5。"""
+        doc = ("# 用例导出功能 测试用例\n\n## 环境与账号表\n\n"
+               "- 管理后台入口地址：**TODO**（待运营确认）\n"
+               "- 运营测试账号：**TODO**（待运营提供）\n\n"
+               "## 1. 模块\n\n- TC-01-01 导出 [P1]\n"
+               "  - 操作步骤: 1. 触发导出\n  - 预期结果: 生成 CSV 文件\n")
+        errs = [f for f in case_lint.lint(doc)[1] if f.severity == "error"]
+        self.assertFalse(any("TODO" in f.message for f in errs),
+                         "带找谁标注的导读 TODO 不应被判错")
+
+    def test_prose_technical_format_not_flagged(self):
+        """散文/表格中引用系统路径与键名格式（含中文变量）不报 E5——实测合法形态。"""
+        doc = ("# 用例导出功能 测试用例\n\n## 功能简介\n\n"
+               "| 对象存储服务 | 存储导出的 CSV，路径格式 `oss://reports/orders/orders_{日期}.csv` |\n"
+               "| 缓存 | 键格式 `user:profile:{用户编号}` |\n\n"
+               "## 1. 模块\n\n- TC-01-01 导出 [P1]\n"
+               "  - 操作步骤: 1. 触发导出\n  - 预期结果: 生成 CSV 文件\n")
+        errs = [f for f in case_lint.lint(doc)[1] if f.severity == "error"]
+        self.assertFalse(any(f.code == "E5" for f in errs),
+                         "导读散文中的技术格式引用不应被判占位符")
