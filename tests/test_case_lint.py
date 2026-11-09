@@ -332,3 +332,51 @@ class RealCorpusDiscriminationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PriorityConcentrationTests(unittest.TestCase):
+    """W5：P0（冒烟）占比过高的告警（2026-11-09）。
+
+    触发依据是实测：审查任务产物出现 8/18 = 44% P0（原违规含"P0 泛滥"未被审出），
+    而 204 份真实产物 P0 占比中位 15%、p95 26%、最高 40%。故取 35% 且用例 ≥6 条，
+    只命中约 1.5% 样本——告警级（不阻断），要求逐条过 P0 自检。
+    """
+
+    def _cases(self, p0, p1, p2=0):
+        lines = ["# 用例", "## 1. 模块", ""]
+        n = 1
+        for _ in range(p0):
+            lines.append(f"- TC-01-{n:02d} 用例 {n} [P0]")
+            lines.append("  - 操作步骤: 1. 打开页面 2. 点击按钮")
+            lines.append("  - 预期结果: 显示成功提示，页面停留 1 秒内可见结果")
+            n += 1
+        for _ in range(p1):
+            lines.append(f"- TC-01-{n:02d} 用例 {n} [P1]")
+            lines.append("  - 操作步骤: 1. 打开页面 2. 点击按钮")
+            lines.append("  - 预期结果: 显示成功提示，页面停留 1 秒内可见结果")
+            n += 1
+        for _ in range(p2):
+            lines.append(f"- TC-01-{n:02d} 用例 {n} [P2]")
+            lines.append("  - 操作步骤: 1. 打开页面")
+            lines.append("  - 预期结果: 无变化")
+            n += 1
+        return "\n".join(lines) + "\n"
+
+    def _warns(self, text):
+        out, _ = case_lint.render("x.md", case_lint.lint(text)[0],
+                                  case_lint.lint(text)[1], case_lint.lint(text)[2])
+        return "W5" in out
+
+    def test_high_p0_ratio_warns(self):
+        self.assertTrue(self._warns(self._cases(p0=8, p1=9, p2=1)))  # 44%
+
+    def test_normal_ratio_does_not_warn(self):
+        self.assertFalse(self._warns(self._cases(p0=3, p1=12, p2=3)))  # 17%，接近实测中位
+
+    def test_small_suite_not_warned(self):
+        """用例 <6 条时比例失真（3/5=60% 也可能是合理冒烟集），不告警。"""
+        self.assertFalse(self._warns(self._cases(p0=3, p1=2)))
+
+    def test_threshold_boundary(self):
+        self.assertTrue(self._warns(self._cases(p0=7, p1=13)))    # 35%
+        self.assertFalse(self._warns(self._cases(p0=6, p1=14)))   # 30%

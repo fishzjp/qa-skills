@@ -25,6 +25,10 @@
     W2  异步预期缺判定时限（有"自动/异步/生效"而无时间词）
     W3  预期结果非唯一（"或"表述，应拆条）
     W4  未标注优先级的用例数
+    W5  P0（冒烟）占比过高（用例 ≥6 条且 P0 ≥35%）——冒烟集失去筛选意义，须逐条过
+        P0 自检（失败是否导致核心功能不可用）或降级；告警不阻断。
+        阈值依据（2026-11-09 实测 204 份真实产物）：P0 占比中位 15%、p95 26%、最高 40%，
+        取 35% 只命中 1.5% 样本；设 50% 会漏掉实测评测中出现的 44% 异常产物
 
 附录区（`## 附录…` / `## 审查记录…` 之后）整体跳过 E5/E6/W1-W3——那里按
 core/case-format.md 第 9 节就该放代码证据与缺陷记录。
@@ -422,6 +426,13 @@ def render(path, cases, findings, untagged):
         len(cases), modules, len(errors), len(warns)))
     for f in sorted(findings, key=lambda x: (x.severity != "error", x.line, x.code)):
         out.append("%-3s 行 %-4d %s" % (f.code, f.line, f.message))
+    p0_count = sum(1 for c in cases if "[P0]" in c.text)
+    if p0_count and len(cases) >= 6 and p0_count >= len(cases) * 0.35:
+        out.append(
+            "W5  P0（冒烟）%d/%d 条占比 %d%%——冒烟集应能快速判定'核心功能是否可用'；"
+            "请逐条过 P0 自检（这条失败是否导致整个功能不可用），不满足的降为 P1/P2"
+            "（判定口径见 test-case-writing「P0（冒烟）」节）"
+            % (p0_count, len(cases), int(p0_count * 100 / len(cases))))
     if untagged:
         out.append("W4  共 %d 条用例未标注 [P0]/[P1]/[P2]（默认按 P1 处理）" % untagged)
     verdict = "FAIL（%d 个错误，修复后重跑）" % len(errors) if errors else "PASS（无错误）"

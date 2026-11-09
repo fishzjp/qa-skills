@@ -57,7 +57,7 @@ description: "Review existing test cases (legacy, others', AI) for coverage and 
 ### 4. 正确性审查（有 PRD/代码时）
 
 - 用例预期结果与 PRD 规则 / 代码实现是否一致（静态裁决：代码为准，见 `../core/evidence.md`）
-- 优先级标注合理性（P0 逐条过自检：失败则核心不可用？）；风险等级对齐 `../core/risk-model.md`（Critical 必有 P0）
+- 优先级标注合理性（P0 逐条过自检：失败则核心不可用？）；风险等级对齐 `../core/risk-model.md`（Critical 必有 P0）。**机械闸门报 `W5 P0 占比过高` 时必须逐条复核**：冒烟集应只含「失败即核心功能不可用」的用例，实测 P0 合理占比中位约 15%（p95 26%）；把不满足自检的 P0 降为 P1/P2，并在审查记录注明降级依据（闸门是告警级，但忽略它等于把筛选问题留给执行现场）
 
 ### 5. 修订与落盘
 
