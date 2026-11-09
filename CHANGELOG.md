@@ -55,6 +55,12 @@
 - **改动**：新增 `skills/core/scripts/regression_checklist_check.py`——E1 缺节 / E2 缺变更基线 / W1 排除缺理由 / W2 P0 缺依据 / W3 影响不明缺标注。`regression-testing` 落盘步骤接线。
 - **验证**：用 Round 29 两份真实产物自测——修复后的产物干净通过、修复前的产物 W1 正确点名排除缺理由；pytest 346 passed。
 
+### case_lint / qa：审查记录归属改三态判定（修 Round 35 规则自相矛盾）
+
+- **问题（in-situ 实跑暴露）**：审查记录落款检查是子串口径且不分节类型——诚实标注「写时自审」的阶段 3 产物被 E9 拦死（而阶段 3 完成判据正是 case_lint 过闸）；混合标题「写时自审；非独立 test-case-review」反而能骗过检查并满足 qa 阶段 4 续跑判据（静默跳过独立审查的防线失守）。被测 Agent 在受控实验中被迫发明混合标题过闸并如实报告，暴露了规则不自洽。
+- **改动**：归属按标题括号**首 token** 三态判定——`test-case-review` 开头=独立审查、`test-case-writing`/`写时自审` 开头=合法自审、其余归属不明=E9；新增 `is_independent_review_heading()` 作为 qa 阶段 4 判据的机器口径；qa SKILL.md 判据同步；回归夹具登记随措辞有意识更新。
+- **验证**：三份真实产物（混合标题/独立落款/示例文件）全过；五种标题形态判定全部正确；pytest 358 passed；夹具 6/6。
+
 ### case_lint：审查记录落款核验（qa 阶段 4 判据前置到机器层）
 
 - **问题**：`qa` 阶段 4 完成判据要求"用例文件末尾含 **test-case-review 落款**的审查记录节"，但 `case_lint.py` 只查账目（E9 算术），不查落款——没有 test-case-review 标识的自审节也能过闸，编排层才（可能）发现，续跑时静默跳过独立审查。框架自身的展示文件 `examples/test-cases_with-skills.md` 也只写了 `## 审查记录`。
