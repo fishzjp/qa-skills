@@ -5,6 +5,16 @@
 
 ## [Unreleased]
 
+### Benchmark Audit（2026-11-09）：行业对标 + 有效性审计 + RSI 闭环验证（experiment/qa-rsi）
+
+40 轮 RSI 后对评测体系做独立审计。公开侧落库物：
+
+- **已知缺陷注入回归集入口测试**（`tests/test_regression_fixtures.py`）：把散在各轮的校验器缺陷修复固化为"真实产物 + 定向注入"回归夹具（E9 账目/落款、回归清单缺节 + 已知盲区负对照），runner 断言命中预期规则；夹具与 runner 属评测链路随 `eval/` 本地维护（不入公开仓），本测试保证本地 pytest 全量口径必须绿、公开侧自动跳过。
+- 审计本地链路发现并修复 **score 聚合层 tag 硬编码缺陷**（显式 `--model` 全轮 run 聚合 0 行、LATEST 假报 DEGRADED 五天）：`select_primary_tag()` + 聚合非空率守卫 + 4 单测；修复后恢复 0919 弱档矩阵标准报告路径（详见本地 `eval/GATES.md` §6 与 `eval/results/analyses/2026-11-09-*`）。
+- **Holdout 盲测层 v1**（本地 `eval/holdout/`，POLICY 预注册）：3 个全新任务（tcw-wms/req-telemed/rev-expense），独立作者代理隔离编写 + 独立审计代理逐点复核 + canary 分账注册；RSI 迭代代理禁止读取（GAIA/FrontierMath/Kaggle 私榜同款防过拟合设计）。
+- 审计报告（本地 `eval/results/analyses/2026-11-09-benchmark-audit-report.md`）：10 维行业对标（SWE-bench 系/τ-bench/WebArena-Verified/OSWorld/Terminal-Bench/SkillsBench 等，来源齐备）、科学性十指标验证、RSI 闭环实验（预注册 E0–E7）、最终裁决。
+
+
 ### 校验器（validate_schema）可靠性：四处"该拦没拦 / 不该拦却拦"
 
 围绕"门禁必须真的判定它声称要判定的东西"做了一轮确定性修复，全部有正反例钉住，判定标准本身未放松：
