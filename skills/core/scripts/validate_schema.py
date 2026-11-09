@@ -33,7 +33,8 @@
      在 budget_review 文本中（堵住"先超限触发检查点、再裁剪回 ≤3 后无迹可查"的逃逸窗口：
      维持低档也须留一行依据，不许无声消失）
   V5 移交不断链——execution_status=blocked 必带 todo；executor 非空且非 agent 时
-     （含 handoff）必带 handoff_ref
+     （含 handoff）必带 handoff_ref，且该 ref 指向的移交包文件必须真实存在
+     （按测试策略文件所在目录解析，支持 glob；模板占位符视为未落盘）
 
 模式三（可选增强参数，两模式均可叠加）：
 
@@ -355,6 +356,27 @@ def extract_scope_blocks(text):
     return "\n".join(parts) if parts else None
 
 
+def _handoff_ref_exists(ref, base):
+    """handoff_ref 是否指向真实存在的移交包（V5 断链实体核验）。
+
+    解析顺序：绝对路径 → 策略文件同目录 → 当前工作目录；同目录/ cwd 下额外允许
+    glob 形态（如 `专项移交_性能_*.yaml`，多份历史移交包并存时的写法）。
+    模板占位符（含 `{` / `<`）一律视为未落盘。
+    """
+    ref = (ref or "").strip()
+    if not ref or "{" in ref or "<" in ref:
+        return False
+    cands = [Path(ref)] if Path(ref).is_absolute() else [Path(base) / ref, Path.cwd() / ref]
+    for c in cands:
+        if c.exists():
+            return True
+        if any(ch in ref for ch in "*?["):
+            parent = c.parent
+            if parent.is_dir() and any(parent.glob(c.name)):
+                return True
+    return False
+
+
 def validate_strategy(path, repo_root=None):
     errors, warnings = [], []
     # 统一换行（Windows 宿主产物的 CRLF 会让行锚定正则全部失配）
@@ -426,6 +448,14 @@ def validate_strategy(path, repo_root=None):
         executor = scalar(kv, "executor")
         if decision == "include" and executor and executor != "agent" and not scalar(kv, "handoff_ref"):
             errors.append(f"V5 {axis}: include + 外部执行器({executor}) 缺 handoff_ref")
+        # V5 断链实体核验（2026-11-09 补）：handoff_ref 此前只查"非空"，指向不存在的
+        # 文件也能全绿——移交包"写了名字但没落盘"是本门要防的失败形态本身。
+        # 解析基准：策略文件所在目录（任务产物同目录落盘），其次 cwd（跨目录调用时的宽容路径）。
+        href = scalar(kv, "handoff_ref")
+        if href and not _handoff_ref_exists(href, path.parent):
+            errors.append(
+                f"V5 {axis}: handoff_ref 指向的文件不存在：{href}（按测试策略文件所在目录解析）——"
+                "移交包必须与策略一同落盘；若是模板占位符请替换为实际文件名并生成该文件")
 
     # V4：depth 枚举 + full 档逐行统计（functional_scope + type_scope 两域合并）
     full_axes = []

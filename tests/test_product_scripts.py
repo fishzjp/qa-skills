@@ -617,3 +617,55 @@ class MdLinkSuffixCoverageTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StrategyHandoffRefEntityTests(unittest.TestCase):
+    """V5 断链实体核验（2026-11-09 补）：handoff_ref 必须指向真实存在的移交包。
+
+    修复前形态：`handoff_ref` 只查非空，指向不存在的文件也全绿——"移交包写了名字
+    但没落盘"正是该门要防的失败形态。以下三条锚定：缺失红 / 存在绿 / 占位符红。
+    """
+
+    def _strategy(self, td, handoff_ref):
+        lines = [
+            "test_strategy:",
+            "  type_scope:",
+            f"    performance: {{ decision: handoff, executor: k6, handoff_ref: \"{handoff_ref}\", signals: [\"SLA\"] }}",
+        ]
+        for axis in ("security_business", "reliability", "concurrency", "compatibility",
+                     "accessibility", "visual", "i18n", "migration", "contract_integration"):
+            lines.append(
+                f'    {axis}: {{ decision: exclude, rationale: "无代码仓库，需求信号未命中", '
+                'scanned: ["需求信号(G)"] }')
+        lines += ["  depth_budget:", "    full_axes: []", ""]
+        md = td / "测试策略.md"
+        md.write_text("# 测试策略\n\n```yaml\n" + "\n".join(lines) + "```\n", encoding="utf-8")
+        return md
+
+    def test_missing_handoff_file_fails(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            md = self._strategy(td, "专项移交_性能_20260101.yaml")
+            self.assertEqual(validate_schema.main([str(md)]), 1)
+            errors, _ = validate_schema.validate_strategy(md)
+            self.assertTrue(any("handoff_ref 指向的文件不存在" in e for e in errors), errors)
+
+    def test_existing_handoff_file_passes(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            (td / "专项移交_性能_20260101.yaml").write_text("axis: performance\n", encoding="utf-8")
+            md = self._strategy(td, "专项移交_性能_20260101.yaml")
+            self.assertEqual(validate_schema.main([str(md)]), 0)
+
+    def test_template_placeholder_fails(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            md = self._strategy(td, "专项移交_性能_{日期}.yaml")
+            self.assertEqual(validate_schema.main([str(md)]), 1)
+
+    def test_glob_form_passes_when_file_present(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            (td / "专项移交_性能_20260101.yaml").write_text("axis: performance\n", encoding="utf-8")
+            md = self._strategy(td, "专项移交_性能_*.yaml")
+            self.assertEqual(validate_schema.main([str(md)]), 0)
