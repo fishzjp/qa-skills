@@ -331,6 +331,16 @@ def lint(text):
                         case.tc, "、".join(sorted(set(refs)))),
                 ))
 
+        # 标题占位符（Devin 评审 2026-11-09：此前 E5 只扫字段值，标题里的
+        # `{手机号}` 这类未完成占位符能一路过闸进入评审与自动化转换）
+        title_ph = find_placeholders(case.text)
+        if title_ph:
+            findings.append(Finding(
+                "E5", "error", case.line,
+                "%s 用例标题含占位符 %s——标题也是交付正文，须替换为具体数据"
+                % (case.tc, "、".join(sorted(title_ph)[:3])),
+            ))
+
         if expected_text:
             if UNDETERMINABLE_RE.search(expected_text):
                 findings.append(Finding(
@@ -379,7 +389,11 @@ def check_bookkeeping(raw_lines, cases, findings):
     claimed_after = [int(x) for x in re.findall(r"审查后[：:]\s*(\d+)\s*条", section)]
     claimed_before = [int(x) for x in re.findall(r"审查前[：:]\s*(\d+)\s*条", section)]
     claimed_added = [int(x) for x in re.findall(r"新增[：:]\s*(\d+)\s*条", section)]
-    claimed_modules = [int(x) for x in re.findall(r"(\d+)\s*个模块", section)]
+    claimed_removed = [int(x) for x in re.findall(r"(?:删除|移除|合并)[：:]?\s*(\d+)\s*条", section)]
+    # 模块数优先取「审查后」口径——审查可新增模块，取"审查前"的数目去比实际必然误报
+    # （Devin 评审 PR #13 指出：`审查前 3 个模块 … 审查后 4 个模块` 时 E9 恒红）
+    after_mods = [int(x) for x in re.findall(r"审查后[^\n]{0,12}?(\d+)\s*个模块", section)]
+    claimed_modules = after_mods or [int(x) for x in re.findall(r"(\d+)\s*个模块", section)]
 
     if claimed_after and claimed_after[0] != actual:
         findings.append(Finding(
@@ -393,12 +407,16 @@ def check_bookkeeping(raw_lines, cases, findings):
             "审查记录自报「%d 个模块」，实际 %d 个——模块数按 `## N.` 计数" % (
                 claimed_modules[0], actual_modules),
         ))
-    if claimed_before and claimed_added and claimed_after:
-        if claimed_before[0] + claimed_added[0] != claimed_after[0]:
+    if claimed_before and claimed_after and (claimed_added or claimed_removed):
+        added = claimed_added[0] if claimed_added else 0
+        removed = claimed_removed[0] if claimed_removed else 0
+        # 审查允许删除/合并冗余用例（见 test-case-review 修订规则），故算术须带减项：
+        # 审查前 - 删除 + 新增 == 审查后（Devin 评审 2026-11-09：只算加法会误伤合法审查）
+        if claimed_before[0] - removed + added != claimed_after[0]:
             findings.append(Finding(
                 "E9", "error", start + 1,
-                "审查记录算术不平：审查前 %d + 新增 %d ≠ 审查后 %d" % (
-                    claimed_before[0], claimed_added[0], claimed_after[0]),
+                "审查记录算术不平：审查前 %d − 删除 %d + 新增 %d ≠ 审查后 %d" % (
+                    claimed_before[0], removed, added, claimed_after[0]),
             ))
 
 

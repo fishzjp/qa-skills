@@ -209,19 +209,26 @@ def _scan_inline_levels(line):
     表格行以 `|` 分列，不属边界（否则同一行编号会被切断）。
     """
     pairs, pending = [], []
+    prefix_level = None          # 等级词出现在编号之前（如表格 `| Critical | R1 |`）
     last_end = 0
     for m in INLINE_LEVEL_TOKEN_RE.finditer(line):
-        if pending and INLINE_CLAUSE_SEP_RE.search(line[last_end:m.start()]):
+        if INLINE_CLAUSE_SEP_RE.search(line[last_end:m.start()]):
             pending = []
+            prefix_level = None   # 句界同时清空前缀等级，防跨句污染
         last_end = m.end()
         tok = m.group(0)
         if tok[0] in "Rr" and tok[1:].isdigit():
-            pending.append(tok)
+            if prefix_level:      # 前缀等级作用于同句内紧随的编号
+                pairs.append((tok, prefix_level))
+            else:
+                pending.append(tok)
             continue
         level = "Critical" if tok.lower() == "critical" else "High"
         if pending:
             pairs.extend((rid, level) for rid in pending)
             pending = []
+        else:
+            prefix_level = level  # 记下，供同句后续编号使用
     return pairs, pending
 
 

@@ -417,3 +417,32 @@ class AsyncTimeLimitNoiseTests(unittest.TestCase):
 
     def test_duration_still_accepted(self):
         self.assertFalse(self._w2("任务自动触发，30 分钟内完成"))
+
+
+class DevinCaseLintRegressionTests(unittest.TestCase):
+    """case_lint 的两个误判（Devin 评审 PR #13 指出，2026-11-09 修复）。"""
+
+    def _doc(self, review, n=6, title="用例"):
+        s = "# 用例\n## 1. 模块1\n"
+        for i in range(1, n + 1):
+            s += (f"- TC-01-{i:02d} {title}{i} [P1]\n"
+                  "  - 操作步骤: 1. 打开页面\n  - 预期结果: 显示成功，1 秒内可见\n")
+        return s + f"\n## 审查记录（test-case-review 2026-11-09）\n\n{review}\n"
+
+    def test_deletion_arithmetic_accepted(self):
+        """审查允许删除/合并冗余用例：审查前 − 删除 + 新增 == 审查后 应通过。"""
+        e9 = [f for f in case_lint.lint(self._doc(
+            "审查前：8 条，新增：0 条，删除：2 条，审查后：6 条", n=6))[1] if f.code == "E9"]
+        self.assertEqual(e9, [])
+
+    def test_wrong_deletion_arithmetic_still_rejected(self):
+        e9 = [f for f in case_lint.lint(self._doc(
+            "审查前：8 条，新增：0 条，删除：1 条，审查后：6 条", n=6))[1] if f.code == "E9"]
+        self.assertTrue(e9)
+
+    def test_placeholder_in_case_title_rejected(self):
+        """标题里的占位符同样是未完成正文，E5 必须拦（此前只扫字段值）。"""
+        e5 = [f for f in case_lint.lint(self._doc(
+            "审查前：6 条，审查后：6 条", n=6, title="用{手机号}登录"))[1] if f.code == "E5"]
+        self.assertTrue(e5)
+        self.assertIn("标题", e5[0].message)

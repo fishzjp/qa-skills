@@ -21,6 +21,7 @@ sys.path.insert(0, str(REPO / "scripts"))
 
 import scan_signals       # noqa: E402
 import validate_schema    # noqa: E402
+import report_meta_check as rmc   # noqa: E402
 import validate_skills    # noqa: E402
 
 GOOD_CASES_YAML = """test_cases:
@@ -929,3 +930,64 @@ class ValidateSchemaModeHintTests(unittest.TestCase):
             errors, _ = validate_schema.validate_strategy(md)
             self.assertTrue(any("type_scope" in e for e in errors), errors)
             self.assertFalse(any("两个参数" in e for e in errors), errors)
+
+
+class DevinReviewRegressionTests(unittest.TestCase):
+    """Devin AI 评审在 PR #13 上指出的 5 个真实缺陷（2026-11-09 修复）。
+
+    这些是最终验收阶段由 CI 侧评审发现、并逐条复现确认的问题——
+    记录在此防止回退。
+    """
+
+    # ---- #1 前缀式等级行（`| Critical | R1 |`）必须被归属，否则覆盖门禁 fail-open ----
+    def test_prefix_level_row_is_attributed(self):
+        self.assertEqual(validate_schema.extract_risk_levels("| Critical | R1 |"), {"R1": "Critical"})
+
+    def test_prefix_level_does_not_cross_clause(self):
+        """前缀等级不得跨句污染——Round 13 的句界修复必须同时成立。"""
+        self.assertEqual(validate_schema.extract_risk_levels(
+            "R5 / R6（Medium）。Critical 全落在三轴"), {})
+
+    def test_grouped_and_prefix_forms_coexist(self):
+        self.assertEqual(validate_schema.extract_risk_levels("R1/R2 为 Critical，R3 High"),
+                         {"R1": "Critical", "R2": "Critical", "R3": "High"})
+
+
+class ReportMetaDevinRegressionTests(unittest.TestCase):
+    """report_meta_check 的 3 个漏检（Devin 评审指出）。"""
+
+    BASE = """```yaml
+meta:
+  project: x
+  date: 2026-01-01
+  source_run: pr-smoke
+summary:
+  total: 1
+  passed: 1
+  failed: 0
+  blocked: 0
+exit_code_hint: {ec}
+open_items: {oi}
+{extra}
+```"""
+
+    def _check(self, ec="0", oi="0", extra="bugs:\n  - {id: BUG-1, severity: S1, status: 新建}"):
+        import types
+        return rmc.check(self.BASE.format(ec=ec, oi=oi, extra=extra))[0]
+
+    def test_bug_without_id_rejected(self):
+        errors = self._check(extra="bugs:\n  - {severity: S1, status: 新建}")
+        self.assertTrue(any("缺 id" in e for e in errors), errors)
+
+    def test_unknown_triage_key_rejected(self):
+        errors = self._check(extra="bugs: []\ntriage_distribution:\n  UNKNOWN: 1")
+        self.assertTrue(any("未定义分类" in e for e in errors), errors)
+
+    def test_empty_exit_code_hint_rejected(self):
+        self.assertTrue(any("exit_code_hint" in e for e in self._check(ec="")), )
+
+    def test_placeholder_open_items_rejected(self):
+        self.assertTrue(any("open_items" in e for e in self._check(oi="{条数}")))
+
+    def test_valid_block_still_passes(self):
+        self.assertEqual(self._check(), [])

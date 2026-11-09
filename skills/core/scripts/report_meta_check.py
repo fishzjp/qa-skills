@@ -120,8 +120,10 @@ def check(text):
             else:
                 errors.append(f"E4 summary.{k}='{v}' 不是整数")
     for k in ("exit_code_hint", "open_items"):
-        if _scalar(block, k) is None:
-            missing.append(k)
+        v = _scalar(block, k)
+        # 键存在但空值 / 仍是模板占位符，对聚合方等价于缺失（Devin 评审 2026-11-09 指出）
+        if v is None or not str(v).strip() or str(v).strip().startswith(("{", "<")):
+            missing.append(f"{k}（{'空值' if v is not None else '缺失'}）")
     if not re.search(r"(?m)^[ \t]*bugs[ \t]*:", block):
         missing.append("bugs")
     if missing:
@@ -139,7 +141,7 @@ def check(text):
 
     triage = _nested(block, "triage_distribution")
     if triage is not None:
-        keys = re.findall(r"(?m)^[ \t]+([A-Z]\d?)[ \t]*:", triage)
+        keys = re.findall(r"(?m)^[ \t]+([A-Za-z_][\w-]*)[ \t]*:", triage)
         bad = [k for k in keys if k not in TRIAGE_KEYS]
         if bad:
             errors.append(f"E3 triage_distribution 含未定义分类 {bad}（合法：{sorted(TRIAGE_KEYS)}）")
@@ -155,8 +157,13 @@ def check(text):
 
     for m in re.finditer(r"(?m)^[ \t]*-[ \t]*\{?(.+)$", block):
         item = m.group(1)
+        # bugs: 段内的列表项一律按 bug 条目校验——缺 id 本身就是缺陷
+        # （Devin 评审 2026-11-09：此前用 id 存在与否决定是否检查，无 id 条目被静默跳过）
+        if not re.search(r"(severity|status)[ \t]*:", item):
+            continue  # 既无 id 也无 severity/status → 不是 bug 条目
         if not re.search(r"id[ \t]*:", item):
-            continue  # 非 bug 条目（如梯形列表）不参与
+            errors.append(f"E5 bug 条目缺 id（聚合方需要标识符定位该缺陷）：{item.strip()[:60]}")
+            continue
         miss = [k for k, pat in (("severity", r"severity[ \t]*:"),
                                  ("status", r"status[ \t]*:")) if not re.search(pat, item)]
         if miss:
