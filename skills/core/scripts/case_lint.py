@@ -395,6 +395,15 @@ def check_bookkeeping(raw_lines, cases, findings):
     after_mods = [int(x) for x in re.findall(r"审查后[^\n]{0,12}?(\d+)\s*个模块", section)]
     claimed_modules = after_mods or [int(x) for x in re.findall(r"(\d+)\s*个模块", section)]
 
+    # qa 阶段 4 要求独立审查须有 test-case-review 落款——编排层判据在此层前置拦截
+    # （Devin 评审同类形态：闸门声称要查的但没查）
+    heading_line = raw_lines[start] if start < len(raw_lines) else ""
+    if "test-case-review" not in heading_line:
+        findings.append(Finding(
+            "E9", "error", start + 1,
+            "审查记录节标题不含 test-case-review 落款：'%s'——"
+            "独立审查节标题须含「test-case-review 日期」标识（区分阶段 3 写时自审）" % heading_line.strip()[:50],
+        ))
     if claimed_after and claimed_after[0] != actual:
         findings.append(Finding(
             "E9", "error", start + 1,

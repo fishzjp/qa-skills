@@ -278,7 +278,7 @@ class BookkeepingTests(unittest.TestCase):
     """E9：审查记录账目必须与实际一致（模型产出实测 8/8 不符，人写示例精确）。"""
 
     def _doc(self, record):
-        return make_doc(good_case()) + "\n## 审查记录\n" + record
+        return make_doc(good_case()) + "\n## 审查记录（test-case-review 2026-11-09）\n" + record
 
     def test_matching_counts_pass(self):
         doc = self._doc("- 审查前：1 条用例，1 个模块\n- 审查后：1 条用例，1 个模块\n")
@@ -446,3 +446,37 @@ class DevinCaseLintRegressionTests(unittest.TestCase):
             "审查前：6 条，审查后：6 条", n=6, title="用{手机号}登录"))[1] if f.code == "E5"]
         self.assertTrue(e5)
         self.assertIn("标题", e5[0].message)
+
+
+class ReviewAttributionTests(unittest.TestCase):
+    """审查记录节标题须含 test-case-review 落款（qa 阶段 4 判据在 case_lint 层前置拦截）。
+
+    qa 编排层阶段 4 完成判据：用例文件末尾含「test-case-review 落款」的审查记录节。
+    此前 case_lint 只查账目（E9 算术），不查落款——没有 test-case-review 标识的
+    自审节也能过闸，编排层才（可能）发现，续跑时静默跳过独立审查。
+    """
+
+    def _doc(self, review_heading):
+        base = "# 用例\n## 1. 模块\n\n"
+        for i in range(1, 7):
+            base += (f"- TC-01-{i:02d} 用例{i} [P1]\n"
+                     "  - 操作步骤: 1. 打开页面\n  - 预期结果: 显示成功，1 秒内可见\n")
+        return base + f"\n## {review_heading}\n\n- 审查前：6 条，审查后：6 条\n"
+
+    def test_with_tc_review_attribution_passes(self):
+        e9 = [f for f in case_lint.lint(self._doc(
+            "审查记录（test-case-review 2026-11-09）"))[1] if f.code == "E9"]
+        self.assertFalse(any("test-case-review 落款" in f.message for f in e9),
+                         "有落款不应报缺落款")
+
+    def test_without_tc_review_attribution_flagged(self):
+        e9 = [f for f in case_lint.lint(self._doc(
+            "审查记录"))[1] if f.code == "E9"]
+        self.assertTrue(any("test-case-review 落款" in f.message for f in e9),
+                        "无落款应被拦截")
+
+    def test_generic_review_heading_flagged(self):
+        e9 = [f for f in case_lint.lint(self._doc(
+            "审查记录（自查）"))[1] if f.code == "E9"]
+        self.assertTrue(any("test-case-review 落款" in f.message for f in e9),
+                        "自查落款不足以标识独立审查")
