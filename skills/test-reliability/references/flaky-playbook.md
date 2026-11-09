@@ -111,7 +111,7 @@ suite_health:
   clean_passes: 0         # 首次执行即通过
   retry_passes: 0         # 首次失败、重试通过（≠修复）
   quarantined_count: 0    # 隔离中（fixme/quarantine），不计入通过率分母
-  flaky_rate: 0.00        # 期间定性 flaky 条目数 / total_cases，两位小数
+  flaky_rate: 0.00        # 期间**定性为 flaky 的条目数** / total_cases，两位小数。分子是逐条判定结论的计数，≠ retry_passes + quarantined_count 之和（重试救回可能是环境噪声 C 类、隔离中可能含待修真失败——口径见判定矩阵）
   repeat_fail_count: 0    # 跨轮 ≥3 轮未修的 flaky 条目数（升级线）
   window: "14d"           # 统计窗口
 ```
