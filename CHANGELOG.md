@@ -15,6 +15,13 @@
 - **实测口径**（本地回放 154 份历史策略产物，非新生成）：可过门比例由 20% 提升到 33%；同期 V4 类误报由 91 条降至 38 条；逐份对比**无「原本通过改为失败」的回退**。
 - **范围假设声明结构化（V6 告警级）**：`test-strategy` 的 Schema 新增 `scope_assumption` 字段。该声明是既有强制交付项，但只写在散文里时实测仅 **39%** 的产物会带上（同期写进 Schema 的项为 80–95%，即「结构化才写、散文会漏」）。校验器在字段与等价散文都缺失时给告警，不阻断——若设为错误，On 臂过门率会从 33% 掉到 13%，为一段声明性文字付这个代价不划算。
 
+### 报告机读摘要新增校验器 `report_meta_check.py`
+
+- **背景**：`report-template` 第 7 节要求报告末节追加固定 yaml「机读摘要」，并声明"流水线聚合与质量门禁只解析此节"；生产方有四个（qa 收尾 / api-testing / automated-e2e-testing / test-reliability），但此前**没有任何脚本校验该块**——缺 `total`、`exit_code_hint: ok`、triage 冒出未定义分类时，人读内容照常、仓库侧零红灯，只有聚合侧出错。
+- **新增**：`skills/core/scripts/report_meta_check.py`（无第三方依赖）——校验块唯一性、必填字段、枚举（`source_run` 三值 / `exit_code_hint` 0–3 / triage ∈ {A,B1,B2,C,D,U}）、计数自洽（非负且 `passed+failed+blocked ≤ total`）、Bug 条目字段（`severity` S0–S2、`status` 四值）；已处理行尾注释与模板占位符（占位符报"仍是模板占位符，须替换"，而非含糊的类型错误）。
+- **接线**：`report-template` §7 定为落盘后必跑（单源），`qa` 收尾步与 `core` 脚本索引同步。
+- **验证**：11 条用例（正例 + 7 类反例 + 注释/占位符两个由实测发现的问题），临时回退修复后用例能红；全量 pytest 通过。
+
 ### 工程质量：插件注册面回归
 
 - 新增 `tests/test_plugin_registration.py`：真跑 dsh 插件入口（node 打桩 ctx），断言注册数/名单与 `skills/` 目录一致、`core` 双重不可调用、每个技能 description 与正文非空。此前 CI 对插件只有 `node --check`（语法），而插件对不合格技能目录是"warn 后跳过"——少注册一个技能时仓库侧照绿。已做正反例实测：把某技能 description 置空 → 测试 2 条红，恢复即绿。
