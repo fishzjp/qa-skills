@@ -311,6 +311,14 @@ reporter: [
 ],
 ```
 
+- **本地未安装 Playwright 浏览器时的执行降级**（2026-11-09 实测）：报错
+  `Executable doesn't exist at .../ms-playwright/chromium-...` 时**不要直接判"无法执行"**——
+  先用本机已装的浏览器跑通：临时配置加 `use: { channel: 'chrome' }`（Edge 用 `'msedge'`），
+  `npx playwright test -c pw.local.config.ts`。这一步能把"规格写得对不对"当场验掉
+  （编译通过 ≠ 选择器与断言成立）。**纪律**：临时配置只用于本地验证，不写进交付物、
+  改完即删；CI 仍按下方片段 `npx playwright install --with-deps chromium` 装原生引擎。
+  实测收益：同一批 spec 在无 Playwright 浏览器的环境里靠系统 Chrome 跑出 3/3 passed，
+  并可用变异（如删掉回车触发）验证断言有杀伤力（对应用例如期失败）。
 - **触发策略**：合入前流水线只跑受影响模块目录；夜间任务跑全量
 - **变量注入**：环境地址与账号沿用第 2 节约定，CI 上经变量/密钥注入，不入库
 - 最小 GitHub Actions 片段：
