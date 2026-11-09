@@ -449,11 +449,13 @@ class DevinCaseLintRegressionTests(unittest.TestCase):
 
 
 class ReviewAttributionTests(unittest.TestCase):
-    """审查记录节标题须含 test-case-review 落款（qa 阶段 4 判据在 case_lint 层前置拦截）。
+    """审查记录节标题归属三态（Round 35 引入，Round 42 修矛盾后的现行语义）。
 
-    qa 编排层阶段 4 完成判据：用例文件末尾含「test-case-review 落款」的审查记录节。
-    此前 case_lint 只查账目（E9 算术），不查落款——没有 test-case-review 标识的
-    自审节也能过闸，编排层才（可能）发现，续跑时静默跳过独立审查。
+    - `审查记录（test-case-review …）` = 独立审查（qa 阶段 4 判据）→ 过闸
+    - `审查记录（test-case-writing 写时自审…）` = 阶段 3 自审 → 过闸（诚实标注不该被罚）
+    - 归属不明的裸标题/其他 → E9（续跑时会被误当独立审查）
+    归属按标题括号**首个 token** 判定，防子串绕过（实测有产物被迫写
+    「写时自审；非独立 test-case-review」混合标题过旧版子串检查）。
     """
 
     def _doc(self, review_heading):
@@ -463,23 +465,32 @@ class ReviewAttributionTests(unittest.TestCase):
                      "  - 操作步骤: 1. 打开页面\n  - 预期结果: 显示成功，1 秒内可见\n")
         return base + f"\n## {review_heading}\n\n- 审查前：6 条，审查后：6 条\n"
 
-    def test_with_tc_review_attribution_passes(self):
-        e9 = [f for f in case_lint.lint(self._doc(
-            "审查记录（test-case-review 2026-11-09）"))[1] if f.code == "E9"]
-        self.assertFalse(any("test-case-review 落款" in f.message for f in e9),
-                         "有落款不应报缺落款")
+    def _e9(self, heading):
+        return [f for f in case_lint.lint(self._doc(heading))[1]
+                if f.code == "E9" and "归属不明" in f.message]
 
-    def test_without_tc_review_attribution_flagged(self):
-        e9 = [f for f in case_lint.lint(self._doc(
-            "审查记录"))[1] if f.code == "E9"]
-        self.assertTrue(any("test-case-review 落款" in f.message for f in e9),
-                        "无落款应被拦截")
+    def test_independent_review_attribution_passes(self):
+        self.assertEqual(self._e9("审查记录（test-case-review 2026-11-09）"), [])
+        self.assertTrue(case_lint.is_independent_review_heading(
+            "## 审查记录（test-case-review 2026-11-09）"))
+
+    def test_self_review_attribution_passes(self):
+        """阶段 3 诚实标注的写时自审节必须能过闸（Round 42 修复的矛盾）。"""
+        self.assertEqual(self._e9("审查记录（test-case-writing 写时自审）"), [])
+        self.assertFalse(case_lint.is_independent_review_heading(
+            "## 审查记录（test-case-writing 写时自审）"))
+
+    def test_hybrid_title_is_self_review_not_independent(self):
+        """子串绕过封堵：混合标题按首 token 归类为自审，不算独立审查落款。"""
+        h = "## 审查记录（test-case-writing 写时自审；非独立 test-case-review）"
+        self.assertFalse(case_lint.is_independent_review_heading(h))
+        self.assertEqual(self._e9("审查记录（test-case-writing 写时自审；非独立 test-case-review）"), [])
+
+    def test_bare_heading_flagged(self):
+        self.assertTrue(self._e9("审查记录"), "归属不明的裸标题应被拦截")
 
     def test_generic_review_heading_flagged(self):
-        e9 = [f for f in case_lint.lint(self._doc(
-            "审查记录（自查）"))[1] if f.code == "E9"]
-        self.assertTrue(any("test-case-review 落款" in f.message for f in e9),
-                        "自查落款不足以标识独立审查")
+        self.assertTrue(self._e9("审查记录（自查）"), "「自查」不是规范归属，应被拦截")
 
 
 class ProsePlaceholderBoundaryTests(unittest.TestCase):

@@ -67,7 +67,7 @@ description: "End-to-end QA entry: \"test this feature fully\" orchestrates requ
 - 阶段 1：`需求模型.md` 存在
 - 阶段 2：`测试策略.md` 存在且 `../core/scripts/validate_schema.py` V1–V5 通过（type_scope 含 handoff/blocked 轴或外部执行器时，对应 `专项移交_{轴}_{日期}.yaml` 应已生成）
 - 阶段 3：用例双轨落盘、`../core/scripts/case_lint.py {用例markmap}` 无错误（退出码 0）且 `../core/scripts/validate_schema.py {用例markmap} {测试用例.schema.yaml}` 通过（**必须双文件参数**——单参数会被当成测试策略校验，报「未找到 type_scope」这种与用例无关的错）
-- 阶段 4：用例文件末尾含 **test-case-review 落款**的审查记录节「## 审查记录（test-case-review …）」、修订后 `case_lint.py` 仍无错误且 Schema 已重新抽取校验——阶段 3 写时自审的同名「审查记录」节不算数（那是阶段 3 的完成标志，区分两者防续跑时静默跳过独立审查）
+- 阶段 4：用例文件末尾含**独立审查记录节**——标题括号内**首个 token** 为 `test-case-review`（「## 审查记录（test-case-review {日期}）」；机器口径 = `../core/scripts/case_lint.py` 的 `is_independent_review_heading()`）、修订后 `case_lint.py` 仍无错误且 Schema 已重新抽取校验——阶段 3 写时自审节（标题以 `test-case-writing 写时自审` 开头）不算数（那是阶段 3 的完成标志；归属不明的裸「审查记录」标题会被 case_lint E9 拦截，区分三者防续跑时静默跳过独立审查）
 - 阶段 5：`测试报告_{来源}_{日期}.md`（自动路径）或 `手动执行记录_{日期}.md`（手动路径）落盘
 - 阶段 6：`Bug条目_{日期}.md` 中转文件落盘；无 Bug 则在 `{项目}/流水线状态.md` 追加一行「阶段 6：无已确认 Bug，跳过」（跳过/未决等流水线状态统一记此文件——硬规则 3"状态全在文件"的续跑凭据，缺该行视为阶段未到）
 - 阶段 7：`回归清单_{日期}.md` 落盘；无代码变更则在 `{项目}/流水线状态.md` 追加一行「阶段 7：无变更，跳过」

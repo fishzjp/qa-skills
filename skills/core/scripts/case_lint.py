@@ -369,6 +369,20 @@ def _excerpt(text, limit=40):
     return text if len(text) <= limit else text[: limit - 1] + "…"
 
 
+# 审查记录节归属（Round 42）：按标题括号**首个 token** 判定——
+# test-case-review 开头 = 独立审查（qa 阶段 4 判据）；test-case-writing/写时自审 开头 =
+# 阶段 3 自审（合法，可过闸）；归属不明 = E9。首 token 锚定防子串绕过：实测有产物把
+# 自审节命名「（test-case-writing 写时自审；非独立 test-case-review）」以过 Round 35 的
+# 子串检查——诚实自审不该被逼成这样，而该标题也确实不是独立审查。
+REVIEW_INDEP_RE = re.compile(r"审查记录\s*[（(]\s*test-case-review\b")
+REVIEW_SELF_RE = re.compile(r"审查记录\s*[（(]\s*(?:test-case-writing|写时自审)")
+
+
+def is_independent_review_heading(heading):
+    """qa 阶段 4 判据的机器口径：审查记录节标题是否为独立审查落款。"""
+    return bool(REVIEW_INDEP_RE.search(heading))
+
+
 def check_bookkeeping(raw_lines, cases, findings):
     """E9：审查记录的自报账目必须与实际一致（模型实测 9/10 产出自报数不符）。
 
@@ -395,14 +409,16 @@ def check_bookkeeping(raw_lines, cases, findings):
     after_mods = [int(x) for x in re.findall(r"审查后[^\n]{0,12}?(\d+)\s*个模块", section)]
     claimed_modules = after_mods or [int(x) for x in re.findall(r"(\d+)\s*个模块", section)]
 
-    # qa 阶段 4 要求独立审查须有 test-case-review 落款——编排层判据在此层前置拦截
-    # （Devin 评审同类形态：闸门声称要查的但没查）
+    # 审查记录节标题必须有明确归属（Round 35 引入、Round 42 修矛盾）：
+    # 独立审查（test-case-review 开头）或写时自审（test-case-writing/写时自审 开头）都合法；
+    # 归属不明的裸标题才是 E9——它会在流水线续跑时被误当独立审查（qa 阶段 4 判据）。
     heading_line = raw_lines[start] if start < len(raw_lines) else ""
-    if "test-case-review" not in heading_line:
+    if not (REVIEW_INDEP_RE.search(heading_line) or REVIEW_SELF_RE.search(heading_line)):
         findings.append(Finding(
             "E9", "error", start + 1,
-            "审查记录节标题不含 test-case-review 落款：'%s'——"
-            "独立审查节标题须含「test-case-review 日期」标识（区分阶段 3 写时自审）" % heading_line.strip()[:50],
+            "审查记录节标题归属不明：'%s'——须以「test-case-review {日期}」（独立审查）"
+            "或「test-case-writing 写时自审」（阶段 3 自审）标明归属；"
+            "归属不明的审查记录会在流水线续跑时被误当独立审查" % heading_line.strip()[:50],
         ))
     if claimed_after and claimed_after[0] != actual:
         findings.append(Finding(
