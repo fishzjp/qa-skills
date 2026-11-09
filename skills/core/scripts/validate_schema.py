@@ -188,6 +188,9 @@ def as_list(val):
 INLINE_LEVEL_TOKEN_RE = re.compile(r"\bR\d{1,3}\b|\bCritical\b|\bHigh\b", re.I)
 
 
+INLINE_CLAUSE_SEP_RE = re.compile(r"[。；;！？!?]")
+
+
 def _scan_inline_levels(line):
     """按分组语义把行内风险编号与等级词配对，返回 ([(rid, level)], 未配对编号)。
 
@@ -195,9 +198,18 @@ def _scan_inline_levels(line):
     - `R1（Critical 20）> R2（High 16）` → R1=Critical；R2=High
     - `| R1 | … | Critical |`（表格行）→ R1=Critical
     等级词先于编号出现（如 `Critical 影响 R1`）时不强行归属，留给下一轮编号匹配。
+
+    句末标点（。；！？ 与半角 ;!?）是分组边界：不得跨句把后文等级并进前文编号组。
+    实测失败形态：`…R5 / R6（Medium）。Critical 全落在 functional / permission …`——
+    句号后的 Critical 被并给 R5/R6，把 Medium 风险误判成 Critical，进而误触 V4-终态。
+    表格行以 `|` 分列，不属边界（否则同一行编号会被切断）。
     """
     pairs, pending = [], []
+    last_end = 0
     for m in INLINE_LEVEL_TOKEN_RE.finditer(line):
+        if pending and INLINE_CLAUSE_SEP_RE.search(line[last_end:m.start()]):
+            pending = []
+        last_end = m.end()
         tok = m.group(0)
         if tok[0] in "Rr" and tok[1:].isdigit():
             pending.append(tok)

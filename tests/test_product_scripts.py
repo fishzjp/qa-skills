@@ -823,3 +823,28 @@ class StrategyBlockStyleAxisTests(unittest.TestCase):
         """块式 `- item` 列表必须被 list_items 识别。"""
         self.assertEqual(validate_schema.list_items(["(G)", "(S)"]), ["(G)", "(S)"])
         self.assertEqual(validate_schema.list_items('["(G)", "(S)"]'), ["(G)", "(S)"])
+
+
+class RiskLevelClauseBoundaryTests(unittest.TestCase):
+    """风险等级归属的句末边界（2026-11-09 补，Round 12 in-situ 暴露）。
+
+    失败形态：`… R5 / R6（Medium）。Critical 全落在三轴` —— 句号属于新句子，其 Critical
+    不得并给前文的 R5/R6（否则 Medium 风险被误判 Critical，误触 V4-终态）。
+    表格行以 `|` 分列，不属边界，不能被切断。
+    """
+
+    def test_sentence_end_resets_group(self):
+        self.assertEqual(validate_schema.extract_risk_levels(
+            "R5 / R6（Medium）。Critical 全落在 functional / permission 三轴"), {})
+
+    def test_grouping_across_ranking_sequence_still_works(self):
+        self.assertEqual(validate_schema.extract_risk_levels(
+            "R1 / R2（各 20 = Critical）> R4 / R3（High）> R5 / R6（Medium）。Critical 全落在三轴"),
+            {"R1": "Critical", "R2": "Critical", "R4": "High", "R3": "High"})
+
+    def test_table_row_not_split_by_pipe(self):
+        self.assertEqual(validate_schema.extract_risk_levels("| R1 用户删除 | Critical | 待验证 |"),
+                         {"R1": "Critical"})
+
+    def test_semicolon_resets_group(self):
+        self.assertEqual(validate_schema.extract_risk_levels("R1（Critical 20）；R2 待评估"), {"R1": "Critical"})
