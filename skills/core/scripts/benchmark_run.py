@@ -29,19 +29,49 @@ SCRIPTS = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPTS))
 
 # ---- 类型识别 ----
-TYPE_PATTERNS = [
-    ("strategy",   r"test_strategy|type_scope|Risk Map",            re.I),
-    ("cases",      r"TC-\d+-\d+|markmap|测试用例",                    0),
-    ("explore",    r"探索笔记|Charter|发现的 Bug|未解之谜",             0),
-    ("bug_entry",  r"BUG-\d+|根因分析|严重程度.*S[0-2]",              re.I),
-    ("regression", r"回归清单|必须回归|建议回归|无影响确认",              0),
-    ("report",     r"exit_code_hint|机读摘要|测试报告",               re.I),
+# 文件名约定优先（Round 52 第二轮教训：产物互相引用词汇——流水线状态引用
+# 「测试报告」路径、报告引用「execution_status」、需求模型引用「未解之谜」——
+# 内容特征对交叉引用文档天然脆弱；skill 产物链命名是硬纪律，文件名即类型）。
+# 内容模式只作回退（run-dir 归档文件 {task}__{arm}__{s} 无类型文件名）。
+FILENAME_PATTERNS = [
+    ("handoff",           r"^专项移交_"),
+    ("report",            r"^测试报告_"),
+    ("regression",        r"^回归清单_"),
+    ("explore",           r"^探索笔记_"),
+    ("bug_entry",         r"^Bug条目"),
+    ("strategy",          r"^测试策略"),
+    ("cases",             r"测试用例_markmap|markmap"),
+    ("case_schema",       r"\.schema\.ya?ml$|^测试用例\.schema"),
+    ("pipeline_state",    r"^流水线状态"),
+    ("plan",              r"流水线执行方案"),
+    ("reliability",       r"^可靠性报告"),
+    ("requirement_model", r"^需求模型|^评审报告|^测试流水线执行方案"),
 ]
 
+# 内容回退顺序 = 特征独特性降序；且只认**强结构证据**（标题锚/yaml 键/多信号共现）。
+# Round 52 第三轮教训：编排类文档会引用所有产物名（"探索笔记_{主题}.md""测试报告_日期"
+# "Risk Map"…），单弱信号回退会截获错类型 → 假红。弱提及不算类型证据。
+TYPE_PATTERNS = [
+    ("handoff",    r"^axis:\s|专项移交包",                              re.M),
+    ("plan",       r"^#{1,3}\s*.{0,16}流水线执行方案",                     re.M),
+    ("reliability", r"^#\s*可靠性报告|重试策略裁决",                        re.M),
+    ("report",     r"exit_code_hint|^#{1,6}\s*[^\n]{0,20}机读摘要",         re.M),
+    ("regression", r"^#+\s*回归清单|必须回归[\s\S]{0,2000}无影响确认",      re.M),
+    ("explore",    r"^#\s*探索笔记",                                    re.M),
+    ("strategy",   r"^\s*type_scope:",                                 re.M),
+    ("cases",      r"TC-[A-Za-z0-9]+-\d+|markmap",                     0),
+    # bug_entry 垫底：run-dir 归档里 BUG-n 引用多出现在用例文档正文（关联缺陷编号），
+    # 真 Bug 条目产物按命名纪律叫 Bug条目_*.md，走文件名路由先行命中
+    ("bug_entry",  r"BUG-\d+[\s\S]{0,400}严重程度|严重程度[\s\S]{0,400}BUG-\d+|根因分析[\s\S]{0,1500}严重程度", 0),
+]
 
-def detect_type(text):
-    """按特征模式识别产物类型。"""
+def detect_type(text, name=""):
+    """产物类型识别：文件名约定优先，内容特征回退。"""
     import re as _re
+    if name:
+        for type_name, pat in FILENAME_PATTERNS:
+            if _re.search(pat, name):
+                return type_name
     for type_name, pat, flags in TYPE_PATTERNS:
         if flags:
             if _re.search(pat, text, flags):
@@ -54,6 +84,13 @@ def detect_type(text):
 # ---- 校验器注册表 ----
 # (checker_module, check_function_or_script, applies_to_types)
 GATES = {
+    "handoff":    [],  # 暂无专属校验器（移交包内容校验器在候选队列，无漂移数据前不建）
+    "case_schema": [],  # schema 须与 markmap 双文件校验（validate_schema 双参模式），单文件不判
+    "pipeline_state": [],
+    "plan":       [],  # 编排方案暂无专属校验器（qa SKILL 判据在编排层 prose）
+    "reliability": [],  # 可靠性报告的机读摘要是 rel 专属 schema（total_cases/clean_passes…），
+                        # 与测试报告机读摘要不同构；专属校验器在候选队列
+    "requirement_model": [],
     "strategy":   [("validate_schema.py",  None, "strategy_gate")],
     "cases":      [("case_lint.py",        None, "lint"),
                    ("validate_schema.py",  None, "schema_dual")],
@@ -107,7 +144,7 @@ def score_file(file_path):
     except Exception as e:
         return {"error": str(e)}
 
-    file_type = detect_type(text)
+    file_type = detect_type(text, p.name)
     if file_type == "unknown":
         return {"file": str(p), "type": "unknown", "skipped": True}
 

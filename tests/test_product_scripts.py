@@ -22,6 +22,7 @@ sys.path.insert(0, str(REPO / "scripts"))
 import scan_signals       # noqa: E402
 import validate_schema    # noqa: E402
 import report_meta_check as rmc   # noqa: E402
+import benchmark_run as br        # noqa: E402
 import validate_skills    # noqa: E402
 
 GOOD_CASES_YAML = """test_cases:
@@ -991,3 +992,54 @@ open_items: {oi}
 
     def test_valid_block_still_passes(self):
         self.assertEqual(self._check(), [])
+
+
+class BenchmarkRunTypeRoutingTests(unittest.TestCase):
+    """benchmark_run 类型路由回归（Round 52 三次误路由教训的固化）。
+
+    教训链：① 移交 yaml 被 bug_entry 误捕（含"严重程度"字样）→ 文件名约定优先；
+    ② 编排方案引用所有产物名（"机读摘要""探索笔记"…）被内容弱信号截获 →
+       内容回退只认强结构证据（标题锚/yaml 键/共现）；
+    ③ 用例文档引用 BUG-n 被 bug_entry 截获 → bug_entry 要求 BUG-n 与严重程度共现且垫底。
+    """
+
+    def test_filename_convention_wins_over_content(self):
+        # 流水线状态文件内容提到"测试报告"——不得判成 report
+        self.assertEqual(br.detect_type("测试报告_20261109.md 将生成", "流水线状态.md"),
+                         "pipeline_state")
+        self.assertEqual(br.detect_type("# x", "测试报告_20261109.md"), "report")
+        self.assertEqual(br.detect_type("未解之谜 探索笔记", "需求模型.md"),
+                         "requirement_model")
+        self.assertEqual(br.detect_type("anything", "专项移交_性能_20261109.yaml"), "handoff")
+
+    def test_content_fallback_requires_strong_evidence(self):
+        # 编排方案引用产物名（弱信号）→ unknown，不得截获为 report/explore
+        plan_ref = "产出 探索笔记_{主题}.md 与 测试报告_日期.md，Risk Map 提及，机读摘要见模板"
+        self.assertEqual(br.detect_type(plan_ref, "qa-doc__on__s0.md"), "unknown")
+        # 真探索笔记（H1 标题锚）→ explore
+        self.assertEqual(br.detect_type("# 探索笔记：主题\n## Charter\n", "x__on__s0.md"),
+                         "explore")
+        # 真编排方案（标题）→ plan
+        self.assertEqual(br.detect_type("# 测试流水线执行方案\n", "qa-x__on__s0.md"), "plan")
+
+    def test_content_order_and_patterns(self):
+        self.assertEqual(br.detect_type("```yaml\ntype_scope:\n  performance: exclude\n```",
+                                        "tsd__on__s0.md"), "strategy")
+        self.assertEqual(br.detect_type("# 回归清单 —\n## 必须回归（P0）\n## 无影响确认",
+                                        "reg__on__s0.md"), "regression")
+        self.assertEqual(br.detect_type("axis: 业务安全\ndecision: include\n", "x.yaml"),
+                         "handoff")
+        self.assertEqual(br.detect_type("# 可靠性报告_x\n## 重试策略裁决\n", "rel__on.md"),
+                         "reliability")
+
+    def test_case_docs_with_bug_refs_route_to_cases(self):
+        """用例文档引用 BUG-n（关联缺陷编号）不得被判成 Bug 条目。"""
+        doc = "- TC-01-01 关联 BUG-1 验证 [P1]\n  - 操作步骤: x\n  - 预期结果: y\n"
+        self.assertEqual(br.detect_type(doc, "tcw-x__on__s0.md"), "cases")
+        # 真 Bug 条目形态（BUG-n + 严重程度共现，无 TC）→ bug_entry
+        bug = "### BUG-001\n- **严重程度**: S1\n- **根因分析**: x\n"
+        self.assertEqual(br.detect_type(bug, "x.md"), "bug_entry")
+
+    def test_alpha_module_tc_ids_detected_as_cases(self):
+        """弱模型产出 TC-NICK-004 式字母模块号也是用例文档（0919 实测形态）。"""
+        self.assertEqual(br.detect_type("- TC-NICK-004 x", "x__on.md"), "cases")
