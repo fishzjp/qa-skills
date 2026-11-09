@@ -202,7 +202,7 @@ markmap 是给人的交付物与**唯一人工维护源**；Schema 是机器可�
 2. **标记受影响用例**：按 TC 编号列出，标记 `[已变更]`、`[已废弃]`、`[需新增]`（Schema 的 `status` 同步）
 3. **更新用例**：新增用追加编号，废弃用 `~~删除线~~` + `[已废弃-原因]`
 4. **局部审查**：对变更模块执行 4A + 涉及变更的跨模块检查
-5. **重新抽取 Schema**（并运行 `../core/scripts/validate_schema.py` 校验），输出变更报告（格式见 `../core/case-format.md` 第 10 节）
+5. **重新抽取 Schema**（并运行 `../core/scripts/validate_schema.py {用例markmap} {测试用例.schema.yaml}` 双文件校验），输出变更报告（格式见 `../core/case-format.md` 第 10 节）
 
 ## Common Mistakes
 

@@ -901,3 +901,31 @@ class StrategyScopeAssumptionTests(unittest.TestCase):
             self.assertEqual(errors, [])
             # 告警不阻断：退出码仍为 0
             self.assertEqual(validate_schema.main([str(md)]), 0)
+
+
+class ValidateSchemaModeHintTests(unittest.TestCase):
+    """单参数误投用例文件时给可执行提示（2026-11-09）。
+
+    触发场景：qa 阶段 3 的完成判据曾写成 `validate_schema.py {用例文件}`（单参数），
+    而校验器按参数个数分发模式——单参数走**测试策略**校验，于是对用例文件报
+    「未找到 type_scope」这种与用例无关的错。实测确认后：判据改为双参数，
+    同时让校验器在单参数喂入用例文件时给出「需要两个参数」的可执行提示。
+    """
+
+    def test_single_arg_on_case_file_hints_two_args(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            md = td / "测试用例_markmap.md"
+            md.write_text("# 用例\n## 1. 模块\n\n- TC-01-01 用例 [P1]\n"
+                          "  - 操作步骤: 1. 打开\n  - 预期结果: 成功\n", encoding="utf-8")
+            errors, _ = validate_schema.validate_strategy(md)
+            self.assertTrue(any("两个参数" in e for e in errors), errors)
+
+    def test_single_arg_on_non_case_file_keeps_original_message(self):
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            md = td / "笔记.md"
+            md.write_text("# 随便一份笔记\n\n没有用例也没有 type_scope\n", encoding="utf-8")
+            errors, _ = validate_schema.validate_strategy(md)
+            self.assertTrue(any("type_scope" in e for e in errors), errors)
+            self.assertFalse(any("两个参数" in e for e in errors), errors)

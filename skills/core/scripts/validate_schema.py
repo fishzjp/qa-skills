@@ -551,7 +551,14 @@ def validate_strategy(path, repo_root=None):
     text = path.read_text(encoding="utf-8").replace("\r\n", "\n")
     block = extract_scope_blocks(text)
     if block is None:
-        errors.append("未找到含 type_scope:/functional_scope: 的 yaml 代码块——测试策略必须包含类型域十轴决策（V1）")
+        # 单参数调用时可能是"误把用例文件当策略文件"——给可执行提示，而不是让人卡在
+        # 「未找到 type_scope」这种与用例无关的错上（qa 阶段 3 判据曾这么写，实测踩到）
+        if re.search(r"^\s*[-*]\s+(?:\*\*)?\s*TC-\d+-\d+", text, re.M):
+            errors.append(
+                "这个文件用的是例（含 TC 编号），而当前是**测试策略**校验模式——"
+                "用例 Schema 校验需要两个参数：validate_schema.py {用例markmap} {测试用例.schema.yaml}")
+        else:
+            errors.append("未找到含 type_scope:/functional_scope: 的 yaml 代码块——测试策略必须包含类型域十轴决策（V1）")
         return errors, warnings
     # Risk Map 等级抽取：供 V4-终态留痕判定哪些轴挂着 Critical 风险；
     # 同时支持 yaml 块 id/level 分行（risk-model.md §4 权威格式）与行内同现（表格/散文）
