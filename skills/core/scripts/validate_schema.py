@@ -184,6 +184,30 @@ def as_list(val):
     return []
 
 
+INLINE_LEVEL_TOKEN_RE = re.compile(r"\bR\d{1,3}\b|\bCritical\b|\bHigh\b", re.I)
+
+
+def _scan_inline_levels(line):
+    """按分组语义把行内风险编号与等级词配对，返回 ([(rid, level)], 未配对编号)。
+
+    - `R1/R2 为 Critical，R3 High` → R1,R2=Critical；R3=High
+    - `R1（Critical 20）> R2（High 16）` → R1=Critical；R2=High
+    - `| R1 | … | Critical |`（表格行）→ R1=Critical
+    等级词先于编号出现（如 `Critical 影响 R1`）时不强行归属，留给下一轮编号匹配。
+    """
+    pairs, pending = [], []
+    for m in INLINE_LEVEL_TOKEN_RE.finditer(line):
+        tok = m.group(0)
+        if tok[0] in "Rr" and tok[1:].isdigit():
+            pending.append(tok)
+            continue
+        level = "Critical" if tok.lower() == "critical" else "High"
+        if pending:
+            pairs.extend((rid, level) for rid in pending)
+            pending = []
+    return pairs, pending
+
+
 def extract_risk_levels_detailed(md_text):
     """提取（{风险编号: 等级}, 有等级依据的编号集合），同号取最高级（Critical > High > 其余忽略）。
 
@@ -223,22 +247,26 @@ def extract_risk_levels_detailed(md_text):
         if current and (not stripped or stripped.startswith("```")
                         or stripped.startswith("#")):
             current = None  # 记录边界：空行 / 围栏 / 标题（这些行也不会携带等级词）
+        lv = None
         if CRITICAL_WORD_RE.search(line):
             lv = "Critical"
         elif HIGH_WORD_RE.search(line):
             lv = "High"
-        else:
-            lv = None
         rids = set(RISK_ID_RE.findall(line))
         has_level_field = level_field_re.search(line) is not None
         has_subgate_level = (medium_word_re.search(line) is not None
                              or low_word_re.search(line) is not None)
         if rids:
-            for rid in rids:  # 形态 1：行内同现
-                if lv:
-                    _raise(rid, lv)
-                    leveled.add(rid)
-            if lv is None and (has_subgate_level or has_level_field):
+            # 形态 1：行内同现——按"编号累积到等级词"的分组语义归属
+            # （2026-11-09 修：此前一行内所有编号共用该行出现的最高等级词，
+            #  `R1/R2 为 Critical，R3 High` 会把 R3 也判成 Critical，进而让
+            #  V4-终态 对 R3 的引用轴误报"Critical 降档未留痕"——27/75 份真实
+            #  产物命中该形态）。分组语义同时覆盖 `R1（Critical 20）> R2（High 16）`。
+            line_pairs, _pending = _scan_inline_levels(line)
+            for rid, lvl in line_pairs:
+                _raise(rid, lvl)
+                leveled.add(rid)
+            if not line_pairs and (has_subgate_level or has_level_field):
                 leveled.update(rids)  # 行内有 Medium/Low 词或 level: 字段 → 有依据
         elif current:
             if lv:  # 形态 2：跨行记录内的等级行

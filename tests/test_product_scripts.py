@@ -669,3 +669,73 @@ class StrategyHandoffRefEntityTests(unittest.TestCase):
             (td / "专项移交_性能_20260101.yaml").write_text("axis: performance\n", encoding="utf-8")
             md = self._strategy(td, "专项移交_性能_*.yaml")
             self.assertEqual(validate_schema.main([str(md)]), 0)
+
+
+class RiskLevelAttributionTests(unittest.TestCase):
+    """风险等级归属的分组语义（2026-11-09 修）。
+
+    修复前形态：同一行出现多个风险编号时，该行出现的**最高**等级词被套给全部编号——
+    `R1/R2 为 Critical，R3 High` 会把 R3 也判成 Critical，进而让 V4-终态 对引用 R3 的
+    轴误报"Critical 降档未留痕"。实测 27/75 份真实产物命中该写法。
+    """
+
+    def test_grouped_ids_share_preceding_level(self):
+        levels = validate_schema.extract_risk_levels("R1/R2 为 Critical，R3 High 驱动功能域")
+        self.assertEqual(levels, {"R1": "Critical", "R2": "Critical", "R3": "High"})
+
+    def test_per_id_parenthesized_levels(self):
+        levels = validate_schema.extract_risk_levels("R1（Critical 20）> R2（High 16）")
+        self.assertEqual(levels, {"R1": "Critical", "R2": "High"})
+
+    def test_legend_line_without_ids_assigns_nothing(self):
+        self.assertEqual(validate_schema.extract_risk_levels(
+            "评分：Critical 20–25 / High 10–19 / Medium 4–9 / Low 1–3"), {})
+
+    def test_table_row_single_id_still_works(self):
+        self.assertEqual(validate_schema.extract_risk_levels("| R1 用户删除 | Critical | 待验证 |"),
+                         {"R1": "Critical"})
+
+    def _strategy_with_refs(self, td, refs_by_axis):
+        lines = ["test_strategy:", "  type_scope:"]
+        base = {
+            "performance": "exclude",
+        }
+        axes = ["performance", "reliability", "concurrency", "compatibility",
+                "accessibility", "visual", "i18n", "migration", "contract_integration"]
+        for ax in axes:
+            refs = refs_by_axis.get(ax)
+            if refs:
+                lines.append(f'    {ax}: {{ decision: include, depth: standard, '
+                             f'signals: ["x"], risk_refs: [{refs}] }}')
+            else:
+                lines.append(f'    {ax}: {{ decision: exclude, rationale: "无代码仓库，未命中", '
+                             'scanned: ["需求信号(G)"] }')
+        sb = refs_by_axis.get("security_business")
+        if sb:
+            lines.append(f'    security_business: {{ decision: include, depth: standard, '
+                         f'signals: ["越权"], risk_refs: [{sb}] }}')
+        else:
+            lines.append('    security_business: { decision: include, depth: standard, signals: ["越权"] }')
+        lines += ["  depth_budget:", "    full_axes: []", ""]
+        md = td / "测试策略.md"
+        riskmap = ("## Risk Map\n\n```yaml\nrisk:\n  id: R1\n  level: Critical\n```\n\n"
+                   "R1 越权 Critical；R2 为 High；R3 为 High\n\n")
+        md.write_text("# 测试策略\n\n" + riskmap + "```yaml\n" + "\n".join(lines) + "```\n",
+                      encoding="utf-8")
+        return md
+
+    def test_v4_terminal_not_triggered_by_high_ref(self):
+        """轴引用 High 风险（R2）维持 standard 时不得要求 budget_review 留痕。"""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            md = self._strategy_with_refs(td, {"reliability": "R2", "performance": "R3"})
+            errors, _ = validate_schema.validate_strategy(md)
+            self.assertFalse([e for e in errors if "V4-终态" in e], errors)
+
+    def test_v4_terminal_still_triggered_by_critical_ref(self):
+        """轴引用 Critical 风险（R1）维持 standard 时仍须留痕——门不能因修复而失效。"""
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            md = self._strategy_with_refs(td, {"reliability": "R1"})
+            errors, _ = validate_schema.validate_strategy(md)
+            self.assertTrue([e for e in errors if "V4-终态 reliability" in e], errors)
