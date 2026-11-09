@@ -82,7 +82,7 @@ description: "End-to-end QA entry: \"test this feature fully\" orchestrates requ
 
 ### 4. 收尾：生成测试报告
 
-全部阶段完成后（或用户要求提前收尾），按 `../core/report-template.md`（此时加载）汇总生成 `{项目}/测试报告_{日期}.md`：范围、执行统计（自动运行结果与手动执行记录合并）、Bug 清单（拼装阶段 6 的 `Bug条目_{日期}.md` 并逐条同步状态——有回归结果的按结果更新为已验证关闭/已修复待验证，未回归的保持新建）、风险残留、回归摘要、类型域专项结果按 report-template §7 逐轴归一化回收（handoff / 外部执行 / blocked / exclude）、未闭环事项（含移交 yaml 各轴当前状态与去向）、各阶段产物路径索引、机读摘要片段（按 report-template「机读摘要片段」节生成，供报告聚合系统消费）。
+全部阶段完成后（或用户要求提前收尾），按 `../core/report-template.md`（此时加载）汇总生成 `{项目}/测试报告_{日期}.md`：范围、执行统计（自动运行结果与手动执行记录合并）、Bug 清单（拼装阶段 6 的 `Bug条目_{日期}.md` 并逐条同步状态——有回归结果的按结果更新为已验证关闭/已修复待验证，未回归的保持新建）、风险残留、回归摘要、类型域专项结果按 report-template §7 逐轴归一化回收（handoff / 外部执行 / blocked / exclude）、未闭环事项（含移交 yaml 各轴当前状态与去向）、各阶段产物路径索引、机读摘要片段（按 report-template「机读摘要片段」节生成，供报告聚合系统消费；落盘后跑 `../core/scripts/report_meta_check.py {报告}` 校验，退出码 1 须修复）。
 
 ### 5. 交付
 
