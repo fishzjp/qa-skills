@@ -87,7 +87,7 @@ description: "Exploratory testing sessions when requirements are vague or docs a
 
 ### 4. 收敛与落盘
 
-- 时间盒到 / 停点条件满足 → 整理探索笔记落盘 `探索笔记_{主题}.md`
+- 时间盒到 / 停点条件满足 → 整理探索笔记落盘 `探索笔记_{主题}.md`，**落盘后跑结构校验** `python3 ../core/scripts/explore_note_check.py {笔记路径}`：E1–E3（六节齐备 / Charter 三要素 / 风险有评级）为错误级须修复；W1–W5（验收强度 / confidence / status / evidence 等级 / 想法归属 / Bug 定性标注）为告警级，逐条处置或在交付说明里写明为何可接受
 - **知识沉淀判定**：探索中确认的业务规则、环境怪癖、flaky 噪声判据若过 `qa-memory` 的写入判据（换新会话重测能省一次重新发现），按其流程沉淀进项目 `.qa/` 知识库
 - 风险清单按 `../core/risk-model.md` 预评级（Impact × Likelihood；证据不足时 status 记 risk/inference 并注明补强方向，不用 status 枚举外的标记）
 - 测试想法分类：可直接转用例的 / 需先澄清的 / 需专项环境的
