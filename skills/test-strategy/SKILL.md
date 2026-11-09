@@ -41,13 +41,13 @@ test_strategy:
     data_consistency:  { include: true, depth: standard, rationale: "库存与订单跨表一致" }
     regression:        { include: true, depth: standard, rationale: "存量功能回归基线" }
   type_scope:                  # 类型域：十轴全轴必答，每轴单行 flow 风格（校验器按行解析）
-    performance:        { decision: include, depth: full,     signals: ["PRD-4.2 SLA", "order_service.go:88"], risk_refs: [R3], executor: k6, execution_status: blocked, todo: "向运维索取独立压测环境", handoff_ref: "专项移交_性能_{日期}.yaml" }
+    performance:        { decision: include, depth: full,     signals: ["PRD-4.2 SLA", "order_service.go:88"], risk_refs: [R3], executor: k6, execution_status: blocked, todo: "向运维索取独立压测环境", handoff_ref: "专项移交_性能_20260901.yaml" }   # 该文件须真实存在（V5 核验）
     security_business:  { decision: include, depth: standard, signals: ["多角色", "内部信号:permission≥standard"] }
     reliability:        { decision: include, depth: standard, signals: ["retry: pay_service.go:41"] }
     concurrency:        { decision: include, depth: standard, signals: ["库存扣减", "S级复核: check-then-write 命中 cart_service.go:41"] }
-    compatibility:      { decision: include, depth: light,    signals: ["有前端"] }
-    accessibility:      { decision: include, depth: light,    signals: ["有前端"] }
-    visual:             { decision: include, depth: light,    signals: ["有前端"] }
+    compatibility:      { decision: include, depth: light,    signals: ["有前端（对外 Web）"] }
+    accessibility:      { decision: include, depth: light,    signals: ["采购条款要求 WCAG 2.2 AA"] }
+    visual:             { decision: exclude,  rationale: "无品牌验收 / 设计稿交付信号（内部工具）", scanned: ["需求信号未命中(G)", "有前端但不构成视觉纳入信号(S 级复核)"] }
     i18n:               { decision: exclude,  rationale: "需求信号（海外/多语言/RTL）未命中；无代码仓库", scanned: ["需求信号(G)"] }
     migration:          { decision: include, depth: standard, signals: ["migrations/2026-08-x.sql"] }
     contract_integration: { decision: include, depth: standard, signals: ["外部风控依赖"] }
@@ -90,6 +90,7 @@ test_strategy:
 
 1. **G 级扫描**（有代码仓库时，开工跑一次三组共用）：`python3 ../core/scripts/scan_signals.py <仓库路径>` → 每轴 G 级信号 + 预填表
 2. **逐轴决策（受限选择，从预填表修订，不空白生成）**：需求信号 → G 级核对 → **S 级照单复核**（矩阵各轴标〔S〕的项逐项读代码确认）→ decision → depth
+   - **软默认轴先判"信号是否命中"**：未命中 → exclude（R4 + scanned 双清单），**不要用 light 兜底**——"求稳全测"会把预算摊到长尾（实测过度纳入是该步最主要的错误形态）。**"有前端"只在轴 5 兼容性算纳入信号，在轴 6 无障碍 / 轴 7 视觉不算**（那两轴要合规条款 / 设计交付物）
 3. **防橡皮图章**：exclude 永不预填——exclude 必须完成 S 级复核并把 G+S 双清单写进 `scanned`；"脚本无命中"单独不构成 exclude 理由
 4. **组内交付核对**：本组全轴有决策再进下一组；十轴完成进入第 5 步
 
