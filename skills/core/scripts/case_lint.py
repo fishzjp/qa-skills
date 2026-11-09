@@ -74,7 +74,14 @@ UNDETERMINABLE_RE = re.compile(
     r"是否正确|是否正常|是否允许|是否视为|视情况|待确认|功能正常|正常显示|无异常"
 )
 ASYNC_RE = re.compile(r"自动|异步|稍后|生效|轮询|超时")
-TIME_LIMIT_RE = re.compile(r"毫秒|秒|分钟|小时|工作日|当天|次日|立即|实时|即刻")
+# 否定式异步不是"待限时的异步预期"：「不会自动变为已结束」「无超时中断」都没有事件可限时
+NEG_ASYNC_RE = re.compile(
+    r"(?:不|无|未|非|勿)\s*(?:会\s*)?(?:自动|异步|生效|轮询|稍后|超时)"
+    r"|无[^，。；]{0,10}(?:超时|自动|异步)")   # 「无内存溢出或超时错误」式否定枚举
+# 括号内多为补充说明（如「（自动结束仅对已发布的券生效）」），不是预期本身
+PAREN_NOTE_RE = re.compile(r"[（(][^）)]*[）)]")
+TIME_LIMIT_RE = re.compile(r"毫秒|秒|分钟|小时|工作日|当天|次日|立即|实时|即刻"
+                           r"|\d{1,2}\s*[:：]\s*\d{2}|\d{1,2}\s*点|凌晨|上午|下午")
 ALTERNATIVE_RE = re.compile(r"[，。；]?\s*或\s*")
 
 PREAMBLE_ITEMS = (
@@ -330,7 +337,8 @@ def lint(text):
                     "W1", "warn", case.line,
                     "%s 预期结果不可判定：「%s」" % (case.tc, _excerpt(expected_text)),
                 ))
-            if ASYNC_RE.search(expected_text) and not TIME_LIMIT_RE.search(expected_text):
+            async_core = PAREN_NOTE_RE.sub("", NEG_ASYNC_RE.sub("", expected_text))
+            if ASYNC_RE.search(async_core) and not TIME_LIMIT_RE.search(expected_text):
                 findings.append(Finding(
                     "W2", "warn", case.line,
                     "%s 异步预期缺判定时限：「%s」" % (case.tc, _excerpt(expected_text)),

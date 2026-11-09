@@ -380,3 +380,40 @@ class PriorityConcentrationTests(unittest.TestCase):
     def test_threshold_boundary(self):
         self.assertTrue(self._warns(self._cases(p0=7, p1=13)))    # 35%
         self.assertFalse(self._warns(self._cases(p0=6, p1=14)))   # 30%
+
+
+class AsyncTimeLimitNoiseTests(unittest.TestCase):
+    """W2 误报收敛（2026-11-09）。
+
+    实测 255 条 W2 中约 32% 是误报，两类清晰可判：
+    ① 否定式异步——「不会自动变为已结束」「无内存溢出或超时错误」：没有事件可限时；
+    ② 钟点时间——「凌晨 2:00 自动启动」：锚点是钟点而非时长，仍属可判定。
+    修复后 255 → 184（-28%），原始误报清零；真正的"缺时限"仍照报。
+    """
+
+    def _w2(self, expected):
+        text = ("# 用例\n## 1. 模块\n\n- TC-01-01 用例 [P1]\n"
+                "  - 操作步骤: 1. 打开页面\n"
+                f"  - 预期结果: {expected}\n")
+        findings = case_lint.lint(text)[1]
+        return any(f.code == "W2" for f in findings)
+
+    def test_negated_async_not_flagged(self):
+        self.assertFalse(self._w2("券状态仍为待发布，不会自动变为已结束"))
+
+    def test_negation_enumeration_not_flagged(self):
+        self.assertFalse(self._w2("任务成功完成，无内存溢出或超时错误"))
+
+    def test_parenthetical_note_not_flagged(self):
+        """括号内是补充说明，不是预期本身。"""
+        self.assertFalse(self._w2("状态保持不变（自动结束仅对已发布的券生效）"))
+
+    def test_clock_time_is_valid_anchor(self):
+        self.assertFalse(self._w2("任务在凌晨 2:00 自动启动执行"))
+        self.assertFalse(self._w2("任务在 2026-08-20 02:00 自动触发"))
+
+    def test_genuine_missing_limit_still_flagged(self):
+        self.assertTrue(self._w2("任务自动触发执行，日志中出现启动记录"))
+
+    def test_duration_still_accepted(self):
+        self.assertFalse(self._w2("任务自动触发，30 分钟内完成"))
